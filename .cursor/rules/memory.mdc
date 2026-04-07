@@ -1,5 +1,5 @@
 ---
-description: Maintain a persistent memory file across sessions
+description: Maintain a persistent memory file across sessions.
 alwaysApply: true
 ---
 
@@ -15,6 +15,7 @@ After completing a task, append to `MEMORY.md` if any of the following occurred:
 - A non-obvious bug was found and fixed
 - The user expressed a preference not already captured in CLAUDE.md
 - A workaround was needed due to a library limitation or quirk
+- A big feature is added or removed
 
 Do NOT record routine changes (file edits, dependency installs, standard CRUD).
 
