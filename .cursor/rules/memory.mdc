@@ -1,0 +1,27 @@
+---
+description: Maintain a persistent memory file across sessions
+alwaysApply: true
+---
+
+# Agent Memory
+
+A `MEMORY.md` file at the repo root stores context that should persist across sessions.
+
+## When to update
+
+After completing a task, append to `MEMORY.md` if any of the following occurred:
+
+- An architectural or technical decision was made
+- A non-obvious bug was found and fixed
+- The user expressed a preference not already captured in CLAUDE.md
+- A workaround was needed due to a library limitation or quirk
+
+Do NOT record routine changes (file edits, dependency installs, standard CRUD).
+
+## Format
+
+Use the existing sections in `MEMORY.md`. Add entries as bullet points with a date prefix (`YYYY-MM-DD`). Keep entries to one or two sentences. If a section doesn't exist, create it.
+
+## On session start
+
+Read `MEMORY.md` at the beginning of a session when tackling a non-trivial task, to recall prior context.
