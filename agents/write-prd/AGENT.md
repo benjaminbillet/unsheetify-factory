@@ -49,6 +49,6 @@ Present the module sketch to the user and confirm it matches their expectations.
 
 Once you have a complete understanding of the problem and solution, write the PRD.
 
-1. Read the template file in `agents/write-prd/templates/example_prd_rpg.txt` to understand the available PRD structures.
+1. Read the template file in `example_prd_rpg.txt` to understand the available PRD structures.
 2. Follow the template's structure and instructions to produce the PRD, filling in every section with the information gathered during the interview and codebase exploration.
 3. Save the PRD to `prds/` in the repo root. Use a descriptive kebab-case filename (e.g. `prds/user-authentication.md`).

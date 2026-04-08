@@ -8,9 +8,11 @@ fi
 
 SOURCE_DIR="$(cd "$1" && pwd)"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 AGENT_PROMPT="$SCRIPT_DIR/AGENT.md"
-PRD_DIR="$REPO_ROOT/prds"
+TEMPLATE_DIR="$SCRIPT_DIR/templates"
+PRD_DIR="$SCRIPT_DIR/prds"
+
+echo "SOURCE_DIR: $SCRIPT_DIR"
 
 mkdir -p "$PRD_DIR"
 
@@ -20,7 +22,7 @@ cd "$SOURCE_DIR"
 claude \
   --dangerously-skip-permissions \
   --append-system-prompt-file "$AGENT_PROMPT" \
-  --add-dir "$REPO_ROOT"
+  --add-dir "$TEMPLATE_DIR"
 
 after=$(ls "$PRD_DIR" 2>/dev/null || true)
 new_file=$(comm -13 <(echo "$before") <(echo "$after"))
