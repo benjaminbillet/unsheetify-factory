@@ -1,0 +1,37 @@
+{
+	"meta": {
+		"generatedAt": "2026-04-08T15:48:26.094Z",
+		"tasksAnalyzed": 3,
+		"totalTasks": 3,
+		"analysisCount": 3,
+		"thresholdScore": 5,
+		"projectName": "unsheetify-factory",
+		"usedResearch": false
+	},
+	"complexityAnalysis": [
+		{
+			"taskId": 1,
+			"taskTitle": "Create hello.sh script with proper shebang and Hello World output",
+			"complexityScore": 2,
+			"recommendedSubtasks": 0,
+			"expansionPrompt": "This task is straightforward and doesn't require further breakdown. Simply create the script file with the specified content.",
+			"reasoning": "This is a very simple task involving creating a basic bash script with minimal content. It requires only basic file creation and understanding of bash shebang syntax. No complex logic, dependencies, or technical challenges are involved."
+		},
+		{
+			"taskId": 2,
+			"taskTitle": "Set executable permissions on hello.sh",
+			"complexityScore": 1,
+			"recommendedSubtasks": 0,
+			"expansionPrompt": "This is a single command execution task that doesn't need expansion.",
+			"reasoning": "This is the simplest possible task - executing a single chmod command. It's a standard Unix operation with no complexity, minimal risk of failure, and straightforward verification."
+		},
+		{
+			"taskId": 3,
+			"taskTitle": "Validate script functionality and output",
+			"complexityScore": 3,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break this down into: 1) Create automated test script to execute hello.sh and capture output, 2) Implement assertions for stdout content and exit code validation, 3) Add cross-environment compatibility testing for different shell environments",
+			"reasoning": "While the core functionality being tested is simple, this task involves creating a comprehensive test suite with multiple validation points. It requires understanding of process execution, output capture, exit code handling, and potentially cross-platform testing considerations."
+		}
+	]
+}

@@ -1,0 +1,29 @@
+{
+  "master": {
+    "tasks": [],
+    "metadata": {
+      "created": "2026-04-08T15:47:55.642Z",
+      "updated": "2026-04-08T15:47:55.642Z",
+      "description": "Tasks for master context"
+    }
+  },
+  "hello-world": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Create hello.sh script with proper shebang and Hello World output",
+        "description": "Create the main hello.sh script file with bash shebang and echo command to output 'Hello World'",
+        "details": "Create a file named 'hello.sh' in the project root directory. Add the shebang line '#!/usr/bin/env bash' for portability across different systems. Include a single echo command that outputs 'Hello World' followed by a newline. The script should be minimal with no additional logic or dependencies. Use '#!/usr/bin/env bash' instead of '#!/bin/bash' for better portability as specified in the risk mitigation section.",
+        "testStrategy": "Execute the script and verify that it prints exactly 'Hello World' to stdout and exits with code 0. Test by running './hello.sh' and asserting stdout equals 'Hello World' with newline.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending"
+      }
+    ],
+    "metadata": {
+      "created": "2026-04-08T15:47:55.643Z",
+      "updated": "2026-04-08T15:48:15.513Z",
+      "description": "Tasks for hello-world context"
+    }
+  }
+}
