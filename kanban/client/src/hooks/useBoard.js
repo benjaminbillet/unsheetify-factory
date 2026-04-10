@@ -244,13 +244,12 @@ export function useBoard() {
       .then(data => {
         if (cancelled) return
         applyCards(groupCards(data))
-        endOp()
       })
       .catch(err => {
         if (cancelled) return
         setError(err.message)
-        endOp()
       })
+      .finally(() => { endOp() })
 
     return () => { cancelled = true }
   }, [])

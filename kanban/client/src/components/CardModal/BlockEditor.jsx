@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { BlockNoteSchema, defaultBlockSpecs } from '@blocknote/core'
-import { useCreateBlockNote, BlockNoteViewRaw } from '@blocknote/react'
-import '@blocknote/react/style.css'
+import { useCreateBlockNote } from '@blocknote/react'
+import { BlockNoteView } from '@blocknote/mantine'
+import '@blocknote/mantine/style.css'
 import './BlockEditor.css'
 
 // Explicit schema scoped to the required block types only
@@ -87,7 +88,7 @@ export default function BlockEditor({ content, onSave, onEditingChange }) {
     <div className="block-editor">
       {isEditing ? (
         <div className="block-editor-edit">
-          <BlockNoteViewRaw editor={editor} editable={true} />
+          <BlockNoteView editor={editor} editable={true} />
           <div className="block-editor-actions">
             <button aria-label="Save description" onClick={handleSave} disabled={isSaving}>
               {isSaving ? 'Saving…' : 'Save'}
@@ -101,7 +102,7 @@ export default function BlockEditor({ content, onSave, onEditingChange }) {
       ) : (
         <div className="block-editor-view">
           {content
-            ? <BlockNoteViewRaw editor={editor} editable={false} />
+            ? <BlockNoteView editor={editor} editable={false} />
             : <p className="block-editor-empty">No description</p>
           }
           <button aria-label="Edit description" onClick={() => { setIsEditing(true); setSaveError(null) }}>

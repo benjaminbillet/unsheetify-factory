@@ -1,13 +1,17 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { BlockNoteSchema } from '@blocknote/core'
-import { useCreateBlockNote, BlockNoteViewRaw } from '@blocknote/react'
+import { useCreateBlockNote } from '@blocknote/react'
+import { BlockNoteView } from '@blocknote/mantine'
 import BlockEditor from './BlockEditor.jsx'
 
 // vi.mock is hoisted — factory must NOT reference module-scope variables
 vi.mock('@blocknote/react', () => ({
   useCreateBlockNote: vi.fn(),
-  BlockNoteViewRaw: vi.fn(({ editable }) => (
+}))
+
+vi.mock('@blocknote/mantine', () => ({
+  BlockNoteView: vi.fn(({ editable }) => (
     <div data-testid="blocknote-view" data-editable={String(editable)} />
   )),
 }))
@@ -24,7 +28,7 @@ beforeEach(() => {
   useCreateBlockNote.mockClear()
   useCreateBlockNote.mockReturnValue(mockEditor)
   mockEditor.replaceBlocks.mockClear()
-  BlockNoteViewRaw.mockClear()
+  BlockNoteView.mockClear()
 })
 
 // ---------------------------------------------------------------------------
@@ -46,7 +50,7 @@ describe('BlockEditor — basic rendering', () => {
     expect(screen.getByText('No description')).toBeInTheDocument()
   })
 
-  it('renders BlockNoteViewRaw in view mode when content is provided', () => {
+  it('renders BlockNoteView in view mode when content is provided', () => {
     render(<BlockEditor content="some content" onSave={vi.fn()} />)
     expect(screen.getByTestId('blocknote-view')).toBeInTheDocument()
   })
@@ -56,7 +60,7 @@ describe('BlockEditor — basic rendering', () => {
     expect(screen.getByRole('button', { name: /edit description/i })).toBeInTheDocument()
   })
 
-  it('does not render BlockNoteViewRaw when content is null', () => {
+  it('does not render BlockNoteView when content is null', () => {
     render(<BlockEditor content={null} onSave={vi.fn()} />)
     expect(screen.queryByTestId('blocknote-view')).not.toBeInTheDocument()
   })
@@ -111,13 +115,13 @@ describe('BlockEditor — mode toggle', () => {
     expect(screen.getByRole('button', { name: /cancel description edit/i })).toBeInTheDocument()
   })
 
-  it('in edit mode, BlockNoteViewRaw receives editable={true}', () => {
+  it('in edit mode, BlockNoteView receives editable={true}', () => {
     render(<BlockEditor content="some content" onSave={vi.fn()} />)
     fireEvent.click(screen.getByRole('button', { name: /edit description/i }))
     expect(screen.getByTestId('blocknote-view')).toHaveAttribute('data-editable', 'true')
   })
 
-  it('in view mode, BlockNoteViewRaw receives editable={false} when content is provided', () => {
+  it('in view mode, BlockNoteView receives editable={false} when content is provided', () => {
     render(<BlockEditor content="some content" onSave={vi.fn()} />)
     expect(screen.getByTestId('blocknote-view')).toHaveAttribute('data-editable', 'false')
   })

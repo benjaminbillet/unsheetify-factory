@@ -372,7 +372,7 @@
         "dependencies": [
           "5"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -380,7 +380,7 @@
             "description": "Create the core Express router with basic CRUD operations for cards",
             "dependencies": [],
             "details": "Create server/api/cards.js with Express router. Implement GET /api/cards endpoint that calls getCards() function. Add POST /api/cards endpoint that calls createCard() function. Implement PATCH /api/cards/:id endpoint that calls updateCard() function. Add DELETE /api/cards/:id endpoint that calls deleteCard() function. Set up basic route structure without validation or error handling.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Unit tests for each endpoint to verify correct function calls and basic response structure",
             "parentId": "undefined",
             "updatedAt": "2026-04-10T10:51:07.901Z"
@@ -393,7 +393,7 @@
               1
             ],
             "details": "Add input validation middleware using express-validator or manual validation. Validate required title field for POST requests. Validate card existence for PATCH and DELETE operations. Create error handling middleware to catch and format validation errors. Implement proper error response structure with meaningful error messages.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test validation errors return 400 status, missing required fields are caught, invalid IDs are handled",
             "parentId": "undefined",
             "updatedAt": "2026-04-10T10:51:09.806Z"
@@ -406,7 +406,7 @@
               1
             ],
             "details": "Import and integrate getCards(), createCard(), updateCard(), and deleteCard() functions from the database layer. Ensure proper data flow between API endpoints and database operations. Handle database connection errors and query failures. Test integration between API layer and database layer.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Integration tests to verify data persistence, database errors are handled gracefully",
             "parentId": "undefined",
             "updatedAt": "2026-04-10T10:51:11.672Z"
@@ -420,7 +420,7 @@
               3
             ],
             "details": "Add proper HTTP status codes: 400 for validation errors, 404 for not found resources, 500 for server errors. Create consistent error response format with error messages and status codes. Mount the router in server/index.js at /api path. Add final error handling middleware for uncaught errors. Test all error scenarios return appropriate status codes.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test 404 for unknown card IDs, 400 for validation failures, 500 for server errors, verify error response format",
             "parentId": "undefined",
             "updatedAt": "2026-04-10T10:51:13.592Z"
@@ -429,7 +429,11 @@
         "complexity": 5,
         "recommendedSubtasks": 4,
         "expansionPrompt": "Split into: 1) Implement basic CRUD endpoints (GET, POST, PATCH, DELETE), 2) Add input validation middleware and error handling, 3) Integrate with database query functions, 4) Add comprehensive error responses with proper HTTP status codes",
-        "updatedAt": "2026-04-10T10:51:13.592Z"
+        "updatedAt": "2026-04-10T17:45:34.277Z",
+        "metadata": {
+          "assignee": "Chris",
+          "devSessionId": "beb5fb61-d1ca-40ab-bc58-f165066ee79b"
+        }
       },
       {
         "id": "7",
@@ -1665,7 +1669,7 @@
         "dependencies": [
           "21"
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -1739,12 +1743,18 @@
         ],
         "complexity": 8,
         "recommendedSubtasks": 6,
-        "expansionPrompt": "Break down into: 1) Implement comprehensive error handling middleware, 2) Add logging and monitoring with morgan, 3) Configure rate limiting and security measures, 4) Optimize client bundle with code splitting, 5) Add React error boundaries and loading states, 6) Configure production CORS and health checks"
+        "expansionPrompt": "Break down into: 1) Implement comprehensive error handling middleware, 2) Add logging and monitoring with morgan, 3) Configure rate limiting and security measures, 4) Optimize client bundle with code splitting, 5) Add React error boundaries and loading states, 6) Configure production CORS and health checks",
+        "updatedAt": "2026-04-10T17:57:22.572Z",
+        "metadata": {
+          "assignee": "Lydia",
+          "devSessionId": "075b0bd4-949a-409e-91c6-150732d34684",
+          "qaSessionId": null
+        }
       }
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-04-10T17:22:15.602Z",
+      "lastModified": "2026-04-10T17:57:22.573Z",
       "taskCount": 24,
       "completedCount": 23,
       "tags": [

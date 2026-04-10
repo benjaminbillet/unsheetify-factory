@@ -1,413 +1,200 @@
-# Task 6: Create REST API Routes for Cards
+# Plan: Create REST API Routes for Cards (Task 6)
 
 ## Context
-The kanban board backend (Express + SQLite) already has a working database layer (`server/db/queries.js`) with fully implemented `getCards()`, `createCard()`, `updateCard()`, and `deleteCard()` functions, along with custom error classes (`NotFoundError`, `DatabaseError`). The server factory (`server/index.js`) exposes `createApp()` with CORS, JSON body parsing, and a global error handler that returns `{ error: string }` with `err.status || err.statusCode || 500`. The `server/api/` directory is empty and ready for route modules. This task wires the DB layer to HTTP by implementing REST routes and mounting them under `/api`.
 
----
+This task implements Express REST API routes for card CRUD operations on a kanban board server. The server uses Express + better-sqlite3 + WebSocket broadcasts. After exploring the codebase, **all implementation files already exist and appear complete**:
 
-## Files to Create
-- `server/api/cards.js` — Express Router with CRUD handlers (routes at `/cards` and `/cards/:id`)
-- `server/test/cards.test.mjs` — Integration tests (Node built-in `node:test` + `supertest`)
+- `server/api/cards.js` — full Express router (GET, POST, PATCH, DELETE, PATCH/move)
+- `server/api/cards.test.js` — 19 supertest integration tests
+- `server/test/cards.test.mjs` — 25+ broader integration tests (with WS broadcast assertions)
+- `server/index.js` — already mounts cardsRouter at `/api`
+- `server/db/queries.js` — `getCards`, `createCard`, `updateCard`, `deleteCard`, `moveCard`, `NotFoundError`
 
-## Files to Modify
-- `server/index.js` — Import and mount the cards router at `/api` (before the 404 handler)
-- `server/package.json` — Add `supertest` to `devDependencies`; add `cards.test.mjs` to test script
-
----
-
-## Mount Path (critical)
-
-The task requires mounting at the `/api` path:
-
-**`server/index.js`**:
-```js
-app.use('/api', cardsRouter);   // ← mount at /api, NOT /api/cards
-```
-
-**`server/api/cards.js`**:
-```js
-router.get('/cards', ...);      // → GET  /api/cards
-router.post('/cards', ...);     // → POST /api/cards
-router.patch('/cards/:id', ...);// → PATCH  /api/cards/:id
-router.delete('/cards/:id', ...);// → DELETE /api/cards/:id
-```
-
-This produces the final URLs `GET /api/cards`, `POST /api/cards`, `PATCH /api/cards/:id`, `DELETE /api/cards/:id`.
-
----
-
-## TDD Plan
-
-### Subtask 1 — Basic CRUD endpoints
-
-#### 1a. Write tests first (`server/test/cards.test.mjs`)
-
-**Imports and supertest pattern:**
-```js
-import { describe, it, before, after } from 'node:test';
-import assert from 'node:assert/strict';
-import request from 'supertest';
-import { createApp } from '../index.js';
-import { initDb, closeDb, createCard } from '../db/queries.js';
-```
-
-Each `describe` block follows this lifecycle:
-```js
-let app;
-before(() => { initDb(':memory:'); app = createApp(); });
-after(() => closeDb());
-// tests use: request(app).get('/api/cards')  ← no server.listen() needed
-```
-
-**Describe block layout for Subtask 1 — three separate blocks:**
-
-**Block A — `GET /api/cards` (empty DB)**
-```js
-describe('GET /api/cards', () => {
-  let app;
-  before(() => { initDb(':memory:'); app = createApp(); });
-  after(() => closeDb());
-
-  // tests:
-  // - returns 200
-  // - returns an array
-  // - returns empty array on empty DB
-});
-```
-
-**Block B — `POST /api/cards` (fresh DB)**
-```js
-describe('POST /api/cards', () => {
-  let app;
-  before(() => { initDb(':memory:'); app = createApp(); });
-  after(() => closeDb());
-
-  // tests:
-  // - returns 201 with valid title
-  // - returned body has id, title, column, position, created_at fields
-  // - returned body.comments is an empty array
-});
-```
-
-**Block C — `PATCH and DELETE /api/cards/:id` (pre-seeded DB)**
-```js
-describe('PATCH and DELETE /api/cards/:id', () => {
-  let app, existingCard;
-  before(() => {
-    initDb(':memory:');
-    app = createApp();
-    existingCard = createCard({ title: 'Seed card' }); // ← pre-create for happy-path tests
-  });
-  after(() => closeDb());
-
-  // tests:
-  // - PATCH returns 200 with updated card
-  // - PATCH updated card reflects new title in response
-  // - DELETE returns 204
-  // - DELETE response body is empty
-});
-```
-
-#### 1b. Implement `server/api/cards.js` (skeleton without validation)
-
-```js
-import { Router } from 'express';
-import { getCards, createCard, updateCard, deleteCard, NotFoundError }
-  from '../db/queries.js';
-
-const router = Router();
-
-router.get('/cards', (req, res, next) => { ... });
-router.post('/cards', (req, res, next) => { ... });
-router.patch('/cards/:id', (req, res, next) => { ... });
-router.delete('/cards/:id', (req, res, next) => { ... });
-
-export default router;
-```
-
-#### 1c. Mount router in `server/index.js`
-
-Add import and mount **after** `app.use(express.json())` and **before** the 404 handler:
-```js
-import cardsRouter from './api/cards.js';
-// inside createApp():
-app.use('/api', cardsRouter);
-```
-
----
-
-### Subtask 2 — Input validation
-
-#### 2a. Write failing tests (new describe block in cards.test.mjs)
-
-**Block D — `POST /api/cards validation` (fresh DB)**
-```js
-describe('POST /api/cards validation', () => {
-  let app;
-  before(() => { initDb(':memory:'); app = createApp(); });
-  after(() => closeDb());
-
-  // tests:
-  // - POST without body returns 400
-  // - POST with missing title field returns 400
-  // - POST with empty string title ("") returns 400
-  // - POST with whitespace-only title ("   ") returns 400
-  // - 400 response body has { error: string } field
-});
-```
-
-#### 2b. Add validation to POST handler
-
-Manual validation in the `router.post('/cards', ...)` route:
-```js
-const { title, assignee, column, description } = req.body ?? {};
-if (!title || typeof title !== 'string' || title.trim() === '') {
-  return res.status(400).json({ error: 'title is required' });
-}
-```
-
----
-
-### Subtask 3 — DB integration
-
-#### 3a. Write failing tests (new describe blocks in cards.test.mjs)
-
-**Block E — `GET /api/cards DB integration` (pre-seeded DB)**
-```js
-describe('GET /api/cards DB integration', () => {
-  let app;
-  before(() => {
-    initDb(':memory:');
-    app = createApp();
-    createCard({ title: 'Pre-seeded card' }); // ← verify GET returns this
-  });
-  after(() => closeDb());
-
-  // tests:
-  // - returns the pre-seeded card
-  // - each card has a comments array
-});
-```
-
-**Block F — `POST /api/cards DB persistence` (fresh DB)**
-```js
-describe('POST /api/cards DB persistence', () => {
-  let app;
-  before(() => { initDb(':memory:'); app = createApp(); });
-  after(() => closeDb());
-
-  // tests (sequential within the block):
-  // - POST creates card; subsequent GET returns that card
-  // - POST-created card has correct title
-});
-```
-
-**Block G — `PATCH/DELETE 404 for unknown IDs` (fresh DB)**
-```js
-describe('PATCH and DELETE 404 for unknown IDs', () => {
-  let app;
-  before(() => { initDb(':memory:'); app = createApp(); });
-  after(() => closeDb());
-
-  // tests:
-  // - PATCH /api/cards/nonexistent-id returns 404
-  // - DELETE /api/cards/nonexistent-id returns 404
-});
-```
-
-**Block H — `PATCH/DELETE happy path` (pre-seeded DB)**
-```js
-describe('PATCH and DELETE happy path', () => {
-  let app, card;
-  before(() => {
-    initDb(':memory:');
-    app = createApp();
-    card = createCard({ title: 'Original title' });
-  });
-  after(() => closeDb());
-
-  // tests:
-  // - PATCH updates title; response body has new title
-  // - DELETE removes card; subsequent GET does not include it
-});
-```
-
-#### 3b. Wire up error handling in PATCH and DELETE handlers
-
-```js
-} catch (err) {
-  if (err instanceof NotFoundError) {
-    return res.status(404).json({ error: err.message });
-  }
-  next(err); // passes 500-class errors to global error handler
-}
-```
-
----
-
-### Subtask 4 — Proper HTTP status codes & error response format
-
-#### 4a. Write failing tests (new describe block)
-
-**Block I — `Error response format` (fresh DB)**
-```js
-describe('Error response format', () => {
-  let app;
-  before(() => { initDb(':memory:'); app = createApp(); });
-  after(() => closeDb());
-
-  // tests:
-  // - PATCH unknown ID: response has Content-Type application/json
-  // - DELETE unknown ID: response has Content-Type application/json
-  // - 404 response body is { error: string }
-  // - 400 response body is { error: string }
-});
-```
-
-#### 4b. Verify consistency
-
-- All error responses use `{ error: '<message>' }` (consistent with existing global handler in `index.js`)
-- 400 for validation failures (missing/empty title)
-- 404 for `NotFoundError` caught in route handlers
-- 500 for unexpected errors forwarded via `next(err)` to global error handler
-
----
-
-## Complete Implementation
-
-### `server/api/cards.js`
-
-```js
-import { Router } from 'express';
-import { getCards, createCard, updateCard, deleteCard, NotFoundError }
-  from '../db/queries.js';
-
-const router = Router();
-
-// GET /api/cards
-router.get('/cards', (req, res, next) => {
-  try {
-    res.json(getCards());
-  } catch (err) { next(err); }
-});
-
-// POST /api/cards
-router.post('/cards', (req, res, next) => {
-  try {
-    const { title, assignee, column, description } = req.body ?? {};
-    if (!title || typeof title !== 'string' || title.trim() === '') {
-      return res.status(400).json({ error: 'title is required' });
-    }
-    const card = createCard({ title: title.trim(), assignee, column, description });
-    // createCard() returns a raw DB row without comments; add comments: [] for
-    // a consistent response shape with GET /api/cards (which uses getCards()).
-    res.status(201).json({ ...card, comments: [] });
-  } catch (err) { next(err); }
-});
-
-// PATCH /api/cards/:id
-router.patch('/cards/:id', (req, res, next) => {
-  try {
-    const card = updateCard(req.params.id, req.body ?? {});
-    res.json(card);
-  } catch (err) {
-    if (err instanceof NotFoundError) return res.status(404).json({ error: err.message });
-    next(err);
-  }
-});
-
-// DELETE /api/cards/:id
-router.delete('/cards/:id', (req, res, next) => {
-  try {
-    deleteCard(req.params.id);
-    res.status(204).end();
-  } catch (err) {
-    if (err instanceof NotFoundError) return res.status(404).json({ error: err.message });
-    next(err);
-  }
-});
-
-export default router;
-```
-
-### `server/index.js` changes
-
-```js
-// Add import near top (after existing imports):
-import cardsRouter from './api/cards.js';
-
-// Add inside createApp(), after app.use(express.json()) and before the 404 handler:
-app.use('/api', cardsRouter);
-```
-
-### `server/package.json` changes
-
-Add `supertest` to `devDependencies`:
-```json
-"devDependencies": {
-  "nodemon": "^3.1.0",
-  "supertest": "^7.0.0"
-}
-```
-
-Update the `test` script to include the new test file:
-```json
-"test": "node --test test/server.test.mjs test/db.test.mjs test/cards.test.mjs"
-```
+The agent must follow TDD: **run tests first**, confirm green state, and fix anything that fails before marking subtasks complete.
 
 ---
 
 ## Critical Files
 
-| File | Action | Purpose |
-|------|--------|---------|
-| `server/api/cards.js` | **Create** | Express Router — routes at `/cards` and `/cards/:id` |
-| `server/test/cards.test.mjs` | **Create** | Integration tests (9 describe blocks, ~25 test cases) |
-| `server/index.js` | **Modify** | `app.use('/api', cardsRouter)` before 404 handler |
-| `server/package.json` | **Modify** | Add supertest dev dep; extend test script |
+| File | Role |
+|------|------|
+| `server/api/cards.js` | Express router — primary implementation target |
+| `server/api/cards.test.js` | Supertest integration tests (run with `npm run test:integration`) |
+| `server/test/cards.test.mjs` | Broader integration tests incl. WS (run with `npm test`) |
+| `server/index.js` | Mounts routers, defines `createApp()` |
+| `server/db/queries.js` | DB functions: `getCards`, `createCard`, `updateCard`, `deleteCard`, `moveCard`, `NotFoundError` |
+| `server/package.json` | Test scripts |
 
-## Reusable Utilities (from `server/db/queries.js`)
+---
 
-- `getCards()` — returns all cards with nested `comments` array
-- `createCard(data)` — `{ title, assignee?, column?, description? }` → raw card row (no `comments` field — POST handler adds `comments: []` manually)
-- `updateCard(id, data)` — partial update, throws `NotFoundError` if card absent
-- `deleteCard(id)` — throws `NotFoundError` if card absent, returns `true`
-- `NotFoundError` — use `instanceof` check in catch blocks to return 404
-- `initDb(':memory:')` / `closeDb()` — test DB lifecycle (module-level singleton)
+## TDD Execution Plan
+
+### Subtask 1 — Basic CRUD Endpoints
+
+**Red phase: Identify expected tests**
+
+Tests already exist in `server/api/cards.test.js`:
+- `GET /api/cards` → 200 + empty array, `application/json` header, returns cards with `comments[]`
+- `POST /api/cards` → 201 + card body (id, title, assignee, column, position, description, created_at)
+- `PATCH /api/cards/:id` → 200 + updated card
+- `DELETE /api/cards/:id` → 204 + empty body
+
+**Green phase: Run and verify**
+
+```bash
+cd server && npm run test:integration
+```
+
+**Expected implementation** (already in `server/api/cards.js`):
+```js
+router.get('/cards', (_req, res, next) => { /* calls getCards() */ });
+router.post('/cards', (req, res, next) => { /* calls createCard() */ });
+router.patch('/cards/:id', (req, res, next) => { /* calls updateCard() */ });
+router.delete('/cards/:id', (req, res, next) => { /* calls deleteCard() */ });
+```
+
+**If tests fail:** The router in `server/api/cards.js` must export `default router` and `server/index.js` must mount it with `app.use('/api', cardsRouter)`. Both already exist — check import paths and ESM syntax.
+
+---
+
+### Subtask 2 — Input Validation Middleware
+
+**Red phase tests** (in `server/api/cards.test.js`):
+- `POST /api/cards` with `{}` → 400 with `{ error: string }`
+- `PATCH /api/cards/:id/move` missing `column` → 400
+- `PATCH /api/cards/:id/move` missing `position` → 400
+- `PATCH /api/cards/:id/move` with `position: 0` → 200 (falsy-safe check)
+
+**Implementation** (already in `server/api/cards.js`):
+```js
+// POST validation
+if (!title) return res.status(400).json({ error: 'title is required' });
+
+// PATCH /move validation  
+if (!column || position === undefined || position === null)
+  return res.status(400).json({ error: 'column and position are required' });
+```
+
+Note: Manual validation used (no `express-validator` needed). The position check uses `=== undefined || === null` (not falsy) to allow `position: 0`.
+
+**Run subtask 2 tests:**
+```bash
+cd server && npm run test:integration
+```
+
+---
+
+### Subtask 3 — Database Integration
+
+**Red phase tests** (in `server/api/cards.test.js` + `server/test/cards.test.mjs`):
+- POST creates card persisted in DB (card appears in subsequent GET)
+- PATCH updates DB record (updated title returned in response)
+- DELETE removes card (subsequent operations return 404)
+- DB initialized with `:memory:` in tests for isolation
+
+**Implementation** (already in `server/api/cards.js`):
+```js
+import { getCards, createCard, updateCard, deleteCard, moveCard, NotFoundError }
+  from '../db/queries.js';
+```
+
+Tests use in-process DB with `initDb(':memory:')` before each suite. The `createApp()` factory creates the app without binding DB — DB is initialized separately in `before()` hook.
+
+**Run broader integration tests:**
+```bash
+cd server && npm test
+```
+
+---
+
+### Subtask 4 — HTTP Status Codes and Error Responses
+
+**Red phase tests** (in `server/api/cards.test.js`):
+- `PATCH /api/cards/no-such-id` → 404 + `{ error: string }`
+- `DELETE /api/cards/no-such-id` → 404 + `{ error: string }`
+- `POST /api/cards` with `{}` → 400 + `{ error: string }`
+- Server errors → 500 (via Express error handler in `server/index.js`)
+
+**Implementation** (already in `server/api/cards.js`):
+```js
+// NotFoundError → 404
+} catch (err) {
+  if (err instanceof NotFoundError) return res.status(404).json({ error: err.message });
+  next(err); // all other errors → 500 via error handler
+}
+```
+
+**Error handler** (already in `server/index.js`):
+```js
+app.use((err, _req, res, _next) => {
+  const status = err.status || err.statusCode || 500;
+  res.status(status).json({ error: err.message || 'Internal Server Error' });
+});
+```
+
+**Router mounting** (already in `server/index.js`):
+```js
+app.use('/api', commentsRouter);
+app.use('/api', cardsRouter);
+```
+
+**Run full test suite:**
+```bash
+cd server && npm run test:all
+```
+
+---
+
+## Execution Order (Agent Steps)
+
+1. **Run integration tests** to establish current baseline:
+   ```bash
+   cd server && npm run test:integration 2>&1
+   ```
+
+2. **Run full test suite** to check all test files:
+   ```bash
+   cd server && npm run test:all 2>&1
+   ```
+
+3. **If all tests pass** → implementation is complete; verify subtask requirements are fully satisfied.
+
+4. **If any test fails**, follow TDD for that specific failing test:
+   a. Read the failing test carefully
+   b. Identify what the implementation is missing or wrong
+   c. Fix the minimum code in `server/api/cards.js` or `server/index.js` to make it pass
+   d. Re-run tests to confirm green
+
+5. **Run coverage check** to confirm thresholds are met (70% lines, 80% functions):
+   ```bash
+   cd server && npm run test:coverage 2>&1
+   ```
 
 ---
 
 ## Verification
 
-### Run tests
+End-to-end verification:
+
 ```bash
-cd server && npm install   # picks up supertest
-npm test                   # runs all 3 test files
+# 1. Unit integration tests (supertest)
+cd server && npm run test:integration
+
+# 2. Full test suite (includes WS broadcast tests)
+cd server && npm run test:all
+
+# 3. Optional: coverage report
+cd server && npm run test:coverage
 ```
-All three files must pass: `server.test.mjs`, `db.test.mjs`, `cards.test.mjs`
 
-### Manual smoke test (server running)
-```bash
-cd server && npm run dev
+All 19 tests in `api/cards.test.js` and all tests in `test/cards.test.mjs` must pass green.
 
-# GET — should return []
-curl http://localhost:3001/api/cards
+**Expected passing tests per endpoint:**
 
-# POST — should return 201 with card object
-curl -X POST http://localhost:3001/api/cards \
-  -H 'Content-Type: application/json' \
-  -d '{"title":"Test card"}'
-
-# POST without title — should return 400
-curl -X POST http://localhost:3001/api/cards \
-  -H 'Content-Type: application/json' \
-  -d '{}'
-
-# PATCH unknown ID — should return 404
-curl -X PATCH http://localhost:3001/api/cards/nonexistent \
-  -H 'Content-Type: application/json' \
-  -d '{"title":"Updated"}'
-
-# DELETE unknown ID — should return 404
-curl -X DELETE http://localhost:3001/api/cards/nonexistent
-```
+| Endpoint | Tests | Expected |
+|----------|-------|----------|
+| GET /api/cards | 3 | 200, application/json, cards with comments |
+| POST /api/cards | 4 | 201, field shape, 400 missing title, error string |
+| PATCH /api/cards/:id | 3 | 200 updated, 404 not found, error string |
+| DELETE /api/cards/:id | 3 | 204, empty body, 404 not found |
+| PATCH /api/cards/:id/move | 6 | 200, column value, 400 col missing, 400 pos missing, pos:0 valid, 404 |
