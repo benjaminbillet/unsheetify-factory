@@ -89,7 +89,7 @@
         "dependencies": [
           "1"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -97,9 +97,10 @@
             "description": "Create new Vite React project using the official template and install all required dependencies",
             "dependencies": [],
             "details": "Run 'npm create vite@latest client -- --template react' in the client directory. Install required dependencies: react, react-dom, @vitejs/plugin-react. Clean up default template files and prepare project structure for custom implementation.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify project creates successfully, all dependencies install without errors, and basic Vite dev server starts on localhost:5173",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T09:27:14.075Z"
           },
           {
             "id": 2,
@@ -109,9 +110,10 @@
               1
             ],
             "details": "Configure vite.config.js with proxy settings for /api and /ws endpoints to localhost:3001. Set up proper proxy configuration to handle both REST API calls and WebSocket connections. Ensure CORS and development server settings are properly configured.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test that proxy configuration routes requests correctly by making test calls to /api endpoints and verifying they reach localhost:3001",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T09:27:15.997Z"
           },
           {
             "id": 3,
@@ -121,14 +123,21 @@
               2
             ],
             "details": "Set up basic App.jsx component structure with placeholder content. Configure index.html with proper meta tags, title, and viewport settings. Test Hot Module Replacement (HMR) functionality to ensure development workflow is smooth and changes reflect immediately.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify localhost:5173 serves React app without errors, make changes to App.jsx and confirm HMR updates work instantly, check console for any errors",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T09:27:17.987Z"
           }
         ],
         "complexity": 4,
         "recommendedSubtasks": 3,
-        "expansionPrompt": "Split into: 1) Initialize Vite React project and install dependencies, 2) Configure vite.config.js with proxy settings for API endpoints, 3) Set up basic App.jsx structure and verify HMR functionality"
+        "expansionPrompt": "Split into: 1) Initialize Vite React project and install dependencies, 2) Configure vite.config.js with proxy settings for API endpoints, 3) Set up basic App.jsx structure and verify HMR functionality",
+        "updatedAt": "2026-04-10T09:27:17.987Z",
+        "metadata": {
+          "assignee": "Ben",
+          "devSessionId": "3e18066f-dae0-40c1-bed1-a303836a2429",
+          "qaSessionId": "c3770a45-d30c-43d5-b90f-598673b2ad4d"
+        }
       },
       {
         "id": "3",
@@ -140,7 +149,7 @@
         "dependencies": [
           "1"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -148,9 +157,10 @@
             "description": "Set up the foundational Express application structure and install all required dependencies for the server",
             "dependencies": [],
             "details": "Create server/index.js file with basic Express app initialization. Install required dependencies using npm: express, cors, better-sqlite3, ws, uuid, and nodemon as dev dependency. Initialize package.json if not exists and configure basic npm scripts for development and production.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify all dependencies are installed correctly and Express app can be imported without errors",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T09:31:54.996Z"
           },
           {
             "id": 2,
@@ -160,9 +170,10 @@
               1
             ],
             "details": "Configure CORS middleware to allow cross-origin requests during development. Set up Express JSON parsing middleware for handling request bodies. Configure any additional middleware needed for request processing and logging.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test CORS headers are present in responses and JSON request bodies are parsed correctly",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T09:31:56.941Z"
           },
           {
             "id": 3,
@@ -172,9 +183,10 @@
               2
             ],
             "details": "Add GET /health endpoint that returns {ok: true} with 200 status code. Implement error handling middleware to catch and properly format errors with appropriate HTTP status codes. Ensure proper error responses for different types of failures.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify GET /health returns 200 status with {ok: true} response and error handling middleware catches and formats errors properly",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T09:31:58.951Z"
           },
           {
             "id": 4,
@@ -184,14 +196,20 @@
               3
             ],
             "details": "Configure nodemon for development with proper file watching patterns and restart behavior. Set up Express to serve static files from client/dist directory in production mode. Add environment-specific configuration to distinguish between development and production modes.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test server restarts automatically on file changes in development mode and static files are served correctly in production mode",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T09:32:00.905Z"
           }
         ],
         "complexity": 4,
         "recommendedSubtasks": 4,
-        "expansionPrompt": "Break down into: 1) Create basic Express app with dependencies installation, 2) Configure CORS and middleware setup, 3) Implement health endpoint and error handling, 4) Set up nodemon for development and static file serving"
+        "expansionPrompt": "Break down into: 1) Create basic Express app with dependencies installation, 2) Configure CORS and middleware setup, 3) Implement health endpoint and error handling, 4) Set up nodemon for development and static file serving",
+        "updatedAt": "2026-04-10T09:32:00.905Z",
+        "metadata": {
+          "assignee": "Paul",
+          "devSessionId": "96fca5a0-7f53-4746-9b55-6625092fc1e4"
+        }
       },
       {
         "id": "4",
@@ -1537,9 +1555,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-04-10T09:13:23.641Z",
+      "lastModified": "2026-04-10T09:32:00.906Z",
       "taskCount": 24,
-      "completedCount": 1,
+      "completedCount": 3,
       "tags": [
         "kanban-board"
       ]

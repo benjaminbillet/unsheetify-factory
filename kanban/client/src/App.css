@@ -1,0 +1,33 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  background: #f0f2f5;
+  color: #1a1a2e;
+}
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  padding: 1rem 1.5rem;
+  background: #1a1a2e;
+  color: #ffffff;
+}
+
+.app-header h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.app-main {
+  flex: 1;
+  padding: 1.5rem;
+}
