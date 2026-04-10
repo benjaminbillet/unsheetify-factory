@@ -1175,4 +1175,228 @@ None. No defects, missing requirements, failing tests, lint errors, or build fai
 
 The implementation is complete and high quality. All five required API wrapper functions are present, correctly implemented, and thoroughly tested. Error handling covers all specified edge cases (network errors, HTTP errors, non-JSON error bodies, malformed success bodies, empty responses). JSDoc annotations are accurate and include types, parameter descriptions, return types, thrown error documentation, and usage examples. The build, lint, and all test suites pass without errors.
 
+---
+
+# Task 16 — Implement WebSocket Broadcaster
+
+**Date:** 2026-04-10
+**Worktree:** `/Users/benjamin/.sofactory/worktrees/kanban-board/kanban-board-16`
+**Branch:** `kanban-board/kanban-board-16`
+**Commit reviewed:** `3264905`
+
+---
+
+## 1. Commands Found and Executed
+
+Scripts found across `kanban/package.json` (root workspace) and `kanban/server/package.json` and `kanban/client/package.json`:
+
+| Command | Location | Result |
+|---|---|---|
+| `npm run test:setup` | `kanban/package.json` | PASS |
+| `npm run test:server` | `kanban/package.json` | PASS |
+| `npm -w client run lint` | `kanban/client/package.json` | PASS |
+| `npm -w client run test` | `kanban/client/package.json` | PASS |
+| `npm run build` | `kanban/package.json` | NOT RUN (client Vite build — no changes to client source in this task) |
+| `npm run start` | `kanban/package.json` | NOT RUN (long-running server process) |
+| `npm run dev` | `kanban/package.json` | NOT RUN (long-running concurrent dev server) |
+
+### test:setup result
+
+```
+# tests 49
+# suites 9
+# pass 49
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 51ms
+```
+
+**All 49 tests pass.** Includes verification of directory structure (`server/ws/` exists), root and workspace `package.json` scripts, Vite proxy config (`/ws` proxied with `ws: true`), and client/server package contents.
+
+### test:server result
+
+```
+# tests 112
+# suites 22
+# pass 112
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2811ms
+```
+
+**All 112 tests pass.** Includes 22 suites: 17 from prior tasks (server setup, DB, comments API) and 5 new WebSocket suites (connection setup, broadcast, heartbeat, disconnection, closeWs teardown).
+
+### client lint result
+
+```
+> kanban-client@1.0.0 lint
+> eslint src
+```
+
+Exit code 0. **No lint errors.**
+
+### client test result
+
+```
+✓ src/api/client.test.js (27 tests) 9ms
+✓ src/App.test.jsx (4 tests) 39ms
+
+Test Files  2 passed (2)
+     Tests  31 passed (31)
+```
+
+**All 31 client tests pass.** No regressions from this task's changes.
+
+---
+
+## 2. Files Created / Modified
+
+| File | Status | Notes |
+|---|---|---|
+| `kanban/server/ws/broadcaster.js` | Created | Core implementation |
+| `kanban/server/test/ws.test.mjs` | Created | Test suite for broadcaster |
+| `kanban/server/package.json` | Modified | `test` script updated to include `ws.test.mjs` |
+| `kanban/server/index.js` | Modified | `initWs` imported and wired to HTTP server |
+
+---
+
+## 3. Code Review — `server/ws/broadcaster.js`
+
+### 3.1 Required Exports
+
+The task specification requires:
+- `initWs(httpServer)` — exported ✓
+- `broadcast(event, payload)` — exported ✓
+
+Additionally, `closeWs()` is exported for test teardown. This is an internal utility not required by the spec but appropriate for enabling clean test teardown without process-level side effects.
+
+### 3.2 WebSocket Server Attachment
+
+`initWs` uses `new WebSocketServer({ server: httpServer })` to attach to the existing HTTP server. This is the correct pattern for sharing a port between Express HTTP and WebSocket — no separate port is opened.
+
+### 3.3 Connected Clients List
+
+Clients are tracked via a module-level `Set`. On `connection`, the socket is added; on `close` and `error` events, it is deleted. This is correct.
+
+### 3.4 broadcast(event, payload)
+
+`broadcast` serializes `{ event, payload }` as JSON once and iterates over `clients`, sending only to sockets with `readyState === WS_OPEN` (value `1`). Each send is wrapped in a try/catch to isolate per-client errors. This matches the specification.
+
+The implementation avoids importing the `WebSocket` class just to reference `WebSocket.OPEN`, instead using the numeric constant `1` assigned to `WS_OPEN`. The comment explains the rationale. This is a correct and safe approach.
+
+### 3.5 Heartbeat / Ping Mechanism
+
+`initWs` accepts an optional `{ pingInterval = 30000 }` options parameter. A `setInterval` runs every `pingInterval` ms: for each client, if `isAlive` is `false`, the client is terminated and removed; otherwise `isAlive` is set to `false` and a ping is sent. On `pong`, `isAlive` is reset to `true`. This is the standard ws library heartbeat pattern.
+
+The heartbeat interval is stored in `heartbeatInterval` and cleared in `closeWs` and in the `wss.on('close', ...)` handler (as a safety net if the HTTP server is closed outside `closeWs`).
+
+### 3.6 Connection / Disconnection Events
+
+- `connection`: adds socket to `clients`, sets `isAlive = true`, registers `pong`/`close`/`error` handlers.
+- `close`: removes socket from `clients`.
+- `error`: removes socket from `clients`.
+
+The `error` handler only removes the socket — it does not re-throw or call `terminate()`. Since the WebSocket `error` event is typically followed by a `close` event, this is safe (the `close` handler will also delete the socket, but `Set.delete` is idempotent).
+
+### 3.7 Defensive Re-initialization
+
+If `initWs` is called again without `closeWs`, the module clears the existing `heartbeatInterval` and resets `clients` before creating a new `WebSocketServer`. This prevents interval leaks on re-initialization, which is relevant in test environments that call `initWs` multiple times.
+
+### 3.8 closeWs (Test Teardown)
+
+`closeWs` terminates all tracked clients, clears the heartbeat interval, and then calls `wss.close()` wrapped in a Promise. Terminating clients first is critical — `wss.close()` waits for all connections to close naturally, which would hang indefinitely without forcing termination.
+
+### 3.9 Integration with server/index.js
+
+`initWs` is imported from `./ws/broadcaster.js` and called in the startup block with the HTTP server instance after `app.listen()`. This correctly attaches the WebSocket server to the shared HTTP server.
+
+### 3.10 Potential Issues Found
+
+**Issue 1 — No `initWs` call in `createApp()` / test helper path (Minor, by design)**
+
+`initWs` is only called in the entry-point startup block (`if (resolve(process.argv[1]) === ...)`). When tests import `createApp()` and start their own server, `initWs` is not called automatically. This is correct design for separation of concerns — WebSocket tests use their own HTTP servers via the WS test helpers. However, if future integration tests use `createApp()` and expect WebSocket support on the same server, they would need to call `initWs` manually. This is not a defect in the current scope, but worth noting for future tasks that integrate WS into the full application flow.
+
+**Issue 2 — `wss` module-level state (Architectural note)**
+
+`wss`, `clients`, and `heartbeatInterval` are module-level variables. In a multi-worker or multi-instance scenario, each process would maintain its own independent client list — broadcasts would not reach clients connected to other workers. For the current single-process scope this is correct; it would become a limitation if horizontal scaling is added.
+
+**Issue 3 — No message handling on incoming WS messages (Acceptable for current scope)**
+
+The task specification does not require server-side handling of messages received from clients. The implementation correctly focuses on outbound broadcasting only. No `message` event handler is registered. This is appropriate for the current task scope.
+
+**Issue 4 — `closeWs` resets `clients` to a new Set before terminating (Minor order concern)**
+
+In `closeWs`, the code terminates all clients and then immediately sets `clients = new Set()` before awaiting `wss.close()`. This means if `wss.close()` were to trigger any close/error events on already-terminated sockets (which it should not, since `terminate()` fires them synchronously), the handlers would call `clients.delete()` on the new empty Set — a no-op. In practice, `terminate()` fires the `close` event synchronously for already-terminated sockets, so by the time `clients = new Set()` is assigned, the `close` handlers have already run on the old Set. This is safe in the current code but is a subtle ordering dependency.
+
+---
+
+## 4. Code Review — `server/test/ws.test.mjs`
+
+### 4.1 Test Structure
+
+The test file contains 5 `describe` blocks:
+1. **WebSocket server setup and client connection** — 3 tests: exports check, single client connect, multiple simultaneous clients.
+2. **broadcast(event, payload)** — 7 tests: message delivery, correct event, correct payload, all-clients delivery, message shape, no-client safety, terminated client skipping.
+3. **Heartbeat / ping mechanism** — 5 tests: ping sent at interval, client survives multiple cycles, dead TCP detection, only live clients receive broadcast after cleanup, timer cleared on closeWs.
+4. **Client disconnection and cleanup** — 5 tests: graceful close removes client, only disconnected client removed, error event removes client, multiple simultaneous disconnections, broadcast safe after all disconnect.
+5. **closeWs with open connections** — 1 test: isolated teardown test in its own describe with its own HTTP server.
+
+Each suite creates its own HTTP server in `before` and tears it down in `after`, using `pingInterval: 50` for heartbeat tests (to avoid long waits) and `pingInterval: 5000` for disconnection tests (to isolate from heartbeat paths). This is well-designed.
+
+### 4.2 Test Helpers
+
+Helper functions are defined at the top of the file: `startWsServer`, `stopWsServer`, `connectClient`, `waitForMessage`, `closeClient`, `withTimeout`. These are WebSocket-specific and do not duplicate HTTP test helpers from other test files.
+
+The `withTimeout` helper using `Promise.race` is appropriate — it prevents test hangs without requiring a full test framework timeout configuration.
+
+### 4.3 Test Correctness
+
+No test correctness issues were found. Tests correctly:
+- Register `waitForMessage` listeners before calling `broadcast` to avoid race conditions.
+- Wait for close events to propagate (`setTimeout(resolve, 20-50ms)`) before asserting client set membership via broadcast.
+- Use `_socket.destroy()` to simulate dead TCP connections (not `ws.close()`, which sends a proper close frame).
+- Use `withTimeout` on all async operations to prevent hangs.
+
+---
+
+## 5. Dev Agent Observations (from transcript)
+
+The dev agent followed a thorough planning and TDD process:
+
+1. **Exploration phase**: Read all existing server files, test files, db queries, comments API, and the vite config to understand the codebase before writing any code.
+2. **Planning phase**: Generated a detailed TDD plan using a Plan subagent, then executed multiple review passes on the plan itself, identifying and fixing issues including: the `closeWs` hang (terminating clients before closing the server), the timer leak on `initWs` re-call, the `server/package.json` test script needing to be updated before the first RED run, and clarifying that Subtask 4 has no genuine RED phase.
+3. **Implementation**: Created `ws.test.mjs` first (RED), then `broadcaster.js` (GREEN). All 112 tests passed in a single implementation attempt with no iteration.
+4. **Simplify review**: Ran a three-agent simplify pass (code reuse, quality, efficiency). One cosmetic change was made: removed a `// ── Heartbeat ──` decorative section comment that described WHAT rather than WHY. No functional changes were required.
+
+The overall dev process was methodical and high quality, with the plan review catching real bugs before implementation rather than after.
+
+---
+
+## 6. Issues Found
+
+### Defects
+
+None. No failing tests, no missing required functionality, no incorrect behavior.
+
+### Minor Observations (Non-blocking)
+
+| # | Severity | Description |
+|---|---|---|
+| 1 | Info | `initWs` is not called by `createApp()` — integration tests using `createApp()` would need to call `initWs` manually if they require WebSocket support. By-design for current scope. |
+| 2 | Info | Module-level state means broadcasts do not propagate across multiple processes/workers. Acceptable for current single-process scope. |
+| 3 | Info | No inbound message handler — clients cannot send messages to the server via WebSocket. Not required by the spec. |
+| 4 | Info | Subtle ordering in `closeWs`: `clients = new Set()` is assigned before `wss.close()` resolves. Safe in practice due to synchronous `terminate()` behavior, but is an implicit ordering dependency. |
+
+---
+
+## 7. Overall Assessment
+
+**PASS**
+
+The implementation is complete, correct, and well-structured. All required exports (`initWs`, `broadcast`) are present. The WebSocket server attaches to the existing HTTP server, maintains a connected clients Set, implements broadcast with correct JSON format, handles connection and disconnection events, includes a configurable heartbeat/ping mechanism, and exports `closeWs` for clean test teardown. All 112 server tests and all 31 client tests pass. Lint passes with no errors. No regressions to prior tasks were introduced.
+
 The failing client commands are a pre-existing environment issue (missing `npm install` for client workspace) and are unrelated to this task's deliverables.

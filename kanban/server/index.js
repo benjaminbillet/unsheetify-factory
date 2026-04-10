@@ -3,6 +3,7 @@ import cors from 'cors';
 import { fileURLToPath } from 'node:url';
 import { resolve, dirname, join } from 'node:path';
 import commentsRouter from './api/comments.js';
+import { initWs } from './ws/broadcaster.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -62,7 +63,8 @@ function createApp() {
 if (resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const app = createApp();
   const PORT = process.env.PORT || 3001;
-  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  const server = app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  initWs(server);
 }
 
 export { createApp };

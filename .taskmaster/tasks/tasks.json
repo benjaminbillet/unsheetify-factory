@@ -578,7 +578,7 @@
         "dependencies": [
           "8"
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -629,7 +629,12 @@
         ],
         "complexity": 7,
         "recommendedSubtasks": 4,
-        "expansionPrompt": "Break down into: 1) Set up basic state structure and initial data loading, 2) Implement optimistic updates for card operations, 3) Add error handling and loading states, 4) Structure state for efficient column-based rendering"
+        "expansionPrompt": "Break down into: 1) Set up basic state structure and initial data loading, 2) Implement optimistic updates for card operations, 3) Add error handling and loading states, 4) Structure state for efficient column-based rendering",
+        "updatedAt": "2026-04-10T14:03:21.931Z",
+        "metadata": {
+          "assignee": "Sam",
+          "devSessionId": "8b5381bc-18e3-4964-8936-c266d6ba848f"
+        }
       },
       {
         "id": "10",
@@ -1025,7 +1030,7 @@
         "dependencies": [
           "7"
         ],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1033,9 +1038,10 @@
             "description": "Create WebSocket server infrastructure and handle client connections",
             "dependencies": [],
             "details": "Create server/ws/broadcaster.js file. Set up WebSocket server using 'ws' library and attach to existing HTTP server. Initialize empty Set to track connected clients. Implement connection event handler to add clients to tracking set. Export initWs(httpServer) function to initialize the WebSocket server.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test WebSocket server starts correctly, clients can connect, connection tracking works",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T14:14:25.479Z"
           },
           {
             "id": 2,
@@ -1045,9 +1051,10 @@
               1
             ],
             "details": "Implement broadcast(event, payload) function that creates JSON message with event type and payload. Iterate through all connected clients and send message to each. Handle WebSocket ready state checking before sending. Add error handling for failed sends to individual clients.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test broadcast sends to all connected clients, JSON format is correct, handles client send failures gracefully",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T14:14:27.436Z"
           },
           {
             "id": 3,
@@ -1057,9 +1064,10 @@
               1
             ],
             "details": "Add heartbeat interval timer that sends ping frames to all clients every 30 seconds. Track pong responses from clients with timestamps. Implement pong event handler to update client heartbeat status. Set up cleanup mechanism to identify clients that haven't responded to pings within timeout period.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test ping frames are sent regularly, pong responses are tracked, dead connections are identified correctly",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T14:14:29.504Z"
           },
           {
             "id": 4,
@@ -1070,18 +1078,20 @@
               3
             ],
             "details": "Add close event handler to remove clients from tracking set when they disconnect normally. Implement cleanup logic for dead connections identified by heartbeat mechanism. Remove unresponsive clients from the connected clients set. Add error event handler for connection errors. Ensure proper resource cleanup and memory management.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test clients are removed on normal disconnect, dead connections are cleaned up, no memory leaks occur",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T14:14:31.618Z"
           }
         ],
         "complexity": 7,
         "recommendedSubtasks": 4,
         "expansionPrompt": "Break down into: 1) Set up WebSocket server and client connection handling, 2) Implement broadcast functionality to all connected clients, 3) Add heartbeat/ping mechanism for connection health, 4) Handle client disconnection and cleanup",
-        "updatedAt": "2026-04-10T13:46:19.875Z",
+        "updatedAt": "2026-04-10T14:14:31.618Z",
         "metadata": {
           "assignee": "David",
-          "devSessionId": "7d9e5b54-81f9-4b54-92d1-4147faf4645a"
+          "devSessionId": "7d9e5b54-81f9-4b54-92d1-4147faf4645a",
+          "qaSessionId": "80c4279f-7d25-41fe-8c3b-b8ca7a414206"
         }
       },
       {
@@ -1608,9 +1618,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-04-10T13:59:33.762Z",
+      "lastModified": "2026-04-10T14:14:31.619Z",
       "taskCount": 24,
-      "completedCount": 8,
+      "completedCount": 9,
       "tags": [
         "kanban-board"
       ]
