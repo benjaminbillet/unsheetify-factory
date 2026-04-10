@@ -372,7 +372,7 @@
         "dependencies": [
           "5"
         ],
-        "status": "done",
+        "status": "pending",
         "subtasks": [
           {
             "id": 1,
@@ -380,7 +380,7 @@
             "description": "Create the core Express router with basic CRUD operations for cards",
             "dependencies": [],
             "details": "Create server/api/cards.js with Express router. Implement GET /api/cards endpoint that calls getCards() function. Add POST /api/cards endpoint that calls createCard() function. Implement PATCH /api/cards/:id endpoint that calls updateCard() function. Add DELETE /api/cards/:id endpoint that calls deleteCard() function. Set up basic route structure without validation or error handling.",
-            "status": "done",
+            "status": "pending",
             "testStrategy": "Unit tests for each endpoint to verify correct function calls and basic response structure",
             "parentId": "undefined",
             "updatedAt": "2026-04-10T10:51:07.901Z"
@@ -393,7 +393,7 @@
               1
             ],
             "details": "Add input validation middleware using express-validator or manual validation. Validate required title field for POST requests. Validate card existence for PATCH and DELETE operations. Create error handling middleware to catch and format validation errors. Implement proper error response structure with meaningful error messages.",
-            "status": "done",
+            "status": "pending",
             "testStrategy": "Test validation errors return 400 status, missing required fields are caught, invalid IDs are handled",
             "parentId": "undefined",
             "updatedAt": "2026-04-10T10:51:09.806Z"
@@ -406,7 +406,7 @@
               1
             ],
             "details": "Import and integrate getCards(), createCard(), updateCard(), and deleteCard() functions from the database layer. Ensure proper data flow between API endpoints and database operations. Handle database connection errors and query failures. Test integration between API layer and database layer.",
-            "status": "done",
+            "status": "pending",
             "testStrategy": "Integration tests to verify data persistence, database errors are handled gracefully",
             "parentId": "undefined",
             "updatedAt": "2026-04-10T10:51:11.672Z"
@@ -420,7 +420,7 @@
               3
             ],
             "details": "Add proper HTTP status codes: 400 for validation errors, 404 for not found resources, 500 for server errors. Create consistent error response format with error messages and status codes. Mount the router in server/index.js at /api path. Add final error handling middleware for uncaught errors. Test all error scenarios return appropriate status codes.",
-            "status": "done",
+            "status": "pending",
             "testStrategy": "Test 404 for unknown card IDs, 400 for validation failures, 500 for server errors, verify error response format",
             "parentId": "undefined",
             "updatedAt": "2026-04-10T10:51:13.592Z"
@@ -429,11 +429,7 @@
         "complexity": 5,
         "recommendedSubtasks": 4,
         "expansionPrompt": "Split into: 1) Implement basic CRUD endpoints (GET, POST, PATCH, DELETE), 2) Add input validation middleware and error handling, 3) Integrate with database query functions, 4) Add comprehensive error responses with proper HTTP status codes",
-        "updatedAt": "2026-04-10T10:51:13.592Z",
-        "metadata": {
-          "assignee": "Maria",
-          "devSessionId": "1f202747-7e76-4ed7-a89b-9c59c29443af"
-        }
+        "updatedAt": "2026-04-10T10:51:13.592Z"
       },
       {
         "id": "7",
@@ -1436,7 +1432,7 @@
         "dependencies": [
           "20"
         ],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1468,9 +1464,10 @@
             "description": "Install Playwright and set up end-to-end testing infrastructure",
             "dependencies": [],
             "details": "Install Playwright and browser dependencies. Create playwright.config.js with browser configurations (Chrome, Firefox, Safari). Set up test database seeding for E2E tests. Configure base URL and test timeouts.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify Playwright can launch browsers and navigate to application",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T17:22:13.595Z"
           },
           {
             "id": 4,
@@ -1480,9 +1477,10 @@
               1
             ],
             "details": "Create client/src/hooks/useBoard.test.js to test state management logic. Test hook initialization, state updates, error handling, and side effects. Mock API calls and WebSocket connections. Verify hook behavior with different scenarios.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test all hook functions, state transitions, and edge cases with 80%+ coverage",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T17:07:39.810Z"
           },
           {
             "id": 5,
@@ -1507,18 +1505,20 @@
               5
             ],
             "details": "Create e2e/board.spec.js to test full user workflows: creating cards, moving between columns, adding comments, real-time updates. Set up coverage reporting with nyc/c8 for 70% line coverage and 80% function coverage targets. Configure CI test scripts.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test complete user journeys, verify real-time functionality, achieve coverage targets",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T17:22:15.602Z"
           }
         ],
         "complexity": 8,
         "recommendedSubtasks": 6,
         "expansionPrompt": "Break down into: 1) Set up Jest for unit testing database queries, 2) Add supertest for API integration tests, 3) Configure Playwright for E2E testing, 4) Create unit tests for React hooks, 5) Implement API endpoint tests, 6) Add E2E workflow tests and coverage reporting",
-        "updatedAt": "2026-04-10T17:07:25.949Z",
+        "updatedAt": "2026-04-10T17:22:15.602Z",
         "metadata": {
           "assignee": "Alice",
-          "devSessionId": "e152f977-e158-4bd0-ac49-754cc97f1de5"
+          "devSessionId": "e152f977-e158-4bd0-ac49-754cc97f1de5",
+          "qaSessionId": "81ad2995-ddd6-455b-9bf9-a9b5c3fe30d2"
         }
       },
       {
@@ -1744,9 +1744,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-04-10T17:07:25.950Z",
+      "lastModified": "2026-04-10T17:22:15.602Z",
       "taskCount": 24,
-      "completedCount": 22,
+      "completedCount": 23,
       "tags": [
         "kanban-board"
       ]

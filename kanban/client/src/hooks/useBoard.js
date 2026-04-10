@@ -286,8 +286,10 @@ export function useBoard() {
         const next = { ...prev }
         // Remove the temp card from whichever column it was placed in
         next[key] = next[key].filter(c => c.id !== tempId)
-        // Insert the server card into the column the server assigned
-        next[createdKey] = [...next[createdKey], created]
+        // Insert the server card into the column the server assigned.
+        // Filter out any WS-added duplicate (card:created can arrive before the
+        // HTTP 201 response when broadcast precedes the response flush).
+        next[createdKey] = [...next[createdKey].filter(c => c.id !== created.id), created]
           .sort((a, b) => a.position - b.position)
         return next
       })
@@ -329,7 +331,8 @@ export function useBoard() {
       applyCards(prev => {
         const next = {}
         for (const [k, col] of Object.entries(prev)) {
-          next[k] = col.map(c => c.id === id ? updated : c)
+          // Preserve existing comments — PATCH response doesn't include them
+          next[k] = col.map(c => c.id === id ? { ...updated, comments: c.comments ?? [] } : c)
         }
         return next
       })
@@ -414,10 +417,13 @@ export function useBoard() {
       const updatedKey = columnToKey(updated.column)
       applyCards(prev => {
         const next = {}
+        let existingComments = []
         for (const [k, col] of Object.entries(prev)) {
+          const card = col.find(c => c.id === id)
+          if (card) existingComments = card.comments ?? []
           next[k] = col.filter(c => c.id !== id)
         }
-        next[updatedKey] = [...next[updatedKey], updated]
+        next[updatedKey] = [...next[updatedKey], { ...updated, comments: existingComments }]
           .sort((a, b) => a.position - b.position)
         return next
       })
@@ -467,8 +473,10 @@ export function useBoard() {
             c.id === cardId
               ? {
                   ...c,
+                  // Filter out both the temp comment and any WS-added real comment
+                  // (comment:created can arrive before the HTTP 201 response)
                   comments: c.comments
-                    .filter(cm => cm.id !== tempId)
+                    .filter(cm => cm.id !== tempId && cm.id !== comment.id)
                     .concat(comment),
                 }
               : c

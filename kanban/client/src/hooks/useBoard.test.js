@@ -694,7 +694,9 @@ describe('state shape', () => {
 // ---------------------------------------------------------------------------
 
 describe('WebSocket integration — initialization', () => {
-  beforeEach(() => { api.fetchCards.mockResolvedValue(FIXTURE_CARDS) })
+  // Use a never-resolving promise so the async fetchCards state update
+  // (loading → false) never fires outside of act(), suppressing act() warnings.
+  beforeEach(() => { api.fetchCards.mockReturnValue(new Promise(() => {})) })
   afterEach(() => vi.clearAllMocks())
 
   it('calls useWebSocket with a ws:// URL containing /ws', () => {
@@ -1037,7 +1039,8 @@ describe('multi-client state consistency', () => {
     await waitFor(() => expect(result.current.loading).toBe(false))
     // Simulate disconnect → reconnect
     act(() => { mockWsStatus = 'disconnected'; rerender() })
-    act(() => { mockWsStatus = 'connected'; rerender() })
+    // await act to flush the async fetchCards() triggered by the reconnect useEffect
+    await act(async () => { mockWsStatus = 'connected'; rerender() })
     expect(api.fetchCards).toHaveBeenCalledTimes(2)
   })
 

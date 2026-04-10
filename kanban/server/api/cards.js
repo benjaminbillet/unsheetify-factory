@@ -1,8 +1,18 @@
 import { Router } from 'express';
-import { createCard, updateCard, deleteCard, moveCard, NotFoundError } from '../db/queries.js';
+import { getCards, createCard, updateCard, deleteCard, moveCard, NotFoundError } from '../db/queries.js';
 import { broadcast } from '../ws/broadcaster.js';
 
 const router = Router();
+
+// GET /api/cards
+router.get('/cards', (_req, res, next) => {
+  try {
+    const cards = getCards();
+    return res.status(200).json(cards);
+  } catch (err) {
+    next(err);
+  }
+});
 
 // POST /api/cards
 router.post('/cards', (req, res, next) => {
