@@ -222,7 +222,7 @@
         "dependencies": [
           "3"
         ],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -230,9 +230,10 @@
             "description": "Create the initial SQL migration file with properly structured tables and relationships for the kanban board database",
             "dependencies": [],
             "details": "Create server/db/migrations/001_init.sql file containing SQL DDL statements for cards table (id TEXT PRIMARY KEY, title TEXT NOT NULL, assignee TEXT, column TEXT DEFAULT 'ready', position REAL NOT NULL, description TEXT, created_at INTEGER NOT NULL) and comments table (id TEXT PRIMARY KEY, card_id TEXT REFERENCES cards(id) ON DELETE CASCADE, author TEXT NOT NULL, content TEXT NOT NULL, created_at INTEGER NOT NULL). Ensure proper foreign key constraints and data types are defined.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify SQL syntax is valid, tables can be created successfully, foreign key constraints work properly, and default values are applied correctly",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T09:52:32.011Z"
           },
           {
             "id": 2,
@@ -242,9 +243,10 @@
               1
             ],
             "details": "Create server/db/schema.js with migration runner functionality that maintains a schema_version table to track applied migrations. Implement logic to scan migrations directory, compare against applied migrations, and execute pending migrations in order. Add error handling for failed migrations and ensure atomic execution. Include startup integration to run migrations automatically when server starts.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test migration runner applies new migrations only once, tracks version correctly, handles migration failures gracefully, and works on fresh database and existing database",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T09:53:17.899Z"
           },
           {
             "id": 3,
@@ -254,15 +256,16 @@
               2
             ],
             "details": "Add CREATE INDEX statements to the migration file for card_id field in comments table and column field in cards table to optimize query performance. Test the complete migration system by running it on fresh database and verifying all tables, constraints, and indexes are created correctly. Verify the kanban.db file is generated with proper schema structure.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify indexes are created and improve query performance, test migration creates kanban.db file with correct tables and indexes, confirm migration runner applies only new migrations on subsequent runs",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T09:54:16.795Z"
           }
         ],
         "complexity": 6,
         "recommendedSubtasks": 3,
         "expansionPrompt": "Split into: 1) Design and create SQL schema files for cards and comments tables with proper relationships, 2) Implement migration runner system with version tracking, 3) Add database indexes and test migration execution",
-        "updatedAt": "2026-04-10T09:35:44.524Z",
+        "updatedAt": "2026-04-10T09:54:16.795Z",
         "metadata": {
           "assignee": "Grace",
           "devSessionId": "43292131-9288-4835-a171-2ceb5fbee42d"
@@ -278,7 +281,7 @@
         "dependencies": [
           "4"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -286,9 +289,10 @@
             "description": "Create fundamental database operations for card management including create, read, update, and delete functions",
             "dependencies": [],
             "details": "Implement initDb(), getCards(), createCard(), updateCard(), and deleteCard() functions in server/db/queries.js. Use better-sqlite3 for database operations. Include UUID generation for new cards and proper error handling for each operation.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Unit tests for each CRUD function using in-memory SQLite database, verify data integrity and proper return values",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T10:34:31.436Z"
           },
           {
             "id": 2,
@@ -298,9 +302,10 @@
               1
             ],
             "details": "Implement moveCard(id, column, position) function that updates card position and reorders siblings using fractional indexing algorithm. Handle edge cases like moving to first/last position and between existing cards. Ensure position values maintain proper ordering.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test position calculations, verify card order is maintained after multiple moves, test edge cases for first/last positions",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T10:34:33.422Z"
           },
           {
             "id": 3,
@@ -310,9 +315,10 @@
               1
             ],
             "details": "Create createComment(cardId, data) function that inserts comments with UUID and timestamp. Modify getCards() to include nested comments. Ensure cascade delete behavior when cards are deleted. Handle comment ordering and relationships properly.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test comment creation, verify nested comments in getCards(), test cascade delete behavior when parent card is deleted",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T10:34:35.335Z"
           },
           {
             "id": 4,
@@ -324,9 +330,10 @@
               3
             ],
             "details": "Convert all database queries to use prepared statements for better performance and security. Create reusable prepared statement objects for frequently used queries. Implement proper statement cleanup and error handling.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Performance benchmarks comparing prepared vs non-prepared statements, verify all operations still work correctly",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T10:34:37.289Z"
           },
           {
             "id": 5,
@@ -339,14 +346,21 @@
               4
             ],
             "details": "Add try-catch blocks around all database operations. Create custom error types for different failure scenarios (not found, constraint violations, etc.). Ensure proper error propagation and logging. Handle database connection issues gracefully.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test error scenarios like invalid IDs, constraint violations, database connection failures, verify proper error messages and types",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T10:34:39.271Z"
           }
         ],
         "complexity": 7,
         "recommendedSubtasks": 5,
-        "expansionPrompt": "Break down into: 1) Implement basic CRUD operations (create, read, update, delete), 2) Implement complex moveCard function with fractional indexing, 3) Add comment operations with proper card relationships, 4) Optimize with prepared statements, 5) Add comprehensive error handling"
+        "expansionPrompt": "Break down into: 1) Implement basic CRUD operations (create, read, update, delete), 2) Implement complex moveCard function with fractional indexing, 3) Add comment operations with proper card relationships, 4) Optimize with prepared statements, 5) Add comprehensive error handling",
+        "updatedAt": "2026-04-10T10:34:39.271Z",
+        "metadata": {
+          "assignee": "Chris",
+          "devSessionId": "547c2df1-3702-4f67-bea3-975ddc4489b5",
+          "qaSessionId": "29f5a767-991e-49e3-b70a-1458a2f55028"
+        }
       },
       {
         "id": "6",
@@ -1561,9 +1575,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-04-10T09:35:44.525Z",
+      "lastModified": "2026-04-10T10:34:39.271Z",
       "taskCount": 24,
-      "completedCount": 3,
+      "completedCount": 5,
       "tags": [
         "kanban-board"
       ]

@@ -662,3 +662,213 @@ All verifiable Task 2 deliverables are correctly implemented and functional:
 - ESLint reports zero warnings or errors
 
 One potential gap exists around routing configuration, which should be clarified with the task owner. It does not block the automated test suite.
+
+---
+---
+
+# Task 5 — Implement Database Query Functions
+
+**Date:** 2026-04-10
+**Worktree:** `/Users/benjamin/.sofactory/worktrees/kanban-board/kanban-board-5`
+**Branch:** `kanban-board/kanban-board-5`
+**Commit reviewed:** `4f9244c`
+
+---
+
+## 1. Commands Found and Executed
+
+All commands were run from `kanban/` or the `server/` subdirectory, as appropriate.
+
+| Command | Location | Script Value | Result |
+|---|---|---|---|
+| `npm run test:server` | `kanban/package.json` | `npm -w server run test` | PASS |
+| `npm run test` | `kanban/server/package.json` | `node --test test/server.test.mjs test/db.test.mjs` | PASS |
+| `npm run test:setup` | `kanban/package.json` | `node --test test/*.test.mjs` | PASS |
+
+No lint script exists at the server level. No typecheck script exists — TypeScript is not used. No Makefile was found.
+
+### npm run test:server output (81 tests, 16 suites)
+
+```
+> kanban-app@1.0.0 test:server
+> npm -w server run test
+
+> kanban-server@1.0.0 test
+> node --test test/server.test.mjs test/db.test.mjs
+
+# tests 81
+# suites 16
+# pass 81
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 130.618ms
+```
+
+**All 81 tests pass.** This includes 8 suites from `server.test.mjs` (unchanged from Task 3) and 8 new suites from `db.test.mjs` covering the database query functions.
+
+### npm run test:setup output (49 tests, 9 suites)
+
+```
+> kanban-app@1.0.0 test:setup
+> node --test test/setup.test.mjs test/client.setup.test.mjs
+
+# tests 49
+# suites 9
+# pass 49
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 44.652ms
+```
+
+**All 49 tests pass.**
+
+---
+
+## 2. Files Reviewed
+
+| File | Exists | Notes |
+|---|---|---|
+| `kanban/server/db/queries.js` | YES | Main implementation file |
+| `kanban/server/db/migrations/001_init.sql` | YES | Schema migration |
+| `kanban/server/test/db.test.mjs` | YES | 54 tests across 8 suites |
+
+---
+
+## 3. Implementation Verification
+
+### 3a. Required Functions
+
+| Function | Required | Implemented | Notes |
+|---|---|---|---|
+| `initDb()` | YES | YES | Takes optional `dbPath`, defaults to `'data/kanban.db'` |
+| `getCards()` | YES | YES | Returns all cards with nested comments |
+| `createCard(data)` | YES | YES | Inserts card with UUID, returns persisted row |
+| `updateCard(id, data)` | YES | YES | Partial update with allowlist; throws `NotFoundError` |
+| `deleteCard(id)` | YES | YES | Returns `true`; throws `NotFoundError` |
+| `moveCard(id, column, position)` | YES | YES | Fractional positioning with renormalization |
+| `createComment(cardId, data)` | YES | YES | FK-validated; throws `ForeignKeyError` |
+
+All 7 required functions are present and exported.
+
+### 3b. Additional Exports (beyond spec)
+
+| Export | Type | Notes |
+|---|---|---|
+| `closeDb()` | function | Closes and nullifies the db singleton; used in tests |
+| `getDb()` | function | Exposes raw db instance for test introspection |
+| `NotFoundError` | class | Custom error, extends `Error` |
+| `DatabaseError` | class | Custom error, extends `Error` |
+| `ForeignKeyError` | class | Extends `DatabaseError` |
+
+These additions are appropriate and well-designed. They enable robust error handling in the API layer and clean test isolation.
+
+### 3c. Prepared Statements Usage
+
+The implementation uses better-sqlite3 prepared statements throughout via the `_prepareStatements()` function:
+
+- `getAllCards`, `getAllComments`, `insertCard`, `getCardById`, `maxPosInCol`, `deleteCard`, `insertComment`, `getCommentById`, `getSiblings`, `updateCardPos` — all prepared once on `initDb()` and reused.
+
+**Exception:** `updateCard` uses `db.prepare(...)` inline per call (not pre-prepared), because the SET clause varies dynamically based on which fields are provided. This is correct — you cannot pre-prepare a statement with a variable number of columns. The fields are filtered against a strict allowlist before being interpolated into the SQL template, which effectively prevents SQL injection.
+
+**Exception:** `moveCard` prepares a `renorm` statement inline inside the transaction when renormalization is needed (the gap-below-0.001 case). This is infrequent and appropriate.
+
+Both exceptions are valid design choices, not defects.
+
+### 3d. Schema
+
+**File:** `kanban/server/db/migrations/001_init.sql`
+
+| Feature | Status | Notes |
+|---|---|---|
+| `cards` table | PASS | `id TEXT PRIMARY KEY`, `title TEXT NOT NULL`, `assignee TEXT`, `column TEXT NOT NULL DEFAULT 'ready'`, `position REAL NOT NULL`, `description TEXT`, `created_at INTEGER NOT NULL` |
+| `comments` table | PASS | `id TEXT PRIMARY KEY`, `card_id TEXT NOT NULL REFERENCES cards(id) ON DELETE CASCADE`, `author TEXT NOT NULL`, `content TEXT NOT NULL`, `created_at INTEGER NOT NULL` |
+| FK cascade delete | PASS | `ON DELETE CASCADE` on `comments.card_id` |
+| Index on cards column+position | PASS | `CREATE INDEX IF NOT EXISTS idx_cards_column_position ON cards("column", position)` |
+| Index on comments card_id | PASS | `CREATE INDEX IF NOT EXISTS idx_comments_card_id ON comments(card_id)` |
+| `CREATE TABLE IF NOT EXISTS` | PASS | Idempotent schema application |
+| WAL mode | PASS | `db.pragma('journal_mode = WAL')` in `initDb()` |
+| Foreign keys enforced | PASS | `db.pragma('foreign_keys = ON')` in `initDb()` |
+
+### 3e. Error Handling
+
+| Scenario | Error Thrown | Status |
+|---|---|---|
+| `updateCard` on non-existent id | `NotFoundError` | PASS |
+| `deleteCard` on non-existent id | `NotFoundError` | PASS |
+| `moveCard` on non-existent id | `NotFoundError` | PASS |
+| `createComment` with invalid `cardId` | `ForeignKeyError` | PASS |
+| `ForeignKeyError` is a `DatabaseError` | YES (inheritance) | PASS |
+| `ForeignKeyError` is an `Error` | YES (inheritance chain) | PASS |
+
+### 3f. moveCard Logic
+
+The `moveCard` function uses a fractional position scheme:
+
+- **Empty column:** sets position to `1.0`
+- **Position ≤ 0 (first):** sets position to `siblings[0].position / 2`
+- **Position ≥ siblings.length (last):** sets position to `siblings[last].position + 1.0`
+- **Middle:** averages the positions of adjacent siblings
+- **Gap < 0.001 (precision floor):** renormalizes all cards in the column to integer positions (1.0, 2.0, ...) by splicing the moved card into the correct index and reassigning whole-number positions
+
+This is a well-known fractional indexing technique. The renormalization threshold of `0.001` is reasonable for this use case. The entire move operation is wrapped in a `db.transaction()` for atomicity.
+
+---
+
+## 4. Test Coverage Review
+
+The `db.test.mjs` file contains 54 tests across 8 suites (plus 27 server tests = 81 total):
+
+| Suite | Tests | Coverage |
+|---|---|---|
+| `initDb and closeDb` | 6 | WAL mode, FK pragma, table creation, re-init after close |
+| `getCards` | 5 | Empty state, comment nesting, ordering |
+| `createCard` | 11 | UUID, timestamp, defaults, positions per column |
+| `updateCard` | 7 | Partial update, multi-field, allowlist (injection prevention) |
+| `deleteCard` | 5 | Success, not-found, cascade |
+| `moveCard` | 11 | All 5 position cases, same-column moves, renormalization, edge cases |
+| `createComment` | 7 | All fields, FK error, error hierarchy |
+| `Error Classes` | 2 | Class hierarchy validation |
+
+Coverage is comprehensive and tests both happy paths and error paths.
+
+---
+
+## 5. Issues Found
+
+### No Blockers
+
+No blocking issues were identified.
+
+### Minor / Observations
+
+1. **`updateCard` with no valid fields and non-existent id returns card rather than throwing.** When `data` contains no allowed fields (e.g., `updateCard(id, { malicious: 'x' })`), the function returns the existing card if it exists, or throws `NotFoundError` if it does not. This is a reasonable design choice (a no-op update returns the current state), but the behavior might surprise callers who expect a `NotFoundError` even when no fields are being updated. No test currently exercises this path with a non-existent id + empty allowed fields. *(Informational — low severity)*
+
+2. **`initDb` does not guard against being called twice without `closeDb` in between.** Calling `initDb()` a second time without closing first will silently replace the `db` singleton and re-prepare all statements, potentially leaking the old database connection. The tests always call `closeDb()` in `afterEach`, so this is not exercised in the test suite. *(Low severity — test usage is safe)*
+
+3. **`createComment` does not validate that `author` and `content` are non-empty strings.** If a caller passes `{ author: null, content: '' }`, the SQLite NOT NULL constraint will catch `author: null` (throwing a generic `DatabaseError`), but an empty string for `content` would be stored without complaint. Input validation at the JS layer would be more informative. *(Low severity — API layer should validate before calling)*
+
+4. **`moveCard` renormalization prepares a new statement inside a transaction loop.** The renorm statement `db.prepare('UPDATE cards SET ...')` is created inside the `db.transaction()` callback on every renormalization call. This is functionally correct but slightly inefficient — it could be pre-prepared in `_prepareStatements()`. Given that renormalization is rare (only when gap < 0.001), this has negligible practical impact. *(Informational — micro-optimization)*
+
+5. **No `scripts.test` at the root `kanban/package.json` level that runs both server and setup tests in one command.** Running `npm run test:server` runs DB + server tests; `npm run test:setup` runs setup tests. There is no single command to run all tests. The root `scripts.test:setup` name is slightly confusing as it covers more than just "setup." *(Informational — developer experience)*
+
+---
+
+## 6. Overall Assessment
+
+**PASS**
+
+All Task 5 deliverables are correctly implemented:
+
+- `server/db/queries.js` is created with all 7 required functions: `initDb()`, `getCards()`, `createCard(data)`, `updateCard(id, data)`, `deleteCard(id)`, `moveCard(id, column, position)`, `createComment(cardId, data)`
+- better-sqlite3 prepared statements are used for all fixed-structure queries
+- The schema migration (`001_init.sql`) correctly defines `cards` and `comments` tables with appropriate indexes and FK cascade behavior
+- WAL mode and foreign key enforcement are enabled in `initDb()`
+- Custom error classes (`NotFoundError`, `DatabaseError`, `ForeignKeyError`) provide structured error handling
+- Fractional positioning with renormalization handles the full range of card movement scenarios
+- All 81 automated tests pass with zero failures
+- All 49 setup/client tests continue to pass (no regressions)
+- The implementation is clean, well-structured, and follows the singleton + prepared-statements pattern appropriate for a single-process Node.js server
