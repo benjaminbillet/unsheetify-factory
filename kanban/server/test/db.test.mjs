@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   initDb, closeDb, getDb,
   getCards, createCard, updateCard, deleteCard, moveCard, createComment,
+  renormalizeColumn,
   NotFoundError, DatabaseError, ForeignKeyError,
 } from '../db/queries.js';
 
@@ -418,7 +419,176 @@ describe('moveCard', () => {
     const result = moveCard(A.id, 'done', 999);
     assert.ok(result.position > C.position);
   });
+
+  it('renormalizes when moving to first position creates a gap below 0.001', () => {
+    const db = getDb();
+    const ins = db.prepare(
+      'INSERT INTO cards (id, title, "column", position, created_at) VALUES (?, ?, ?, ?, ?)'
+    );
+    ins.run('fp-1', 'First', 'col_fp', 0.0016, 1000);
+    ins.run('fp-2', 'Second', 'col_fp', 1.0, 2000);
+    const A = createCard({ title: 'A', column: 'ready' });
+
+    moveCard(A.id, 'col_fp', 0); // move to first position
+
+    const cards = getCards()
+      .filter(c => c.column === 'col_fp')
+      .sort((a, b) => a.position - b.position);
+
+    for (const c of cards)
+      assert.ok(c.position % 1 === 0, `position ${c.position} is not whole`);
+    assert.equal(cards[0].id, A.id);   // A is now first
+    assert.equal(cards[1].id, 'fp-1');
+    assert.equal(cards[2].id, 'fp-2');
+  });
+
+  it('does not renormalize when moving to first position with sufficient gap', () => {
+    const B = createCard({ title: 'B', column: 'done' }); // position 1.0
+    const A = createCard({ title: 'A', column: 'ready' });
+    const result = moveCard(A.id, 'done', 0);
+    // 1.0 / 2 = 0.5, gap = 0.5 >= 0.001 → no renorm, position should be fractional
+    assert.ok(result.position < B.position);
+    assert.ok(result.position % 1 !== 0);
+  });
+
+  it('maintains stable ordered positions after 50 rapid reorder operations', () => {
+    for (let i = 0; i < 10; i++) {
+      createCard({ title: `Stress ${i}`, column: 'stress_col' });
+    }
+    for (let i = 0; i < 50; i++) {
+      const ordered = getCards()
+        .filter(c => c.column === 'stress_col')
+        .sort((a, b) => a.position - b.position);
+      moveCard(ordered[0].id, 'stress_col', 1); // always move first to second slot
+    }
+    const final = getCards()
+      .filter(c => c.column === 'stress_col')
+      .sort((a, b) => a.position - b.position);
+    assert.equal(final.length, 10);
+    for (let i = 1; i < final.length; i++) {
+      assert.ok(
+        final[i].position > final[i - 1].position,
+        `positions out of order at index ${i}`
+      );
+    }
+  });
 });
+
+// ---------------------------------------------------------------------------
+// renormalizeColumn
+// ---------------------------------------------------------------------------
+describe('renormalizeColumn', () => {
+  beforeEach(() => initDb(':memory:'));
+  afterEach(() => closeDb());
+
+  // --- Subtask 2 tests ---
+
+  it('assigns integer positions 1,2,3... to all cards in column', () => {
+    const db = getDb();
+    const ins = db.prepare(
+      'INSERT INTO cards (id, title, "column", position, created_at) VALUES (?, ?, ?, ?, ?)'
+    );
+    ins.run('a', 'A', 'tc', 1.25, 1000);
+    ins.run('b', 'B', 'tc', 1.5,  2000);
+    ins.run('c', 'C', 'tc', 1.75, 3000);
+
+    renormalizeColumn('tc');
+
+    const cards = getCards().filter(c => c.column === 'tc').sort((a,b) => a.position - b.position);
+    assert.equal(cards[0].position, 1.0);
+    assert.equal(cards[1].position, 2.0);
+    assert.equal(cards[2].position, 3.0);
+  });
+
+  it('preserves original card order when renormalizing', () => {
+    const db = getDb();
+    const ins = db.prepare(
+      'INSERT INTO cards (id, title, "column", position, created_at) VALUES (?, ?, ?, ?, ?)'
+    );
+    ins.run('x', 'X', 'tc2', 0.0004, 1000);
+    ins.run('y', 'Y', 'tc2', 0.0008, 2000);
+    ins.run('z', 'Z', 'tc2', 0.0012, 3000);
+
+    renormalizeColumn('tc2');
+
+    const cards = getCards().filter(c => c.column === 'tc2').sort((a,b) => a.position - b.position);
+    assert.equal(cards[0].id, 'x');
+    assert.equal(cards[1].id, 'y');
+    assert.equal(cards[2].id, 'z');
+  });
+
+  it('accepts explicit orderedIds array to override current DB order', () => {
+    const db = getDb();
+    const ins = db.prepare(
+      'INSERT INTO cards (id, title, "column", position, created_at) VALUES (?, ?, ?, ?, ?)'
+    );
+    ins.run('p', 'P', 'tc3', 1.0, 1000);
+    ins.run('q', 'Q', 'tc3', 2.0, 2000);
+    ins.run('r', 'R', 'tc3', 3.0, 3000);
+
+    renormalizeColumn('tc3', ['r', 'p', 'q']); // reverse first two
+
+    const cards = getCards().filter(c => c.column === 'tc3').sort((a,b) => a.position - b.position);
+    assert.equal(cards[0].id, 'r');
+    assert.equal(cards[1].id, 'p');
+    assert.equal(cards[2].id, 'q');
+  });
+
+  it('returns the count of cards renormalized', () => {
+    createCard({ title: 'A', column: 'tc4' });
+    createCard({ title: 'B', column: 'tc4' });
+    const count = renormalizeColumn('tc4');
+    assert.equal(count, 2);
+  });
+
+  it('handles an empty column without error', () => {
+    assert.doesNotThrow(() => renormalizeColumn('nonexistent_col'));
+    assert.equal(renormalizeColumn('nonexistent_col'), 0);
+  });
+
+  it('handles a single-card column', () => {
+    createCard({ title: 'Solo', column: 'solo' });
+    renormalizeColumn('solo');
+    const cards = getCards().filter(c => c.column === 'solo');
+    assert.equal(cards[0].position, 1.0);
+  });
+
+  // --- Subtask 3 tests ---
+
+  it('logs renormalization event with column name, card count, and duration', () => {
+    const logs = [];
+    const origLog = console.log;
+    console.log = (...args) => { logs.push(args.join(' ')); origLog(...args); };
+    try {
+      createCard({ title: 'X', column: 'log_col' });
+      createCard({ title: 'Y', column: 'log_col' });
+      renormalizeColumn('log_col');
+    } finally {
+      console.log = origLog;
+    }
+    const line = logs.find(m => m.includes('[renormalize]'));
+    assert.ok(line, 'Expected a [renormalize] log line');
+    assert.ok(line.includes('log_col'), 'Expected column name in log');
+    assert.ok(line.includes('cards=2'), 'Expected card count in log');
+    assert.match(line, /duration=\d+ms/);
+  });
+
+  it('renormalizes 1000 cards in under 1000ms', () => {
+    const db = getDb();
+    const ins = db.prepare(
+      'INSERT INTO cards (id, title, "column", position, created_at) VALUES (?, ?, ?, ?, ?)'
+    );
+    for (let i = 0; i < 1000; i++) {
+      ins.run(`perf-${i}`, `Card ${i}`, 'perf_col', i * 0.0001, i);
+    }
+    const start = Date.now();
+    const count = renormalizeColumn('perf_col');
+    const elapsed = Date.now() - start;
+    assert.equal(count, 1000);
+    assert.ok(elapsed < 1000, `Renormalization of 1000 cards took ${elapsed}ms, expected < 1000ms`);
+  });
+
+}); // end describe('renormalizeColumn')
 
 // ---------------------------------------------------------------------------
 // createComment

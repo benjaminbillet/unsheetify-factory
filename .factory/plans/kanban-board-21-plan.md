@@ -212,6 +212,9 @@ export default defineConfig({
   testDir: './e2e',
   timeout: 30_000,
   retries: process.env.CI ? 2 : 0,
+  workers: 1,   // REQUIRED: forces sequential project execution so all browsers share the
+                // in-memory DB without race conditions (each project starts after the previous
+                // project fully finishes and the DB is clean)
   use: {
     baseURL: 'http://localhost:3001',   // server serves built client in production mode
     headless: true,
@@ -230,9 +233,12 @@ export default defineConfig({
   projects: [
     { name: 'chromium', use: { browserName: 'chromium' } },
     { name: 'firefox',  use: { browserName: 'firefox'  } },
+    // Safari/WebKit omitted — not available on Linux CI environments
   ],
 });
 ```
+
+**Why `workers: 1` is required**: The tests use `test.describe.configure({ mode: 'serial' })` and share a single in-memory DB. Without `workers: 1`, Playwright would run the `chromium` and `firefox` projects concurrently (using multiple CPU workers), causing them to race each other on the shared DB. With `workers: 1`, Chromium's full test run completes first (ending with the card deleted, leaving the DB empty), then Firefox's full run starts from a clean state.
 
 **Why `NODE_ENV: 'production'` is required**: `server/index.js` checks `process.env.NODE_ENV === 'production'` to decide whether to serve static files from `client/dist`. Without this, the server never serves the React app and every page navigation returns a 404 JSON response.
 
@@ -548,7 +554,7 @@ npm -w client run test
 ### Step 5 (RED → GREEN): Playwright E2E
 ```bash
 npm install -D @playwright/test
-npx playwright install chromium firefox
+npx playwright install chromium firefox   # install both project browsers
 # Create e2e/ directory
 # Create playwright.config.mjs   (NOT .js — root is CJS)
 # Create e2e/board.spec.js

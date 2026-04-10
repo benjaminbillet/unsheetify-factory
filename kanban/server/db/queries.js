@@ -107,6 +107,24 @@ export function deleteCard(id) {
   return true;
 }
 
+// --- renormalizeColumn ---
+export function renormalizeColumn(column, orderedIds = null) {
+  const doRenorm = db.transaction(() => {
+    const startTime = Date.now();
+    const ids = orderedIds ??
+      db.prepare('SELECT id FROM cards WHERE "column" = ? ORDER BY position')
+        .all(column)
+        .map(c => c.id);
+    if (ids.length === 0) return 0;
+    const stmt = db.prepare('UPDATE cards SET "column" = ?, position = ? WHERE id = ?');
+    ids.forEach((cardId, i) => stmt.run(column, i + 1.0, cardId));
+    const duration = Date.now() - startTime;
+    console.log(`[renormalize] column="${column}" cards=${ids.length} duration=${duration}ms`);
+    return ids.length;
+  });
+  return doRenorm();
+}
+
 // --- moveCard ---
 export function moveCard(id, column, position) {
   const card = stmts.getCardById.get(id);
@@ -119,7 +137,12 @@ export function moveCard(id, column, position) {
     if (siblings.length === 0) {
       stmts.updateCardPos.run({ column, position: 1.0, id });
     } else if (position <= 0) {
-      stmts.updateCardPos.run({ column, position: siblings[0].position / 2, id });
+      const newPos = siblings[0].position / 2;
+      if (newPos < 0.001) {
+        renormalizeColumn(column, [id, ...siblings.map(s => s.id)]);
+      } else {
+        stmts.updateCardPos.run({ column, position: newPos, id });
+      }
     } else if (position >= siblings.length) {
       stmts.updateCardPos.run({ column, position: siblings[siblings.length - 1].position + 1.0, id });
     } else {
@@ -130,15 +153,12 @@ export function moveCard(id, column, position) {
       if (gap >= 0.001) {
         stmts.updateCardPos.run({ column, position: (before + after) / 2, id });
       } else {
-        // Renormalize: splice moved card into siblings at the target index, then
-        // assign clean integer positions (1.0, 2.0, 3.0, ...) to all cards in column
-        const renorm = db.prepare('UPDATE cards SET "column" = ?, position = ? WHERE id = ?');
         const newOrder = [
-          ...siblings.slice(0, position),
-          { id },
-          ...siblings.slice(position),
+          ...siblings.slice(0, position).map(s => s.id),
+          id,
+          ...siblings.slice(position).map(s => s.id),
         ];
-        newOrder.forEach((s, i) => renorm.run(column, i + 1.0, s.id));
+        renormalizeColumn(column, newOrder);
       }
     }
 

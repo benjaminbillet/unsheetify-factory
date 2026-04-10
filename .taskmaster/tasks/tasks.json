@@ -1444,9 +1444,10 @@
             "description": "Install Jest testing framework and configure it for unit testing database query functions",
             "dependencies": [],
             "details": "Install Jest and related packages (jest, @types/jest). Create jest.config.js with configuration for Node.js environment. Set up in-memory SQLite database for testing. Configure test scripts in package.json for running unit tests.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify Jest runs successfully and can execute basic test cases",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T17:06:11.528Z"
           },
           {
             "id": 2,
@@ -1456,9 +1457,10 @@
               1
             ],
             "details": "Install supertest package. Create test setup that starts Express server in test mode. Configure test database isolation. Set up helper functions for making HTTP requests to API endpoints.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify supertest can make requests to test server and receive responses",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T17:07:24.035Z"
           },
           {
             "id": 3,
@@ -1490,9 +1492,10 @@
               2
             ],
             "details": "Create server/api/cards.test.js to test all CRUD operations on cards endpoint. Test GET /api/cards, POST /api/cards, PUT /api/cards/:id, DELETE /api/cards/:id. Verify request validation, response formats, error handling, and database interactions.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test all API endpoints with valid/invalid inputs, verify HTTP status codes and response data",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T17:07:25.949Z"
           },
           {
             "id": 6,
@@ -1512,7 +1515,7 @@
         "complexity": 8,
         "recommendedSubtasks": 6,
         "expansionPrompt": "Break down into: 1) Set up Jest for unit testing database queries, 2) Add supertest for API integration tests, 3) Configure Playwright for E2E testing, 4) Create unit tests for React hooks, 5) Implement API endpoint tests, 6) Add E2E workflow tests and coverage reporting",
-        "updatedAt": "2026-04-10T16:32:19.741Z",
+        "updatedAt": "2026-04-10T17:07:25.949Z",
         "metadata": {
           "assignee": "Alice",
           "devSessionId": "e152f977-e158-4bd0-ac49-754cc97f1de5"
@@ -1602,7 +1605,7 @@
         "dependencies": [
           "13"
         ],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1610,9 +1613,10 @@
             "description": "Add logic to detect when position gaps between adjacent cards become smaller than 0.001 threshold",
             "dependencies": [],
             "details": "Enhance moveCard function in queries.js to check position differences between adjacent cards after each move operation. Calculate gaps between consecutive positions and trigger renormalization when any gap falls below 0.001. Include edge case handling for first/last positions in columns.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Unit tests to verify gap detection triggers at correct threshold, test edge cases with single cards and boundary positions",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T17:02:13.585Z"
           },
           {
             "id": 2,
@@ -1622,9 +1626,10 @@
               1
             ],
             "details": "Create renormalizeColumn function that fetches all cards in a column ordered by position, reassigns integer positions (1, 2, 3, etc.), and updates database within a transaction. Ensure atomicity using database transactions to prevent data corruption during renormalization process.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test transaction rollback on failures, verify card order preservation, test concurrent access scenarios",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T17:02:15.535Z"
           },
           {
             "id": 3,
@@ -1634,18 +1639,20 @@
               2
             ],
             "details": "Add comprehensive logging for renormalization events including column ID, card count, and execution time. Create performance tests with datasets of 1000+ cards to verify renormalization completes efficiently. Monitor memory usage and database lock duration during operations.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Performance benchmarks with varying dataset sizes, stress testing with rapid reorder operations, monitoring log output verification",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T17:02:17.497Z"
           }
         ],
         "complexity": 7,
         "recommendedSubtasks": 3,
         "expansionPrompt": "Split into: 1) Implement gap detection logic for fractional positions, 2) Create renormalization algorithm with database transactions, 3) Add monitoring and performance testing for large datasets",
-        "updatedAt": "2026-04-10T16:46:33.003Z",
+        "updatedAt": "2026-04-10T17:02:17.497Z",
         "metadata": {
           "assignee": "Paul",
-          "devSessionId": "f12fe0a0-90c9-4871-ad3c-6b5a6b14b710"
+          "devSessionId": "f12fe0a0-90c9-4871-ad3c-6b5a6b14b710",
+          "qaSessionId": "b10f8e0a-d7f8-4d5d-b02d-dfcda04679d4"
         }
       },
       {
@@ -1737,9 +1744,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-04-10T16:46:33.003Z",
+      "lastModified": "2026-04-10T17:07:25.950Z",
       "taskCount": 24,
-      "completedCount": 21,
+      "completedCount": 22,
       "tags": [
         "kanban-board"
       ]
