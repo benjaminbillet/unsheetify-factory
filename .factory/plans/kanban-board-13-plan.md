@@ -116,7 +116,6 @@ import { DndContext, closestCenter, DragOverlay, useSensor, useSensors, MouseSen
 import { arrayMove } from '@dnd-kit/sortable'
 import { useBoard, columnToKey } from '../../hooks/useBoard.js'
 import Column from './Column.jsx'
-import CardTile from './CardTile.jsx'
 import CardModal from './CardModal.jsx'
 import './Board.css'
 
@@ -214,9 +213,15 @@ export default function Board() {
         <Column title="Done" columnId="done" cards={cards.done} onCardClick={(card) => setSelectedCardId(card.id)} />
       </div>
       <DragOverlay>
-        {activeCard
-          ? <CardTile card={activeCard} onCardClick={() => {}} className="card-drag-overlay" />
-          : null}
+        {activeCard ? (
+          <div className="card-tile card-drag-overlay">
+            <h3 className="card-tile-title">{activeCard.title}</h3>
+            <p className="card-tile-assignee">{activeCard.assignee ?? 'Unassigned'}</p>
+            {activeCard.description && (
+              <p className="card-tile-description">{activeCard.description}</p>
+            )}
+          </div>
+        ) : null}
       </DragOverlay>
       {selectedCard && (
         <CardModal
@@ -312,9 +317,9 @@ vi.mock('@dnd-kit/utilities', () => ({
    expect(screen.getByRole('button')).toHaveClass('card-tile-dragging')
    ```
 5. `CardTile applies inline transform style from useSortable`:
+   (`CSS` is already imported at the top of the file — do NOT put an import inside the test body):
    ```js
-   import { CSS } from '@dnd-kit/utilities'  // top-of-file import; gets the mocked version
-   // Inside the test:
+   // Body of the test only — CSS is the module-level import from @dnd-kit/utilities
    CSS.Transform.toString.mockReturnValueOnce('translate3d(0px,10px,0)')
    useSortable.mockReturnValueOnce({
      attributes: { 'aria-roledescription': 'sortable' },
@@ -330,8 +335,7 @@ vi.mock('@dnd-kit/utilities', () => ({
      transition: 'transform 200ms ease',
    })
    ```
-6. `CardTile renders with additional className when passed` — `render(<CardTile card={card} onCardClick={vi.fn()} className="card-drag-overlay" />)`; element has class `card-drag-overlay`
-7. `existing tests still pass` — `calls onCardClick when clicked`, `calls onCardClick when Enter key is pressed`, `calls onCardClick when Space key is pressed` must all still pass (see notes on keydown merging below)
+6. `existing tests still pass` — `calls onCardClick when clicked`, `calls onCardClick when Enter key is pressed`, `calls onCardClick when Space key is pressed` must all still pass (see notes on keydown merging below)
 
 #### Green (implementation)
 
@@ -370,12 +374,14 @@ export default function Column({ title, cards, columnId, onCardClick }) {
 
 > **Keydown merge rationale**: `{...listeners}` from `useSortable` may include an `onKeyDown` that would overwrite the card's existing `onKeyDown` (which opens the modal). To preserve modal-opening on Enter/Space, the two handlers are merged manually. All other listeners are spread normally.
 
+> **`className` prop removed**: `CardTile` does NOT accept a `className` prop. The `DragOverlay` renders card content as a plain `<div>` (not as `<CardTile>`) specifically to avoid calling `useSortable` outside a `SortableContext`, which would throw at runtime.
+
 ```jsx
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import './CardTile.css'
 
-export default function CardTile({ card, onCardClick, className }) {
+export default function CardTile({ card, onCardClick }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: card.id })
 
   const style = {
@@ -393,7 +399,7 @@ export default function CardTile({ card, onCardClick, className }) {
     dndKeyDown?.(e)
   }
 
-  const classes = ['card-tile', isDragging && 'card-tile-dragging', className]
+  const classes = ['card-tile', isDragging && 'card-tile-dragging']
     .filter(Boolean).join(' ')
 
   return (
@@ -508,13 +514,15 @@ describe('drag overlay', () => {
     expect(screen.getByTestId('drag-overlay')).toBeEmptyDOMElement()
   })
 
-  it('DragOverlay shows card during drag', () => {
+  it('DragOverlay shows card title during drag', () => {
     useBoard.mockReturnValue({ ...DEFAULT_STATE, cards: { ready: [MOCK_CARD], in_progress: [], done: [] } })
     render(<Board />)
     act(() => {
       capturedOnDragStart({ active: { id: MOCK_CARD.id } })
     })
+    // The overlay renders a plain div (NOT CardTile) to avoid calling useSortable outside SortableContext
     expect(screen.getByTestId('drag-overlay')).not.toBeEmptyDOMElement()
+    expect(within(screen.getByTestId('drag-overlay')).getByText(MOCK_CARD.title)).toBeInTheDocument()
   })
 })
 ```
@@ -533,7 +541,7 @@ describe('drag overlay', () => {
 }
 ```
 
-**`Board.css`** — add:
+**`Board.css`** — add (this class is applied directly to the plain `<div>` rendered inside DragOverlay, which also carries the `card-tile` class for base styling):
 ```css
 .card-drag-overlay {
   opacity: 0.95;

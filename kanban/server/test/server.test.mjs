@@ -285,3 +285,20 @@ describe('Nodemon configuration', () => {
     assert.ok(pkg.nodemonConfig.ext, 'Expected nodemonConfig.ext to exist');
   });
 });
+
+// ── Subtask (Docker): Production startup initializes DB ───────────────────
+
+describe('Production startup: initDb called', () => {
+  it('server/index.js imports initDb from db/queries.js', () => {
+    const code = readFileSync(join(SERVER_ROOT, 'index.js'), 'utf-8');
+    assert.ok(
+      code.includes('initDb'),
+      'Expected index.js to import or reference initDb'
+    );
+  });
+
+  it('initDb() is called in the entry-point startup block', () => {
+    const code = readFileSync(join(SERVER_ROOT, 'index.js'), 'utf-8');
+    assert.match(code, /initDb\s*\(/, 'Expected initDb() call in index.js');
+  });
+});

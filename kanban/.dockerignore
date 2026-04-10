@@ -1,0 +1,25 @@
+# Dependencies (reinstalled/compiled inside Docker)
+node_modules
+*/node_modules
+
+# Git
+.git
+.gitignore
+
+# Client build output (built inside Docker, not needed from host)
+client/dist
+
+# Environment files
+.env
+.env.*
+
+# Development/test files
+*.md
+test/
+server/test/
+client/src/**/*.test.*
+client/src/**/*.spec.*
+
+# Misc
+.DS_Store
+npm-debug.log*

@@ -5,6 +5,7 @@ import { resolve, dirname, join } from 'node:path';
 import commentsRouter from './api/comments.js';
 import cardsRouter from './api/cards.js';
 import { initWs } from './ws/broadcaster.js';
+import { initDb } from './db/queries.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -63,6 +64,8 @@ function createApp() {
 // Start when run as the entry point
 // resolve() normalises relative paths before comparing
 if (resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  const dbPath = process.env.DB_PATH || 'data/kanban.db';
+  initDb(dbPath);
   const app = createApp();
   const PORT = process.env.PORT || 3001;
   const server = app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

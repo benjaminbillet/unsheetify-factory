@@ -1370,7 +1370,7 @@
         "dependencies": [
           "19"
         ],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1378,9 +1378,10 @@
             "description": "Implement Dockerfile with two stages: build stage using Node 20 Alpine with Vite for client compilation, and runtime stage with Node 20 Alpine serving the application",
             "dependencies": [],
             "details": "Create Dockerfile with first stage FROM node:20-alpine AS build that installs dependencies and runs npm run build for client. Second stage FROM node:20-alpine AS runtime copies built client assets to server's public directory and sets up production server environment. Configure proper working directories and copy operations between stages.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test docker build completes successfully, verify built client assets are properly copied to server public directory, confirm production server starts correctly",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T16:21:40.659Z"
           },
           {
             "id": 2,
@@ -1390,9 +1391,10 @@
               1
             ],
             "details": "Create docker-compose.yml with app service using the Dockerfile, expose port 3000:3000, create named volume for SQLite database persistence mounted to appropriate database directory. Configure service dependencies and restart policies. Add .dockerignore file to exclude node_modules, .git, and other unnecessary files from build context.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test docker-compose up starts application successfully, verify database data persists after container restart, confirm port 3000 is accessible",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T16:21:42.533Z"
           },
           {
             "id": 3,
@@ -1402,18 +1404,20 @@
               2
             ],
             "details": "Configure NODE_ENV=production in docker-compose.yml, set up environment variables for database path and server configuration. Add production optimizations like multi-stage build cleanup, proper user permissions, and security configurations. Ensure static file serving is optimized for production workloads.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test application runs in production mode, verify environment variables are properly set, confirm static files are served efficiently and security configurations are applied",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T16:21:44.460Z"
           }
         ],
         "complexity": 5,
         "recommendedSubtasks": 3,
         "expansionPrompt": "Split into: 1) Create multi-stage Dockerfile for client build and server runtime, 2) Set up docker-compose with volume persistence, 3) Configure environment variables and production optimizations",
-        "updatedAt": "2026-04-10T15:59:52.810Z",
+        "updatedAt": "2026-04-10T16:21:44.460Z",
         "metadata": {
           "assignee": "James",
-          "devSessionId": "b1e3bc7a-56f2-4afe-aa26-b3cdbdbbde74"
+          "devSessionId": "b1e3bc7a-56f2-4afe-aa26-b3cdbdbbde74",
+          "qaSessionId": "d39d792c-31ff-44e4-adce-331ae0a27303"
         }
       },
       {
@@ -1513,7 +1517,7 @@
         "dependencies": [
           "19"
         ],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1521,9 +1525,10 @@
             "description": "Add inline editing capability to CardTile component for title and assignee fields",
             "dependencies": [],
             "details": "Modify CardTile component to detect clicks on title and assignee elements. Replace text with input fields when clicked. Implement state management for editing mode. Add visual indicators (border, background) to show editing state. Handle focus management to automatically select text content.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test click activation, input field rendering, visual feedback during editing state",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T16:23:08.880Z"
           },
           {
             "id": 2,
@@ -1533,9 +1538,10 @@
               1
             ],
             "details": "Extend CardModal component with inline editing for title and assignee fields. Ensure consistent behavior with CardTile implementation. Handle modal-specific considerations like focus trapping and larger input areas. Maintain modal functionality while in editing mode.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test modal editing works independently, consistent behavior with tile editing, focus management",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T16:23:10.731Z"
           },
           {
             "id": 3,
@@ -1546,9 +1552,10 @@
               2
             ],
             "details": "Implement Enter key to save changes and Escape key to cancel editing. Add blur event handling to auto-save. Implement validation to prevent empty titles and invalid assignee values. Show validation errors inline. Handle edge cases like rapid key presses and multiple simultaneous edits.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test Enter saves, Escape cancels, blur auto-saves, validation prevents empty values, error display",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T16:23:12.641Z"
           },
           {
             "id": 4,
@@ -1558,15 +1565,16 @@
               3
             ],
             "details": "Add try-catch blocks around API calls for saving edits. Implement rollback mechanism to restore previous values when API calls fail. Show user-friendly error messages for network failures or validation errors. Add loading states during save operations. Ensure UI remains responsive during error scenarios.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test API error handling, rollback restores previous values, error messages display correctly, loading states work",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T16:23:14.590Z"
           }
         ],
         "complexity": 6,
         "recommendedSubtasks": 4,
         "expansionPrompt": "Split into: 1) Implement click-to-edit functionality for card tiles, 2) Add inline editing to modal components, 3) Implement keyboard shortcuts and validation, 4) Add error handling with rollback functionality",
-        "updatedAt": "2026-04-10T15:59:54.492Z",
+        "updatedAt": "2026-04-10T16:23:14.590Z",
         "metadata": {
           "assignee": "Lydia",
           "devSessionId": "64591555-f800-49d8-a8de-1311dc5c54ea"
@@ -1712,9 +1720,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-04-10T16:04:02.789Z",
+      "lastModified": "2026-04-10T16:23:14.590Z",
       "taskCount": 24,
-      "completedCount": 18,
+      "completedCount": 20,
       "tags": [
         "kanban-board"
       ]
