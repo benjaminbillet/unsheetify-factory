@@ -1,0 +1,38 @@
+.block-editor {
+  margin-bottom: 0.5rem;
+}
+
+.block-editor-view {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.block-editor-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.block-editor-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.block-editor-empty {
+  font-size: 0.875rem;
+  color: #999;
+  font-style: italic;
+  margin: 0;
+}
+
+.block-editor-error {
+  color: #c0392b;
+  font-size: 0.8rem;
+  margin: 0.25rem 0;
+}
+
+/* Override BlockNote theme to match app palette */
+.block-editor .bn-editor {
+  --bn-colors-editor-text: #333;
+}

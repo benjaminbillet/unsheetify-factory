@@ -14,8 +14,11 @@ Both gaps must be implemented TDD: write failing tests first, then implement.
 ## Architecture Decisions
 
 - **CardTile edit UX**: clicking the title/assignee text (with `stopPropagation`) enters edit mode. The outer tile's click still fires `onCardClick` when the user clicks any non-editing area. No explicit Save/Cancel buttons — save on blur or Enter, cancel on Escape.
+- **CardTile mutual exclusivity**: entering title edit mode must close any open assignee edit mode and vice versa. Without this, both fields can be in edit mode simultaneously (two inputs visible), because when one field is in edit mode the other field's text element is still rendered and clickable.
+- **CardTile edit-mode click guard**: the outer tile's `onClick` must be guarded by `!isEditing` — while editing, clicking the tile body must not call `onCardClick`. This prevents the modal from opening when the user clicks the card while an input is focused.
 - **CardTile error behavior**: on API failure, **exit edit mode and roll back** to original value (compact tile; user can re-click to retry). This differs from CardModal which stays in edit mode on error.
 - **CardModal blur-save**: add `onBlur` to both inputs. Use a `skipBlurRef` (set on Cancel/Save `mouseDown`) to prevent the blur event that fires when a button is clicked from double-triggering a save.
+- **CardModal Escape + blur-save interaction**: adding `onBlur` creates a regression — the existing Escape handler (`setIsEditingTitle(false)`) causes the browser to fire a blur event when the input is removed from DOM, which would call `handleSaveTitle()`. The Escape handler must set `skipBlurRef.current = true` **before** the state setters.
 - **Prop threading**: `onUpdate` needs to flow `Board → Column → CardTile`. `Column.jsx` gains a pass-through `onUpdate` prop.
 - **`skipBlurRef` pattern**: `mousedown` on Cancel/Save sets `skipBlurRef.current = true`; the input's `onBlur` checks and clears it.
 
@@ -41,14 +44,36 @@ Both gaps must be implemented TDD: write failing tests first, then implement.
 
 Add a new `describe('CardTile — inline editing', () => { ... })` block. Each test receives `onUpdate={vi.fn()}`. The card fixture at the top of the file is reused.
 
+**Selector notes for these tests:**
+- To click the title text (enter title edit mode): `fireEvent.click(screen.getByRole('heading', { name: 'Fix bug' }))` — targets the `<h3>`
+- To click the assignee text (enter assignee edit mode): `fireEvent.click(screen.getByText('Alice'))` — targets the `<p>`; for the null-assignee test use `screen.getByText('Unassigned')`
+- To click the card body (outer tile): `fireEvent.click(screen.getByRole('button', { name: 'Fix bug' }))` — targets the outer `<div role="button" aria-label={card.title}>`
+- Title input: `screen.getByRole('textbox', { name: 'Edit title' })`
+- Assignee input: `screen.getByRole('textbox', { name: 'Edit assignee' })`
+
+**⚠️ Key difference from CardModal tests — keyboard event targets:**
+CardModal uses a `document` keydown listener, so its Escape tests fire `fireEvent.keyDown(document.body, { key: 'Escape' })`. CardTile's keyboard handling is on the **input element's `onKeyDown`** prop. DOM events bubble **upward** (child → parent), never downward. Firing on `document.body` will NOT reach the input's handler. For all CardTile keyboard tests:
+- Escape: `fireEvent.keyDown(screen.getByRole('textbox', { name: 'Edit title' }), { key: 'Escape' })`
+- Enter: `fireEvent.keyDown(screen.getByRole('textbox', { name: 'Edit title' }), { key: 'Enter' })`
+(Same pattern for assignee input.)
+
 ```
 // Edit mode entry
 'clicking title text renders a title input initialized to the card title'
 'clicking title text does not call onCardClick'
+'clicking title text focuses the title input automatically'
 'clicking assignee text renders an assignee input initialized to the card assignee'
 'clicking assignee text does not call onCardClick'
+'clicking assignee text focuses the assignee input automatically'
 'clicking assignee text renders an empty input when assignee is null'
-'clicking the card body (not title/assignee) still calls onCardClick'
+'clicking the card body (not title/assignee) still calls onCardClick when not editing'
+
+// Edit mode guard
+'clicking the card body while in title edit mode does not call onCardClick'
+
+// Mutual exclusivity
+'clicking title while editing assignee closes assignee edit and opens title edit'
+'clicking assignee while editing title closes title edit and opens assignee edit'
 
 // Enter key saves
 'pressing Enter on title input calls onUpdate(id, { title }) and exits edit mode'
@@ -58,8 +83,10 @@ Add a new `describe('CardTile — inline editing', () => { ... })` block. Each t
 // Escape key cancels
 'pressing Escape on title input cancels edit without calling onUpdate'
 'pressing Escape on title input restores original title text'
+  (change the input value first, then press Escape — assert h3 shows original card.title, not the changed value)
 'pressing Escape on assignee input cancels edit without calling onUpdate'
 'pressing Escape on assignee input restores original assignee text'
+  (change the input value first, then press Escape — assert p shows original card.assignee)
 
 // Blur saves
 'blurring title input calls onUpdate(id, { title })'
@@ -84,17 +111,28 @@ Add a new `describe('CardTile — inline editing', () => { ... })` block. Each t
 ### Step 2 (Green): Implement `CardTile.jsx`
 
 ```jsx
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import './CardTile.css'
 
 export default function CardTile({ card, onCardClick, onUpdate }) {
-  const [isEditingTitle, setIsEditingTitle]     = useState(false)
-  const [editTitle, setEditTitle]               = useState(card.title)
+  const [isEditingTitle, setIsEditingTitle]       = useState(false)
+  const [editTitle, setEditTitle]                 = useState(card.title)
   const [isEditingAssignee, setIsEditingAssignee] = useState(false)
-  const [editAssignee, setEditAssignee]         = useState(card.assignee ?? '')
-  const [isSaving, setIsSaving]                 = useState(false)
-  const [saveError, setSaveError]               = useState(null)
-  const skipBlurRef                             = useRef(false)
+  const [editAssignee, setEditAssignee]           = useState(card.assignee ?? '')
+  const [isSaving, setIsSaving]                   = useState(false)
+  const [saveError, setSaveError]                 = useState(null)
+  const skipBlurRef                               = useRef(false)
+  const titleInputRef                             = useRef(null)
+  const assigneeInputRef                          = useRef(null)
+
+  // Auto-focus input when entering edit mode (mirrors CardModal pattern)
+  useEffect(() => {
+    if (isEditingTitle && titleInputRef.current) titleInputRef.current.focus()
+  }, [isEditingTitle])
+
+  useEffect(() => {
+    if (isEditingAssignee && assigneeInputRef.current) assigneeInputRef.current.focus()
+  }, [isEditingAssignee])
 
   async function handleSaveTitle() {
     if (editTitle.trim() === '') { setSaveError('Title is required'); return }
@@ -139,6 +177,7 @@ export default function CardTile({ card, onCardClick, onUpdate }) {
       {isEditingTitle ? (
         <div className="card-tile-field-edit">
           <input
+            ref={titleInputRef}
             aria-label="Edit title"
             value={editTitle}
             onChange={e => setEditTitle(e.target.value)}
@@ -156,7 +195,15 @@ export default function CardTile({ card, onCardClick, onUpdate }) {
       ) : (
         <h3
           className="card-tile-title"
-          onClick={e => { e.stopPropagation(); setEditTitle(card.title); setIsEditingTitle(true); setSaveError(null) }}
+          onClick={e => {
+            e.stopPropagation()
+            setEditTitle(card.title)
+            setIsEditingTitle(true)
+            // Mutual exclusivity: close assignee edit if open
+            setIsEditingAssignee(false)
+            setEditAssignee(card.assignee ?? '')
+            setSaveError(null)
+          }}
         >
           {card.title}
         </h3>
@@ -166,6 +213,7 @@ export default function CardTile({ card, onCardClick, onUpdate }) {
       {isEditingAssignee ? (
         <div className="card-tile-field-edit">
           <input
+            ref={assigneeInputRef}
             aria-label="Edit assignee"
             value={editAssignee}
             onChange={e => setEditAssignee(e.target.value)}
@@ -183,7 +231,15 @@ export default function CardTile({ card, onCardClick, onUpdate }) {
       ) : (
         <p
           className="card-tile-assignee"
-          onClick={e => { e.stopPropagation(); setEditAssignee(card.assignee ?? ''); setIsEditingAssignee(true); setSaveError(null) }}
+          onClick={e => {
+            e.stopPropagation()
+            setEditAssignee(card.assignee ?? '')
+            setIsEditingAssignee(true)
+            // Mutual exclusivity: close title edit if open
+            setIsEditingTitle(false)
+            setEditTitle(card.title)
+            setSaveError(null)
+          }}
         >
           {card.assignee ?? 'Unassigned'}
         </p>
@@ -257,24 +313,30 @@ In `describe('CardModal — edit title')`, add:
 ```
 'blurring the title input calls onUpdate(id, { title })'
 'blurring the title input does not call onUpdate when blur is caused by clicking Cancel'
+  (simulate: fireEvent.mouseDown(cancelButton) then fireEvent.blur(input))
+'clicking the Save button does not trigger a double-save via blur'
+  (simulate: fireEvent.mouseDown(saveButton), fireEvent.blur(input), fireEvent.click(saveButton) → onUpdate called exactly once)
+'Escape key cancels title edit without calling onUpdate'
+  (check onUpdate not called; documents the skipBlurRef requirement in the Escape handler)
 ```
 
 In `describe('CardModal — edit assignee')`, add:
 ```
 'blurring the assignee input calls onUpdate(id, { assignee })'
 'blurring the assignee input does not call onUpdate when blur is caused by clicking Cancel'
+  (simulate: fireEvent.mouseDown(cancelButton) then fireEvent.blur(input))
+'clicking the Save button does not trigger a double-save via blur'
+'Escape key cancels assignee edit without calling onUpdate'
 ```
-
-For the "Cancel blur" tests, simulate with `fireEvent.mouseDown` on the cancel button before `fireEvent.blur` on the input.
 
 ### Step 2 (Green): Update `CardModal.jsx`
 
-Add a single shared `skipBlurRef` at the top of the component:
+Add a single shared `skipBlurRef` at the top of the component (alongside existing refs):
 ```jsx
 const skipBlurRef = useRef(false)
 ```
 
-On the title input, add:
+On the **title input**, add `onBlur`:
 ```jsx
 onBlur={() => {
   if (skipBlurRef.current) { skipBlurRef.current = false; return }
@@ -282,12 +344,26 @@ onBlur={() => {
 }}
 ```
 
-On both the title Save and Cancel buttons, add:
+On both the **title Save and Cancel buttons**, add `onMouseDown` to prevent blur from auto-saving when the user clicks a button:
 ```jsx
 onMouseDown={() => { skipBlurRef.current = true }}
 ```
 
-Repeat the same pattern for the assignee input and its Save/Cancel buttons.
+Repeat the same `onBlur` + `onMouseDown` pattern for the **assignee input** and its Save/Cancel buttons.
+
+**Fix the Escape handler** — the existing `useEffect` Escape handler must set `skipBlurRef.current = true` before the state setters; otherwise, when the input is removed from DOM, the browser fires a blur event that triggers an unwanted save:
+```js
+// Inside the onKey handler in the useEffect:
+if (isEditingTitle) {
+  skipBlurRef.current = true   // ← ADD THIS LINE
+  setIsEditingTitle(false); setEditTitle(card.title); setSaveError(null)
+} else if (isEditingAssignee) {
+  skipBlurRef.current = true   // ← ADD THIS LINE
+  setIsEditingAssignee(false); setEditAssignee(card.assignee ?? ''); setSaveError(null)
+} else {
+  onClose()
+}
+```
 
 ---
 
@@ -326,9 +402,9 @@ npm test
 
 Specific checks:
 1. **All existing CardTile tests still pass** (backward compatibility — tile click, keyboard, display)
-2. **All existing CardModal tests still pass** (no regressions)
-3. **New `CardTile — inline editing` tests pass** (~25 tests)
-4. **New CardModal blur-save tests pass** (~4 tests)
+2. **All existing CardModal tests still pass** (no regressions from blur-save addition)
+3. **New `CardTile — inline editing` tests pass** (~29 tests, including mutual exclusivity and edit-mode click guard)
+4. **New CardModal blur-save tests pass** (~8 tests: blur saves, Cancel prevents save, Save button no double-save, Escape no save — for both title and assignee)
 
 Manual smoke test:
 - Click a card tile's title → input appears, typing updates value, Enter saves, Escape cancels

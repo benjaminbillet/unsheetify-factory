@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import './CardModal.css'
 import CommentList from '../CardModal/CommentList.jsx'
+import BlockEditor from '../CardModal/BlockEditor.jsx'
 
 export default function CardModal({ card, onClose, onUpdate, onDelete, onAddComment = () => Promise.resolve() }) {
   // Edit state
@@ -9,6 +10,7 @@ export default function CardModal({ card, onClose, onUpdate, onDelete, onAddComm
   const [editTitle, setEditTitle]           = useState(card.title)
   const [isEditingAssignee, setIsEditingAssignee] = useState(false)
   const [editAssignee, setEditAssignee]     = useState(card.assignee ?? '')
+  const [isEditingDescription, setIsEditingDescription] = useState(false)
   const [isSaving, setIsSaving]             = useState(false)
   const [saveError, setSaveError]           = useState(null)
 
@@ -37,13 +39,15 @@ export default function CardModal({ card, onClose, onUpdate, onDelete, onAddComm
         setIsEditingTitle(false); setEditTitle(card.title); setSaveError(null)
       } else if (isEditingAssignee) {
         setIsEditingAssignee(false); setEditAssignee(card.assignee ?? ''); setSaveError(null)
+      } else if (isEditingDescription) {
+        // BlockEditor owns its own Escape handler; CardModal just prevents modal close
       } else {
         onClose()
       }
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [onClose, isEditingTitle, isEditingAssignee, card.title, card.assignee])
+  }, [onClose, isEditingTitle, isEditingAssignee, isEditingDescription, card.title, card.assignee])
 
   // Save handlers
   async function handleSaveTitle() {
@@ -177,8 +181,12 @@ export default function CardModal({ card, onClose, onUpdate, onDelete, onAddComm
           </div>
         )}
 
-        {/* 4. Description (read-only) */}
-        <p className="modal-description">{card.description ?? 'No description'}</p>
+        {/* 4. Description (BlockNote editor) */}
+        <BlockEditor
+          content={card.description}
+          onSave={(json) => onUpdate(card.id, { description: json })}
+          onEditingChange={setIsEditingDescription}
+        />
 
         {/* 5. Error alert */}
         {saveError && <p role="alert" className="modal-error">{saveError}</p>}

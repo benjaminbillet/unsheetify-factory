@@ -62,13 +62,6 @@
   margin-bottom: 0.5rem;
 }
 
-.modal-description {
-  font-size: 0.875rem;
-  color: #333;
-  line-height: 1.5;
-  margin-bottom: 0.5rem;
-}
-
 /* Editable fields */
 .modal-field-view {
   display: flex;

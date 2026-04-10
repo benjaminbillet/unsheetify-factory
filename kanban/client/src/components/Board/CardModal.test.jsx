@@ -2,6 +2,18 @@ import { render, screen, fireEvent, waitFor, within } from '@testing-library/rea
 import { describe, it, expect, vi } from 'vitest'
 import CardModal from './CardModal.jsx'
 
+// vi.mock is hoisted by Vitest before any imports — factory runs before module code
+vi.mock('../CardModal/BlockEditor.jsx', () => ({
+  default: vi.fn(({ content, onSave, onEditingChange }) => (
+    <div data-testid="block-editor">
+      <span>{content ?? 'No description'}</span>
+      <button aria-label="Edit description" onClick={() => onEditingChange?.(true)}>Edit</button>
+      <button aria-label="Cancel description edit" onClick={() => onEditingChange?.(false)}>Cancel</button>
+      <button aria-label="Save description" onClick={() => onSave?.('{"blocks":"test"}')}>Save</button>
+    </div>
+  )),
+}))
+
 const card = {
   id: '1',
   title: 'Fix bug',
@@ -434,5 +446,44 @@ describe('CardModal — comments', () => {
   it('does not render "No comments yet" when comments exist', () => {
     render(<CardModal card={cardWithComments} onClose={vi.fn()} onUpdate={vi.fn()} onDelete={vi.fn()} onAddComment={vi.fn()} />)
     expect(screen.queryByText(/no comments yet/i)).not.toBeInTheDocument()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// CardModal — description (BlockEditor integration)
+// ---------------------------------------------------------------------------
+describe('CardModal — description', () => {
+  it('renders BlockEditor in place of the static description paragraph', () => {
+    render(<CardModal card={card} onClose={vi.fn()} onUpdate={vi.fn()} onDelete={vi.fn()} />)
+    expect(screen.getByTestId('block-editor')).toBeInTheDocument()
+  })
+
+  it('BlockEditor receives card.description as its content prop', () => {
+    render(<CardModal card={{ ...card, description: 'Some description' }} onClose={vi.fn()} onUpdate={vi.fn()} onDelete={vi.fn()} />)
+    expect(screen.getByTestId('block-editor')).toHaveTextContent('Some description')
+  })
+
+  it('BlockEditor onSave prop calls onUpdate(card.id, { description: json })', async () => {
+    const onUpdate = vi.fn().mockResolvedValue({ ...card, description: '{"blocks":"test"}' })
+    render(<CardModal card={card} onClose={vi.fn()} onUpdate={onUpdate} onDelete={vi.fn()} />)
+    fireEvent.click(screen.getByRole('button', { name: /save description/i }))
+    await waitFor(() => expect(onUpdate).toHaveBeenCalledWith('1', { description: '{"blocks":"test"}' }))
+  })
+
+  it('Escape does not close modal when BlockEditor reports isEditing=true', () => {
+    const onClose = vi.fn()
+    render(<CardModal card={card} onClose={onClose} onUpdate={vi.fn()} onDelete={vi.fn()} />)
+    fireEvent.click(screen.getByRole('button', { name: /edit description/i }))
+    fireEvent.keyDown(document.body, { key: 'Escape' })
+    expect(onClose).not.toHaveBeenCalled()
+  })
+
+  it('Escape closes modal after description editing ends', () => {
+    const onClose = vi.fn()
+    render(<CardModal card={card} onClose={onClose} onUpdate={vi.fn()} onDelete={vi.fn()} />)
+    fireEvent.click(screen.getByRole('button', { name: /edit description/i }))
+    fireEvent.click(screen.getByRole('button', { name: /cancel description edit/i }))
+    fireEvent.keyDown(document.body, { key: 'Escape' })
+    expect(onClose).toHaveBeenCalledTimes(1)
   })
 })
