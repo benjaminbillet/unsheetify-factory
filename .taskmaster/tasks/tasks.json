@@ -874,7 +874,7 @@
         "dependencies": [
           "12"
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -937,7 +937,12 @@
         ],
         "complexity": 8,
         "recommendedSubtasks": 5,
-        "expansionPrompt": "Break down into: 1) Install and configure dnd-kit with DndContext, 2) Implement sortable columns and cards, 3) Add drag end handler for position updates, 4) Implement visual feedback during drag operations, 5) Handle both cross-column and within-column reordering"
+        "expansionPrompt": "Break down into: 1) Install and configure dnd-kit with DndContext, 2) Implement sortable columns and cards, 3) Add drag end handler for position updates, 4) Implement visual feedback during drag operations, 5) Handle both cross-column and within-column reordering",
+        "updatedAt": "2026-04-10T16:04:02.788Z",
+        "metadata": {
+          "assignee": "Kate",
+          "devSessionId": "465be850-b46a-4677-b02f-017469675fbd"
+        }
       },
       {
         "id": "14",
@@ -1705,9 +1710,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-04-10T16:00:00.983Z",
+      "lastModified": "2026-04-10T16:04:02.789Z",
       "taskCount": 24,
-      "completedCount": 17,
+      "completedCount": 18,
       "tags": [
         "kanban-board"
       ]
