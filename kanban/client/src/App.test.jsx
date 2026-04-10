@@ -1,6 +1,19 @@
 import { render, screen } from '@testing-library/react'
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import App from './App.jsx'
+
+vi.mock('./hooks/useBoard.js', () => ({
+  useBoard: vi.fn(() => ({
+    cards: { ready: [], in_progress: [], done: [] },
+    loading: false,
+    error: null,
+    createCard: vi.fn(),
+    updateCard: vi.fn(),
+    deleteCard: vi.fn(),
+    moveCard: vi.fn(),
+    addComment: vi.fn(),
+  })),
+}))
 
 describe('App', () => {
   let container

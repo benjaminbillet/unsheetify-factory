@@ -651,7 +651,7 @@
         "dependencies": [
           "9"
         ],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -659,9 +659,10 @@
             "description": "Build the main Board.jsx component that serves as the container for the three-column layout (Ready, In Progress, Done)",
             "dependencies": [],
             "details": "Create client/src/components/Board/Board.jsx as the main container component. Implement responsive three-column layout using CSS Grid or Flexbox. Set up column structure for Ready, In Progress, and Done states. Ensure proper responsive behavior across different screen sizes. Add proper semantic HTML structure and accessibility attributes.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test responsive layout on different screen sizes, verify three columns render correctly, check accessibility with screen readers",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T14:56:40.482Z"
           },
           {
             "id": 2,
@@ -671,9 +672,10 @@
               1
             ],
             "details": "Create client/src/components/Board/Column.jsx component that accepts column title and cards as props. Render column header with title and card count. Implement card list container that will hold CardTile components. Add proper styling for column structure and ensure cards are properly spaced. Handle empty column state with appropriate messaging.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test column renders with correct title, card count updates properly, empty state displays correctly, cards are properly contained",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T14:56:42.157Z"
           },
           {
             "id": 3,
@@ -683,9 +685,10 @@
               2
             ],
             "details": "Create client/src/components/Board/CardTile.jsx component displaying card title, assignee, and truncated description. Implement click handler to open card modal. Add hover effects and proper cursor styling. Handle long text truncation with ellipsis. Include assignee avatar or initials display. Add proper keyboard navigation support for accessibility.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test card displays all required information, click handler opens modal correctly, text truncation works properly, keyboard navigation functions",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T14:56:43.852Z"
           },
           {
             "id": 4,
@@ -697,18 +700,20 @@
               3
             ],
             "details": "Create CSS modules or styled-components for all three components. Implement responsive design that works on mobile, tablet, and desktop. Add proper spacing, colors, and typography. Ensure consistent design language across components. Add hover states, focus indicators, and smooth transitions. Test cross-browser compatibility and ensure proper contrast ratios for accessibility.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test responsive behavior across device sizes, verify styling consistency, check accessibility contrast ratios, validate cross-browser compatibility",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T14:56:45.533Z"
           }
         ],
         "complexity": 6,
         "recommendedSubtasks": 4,
         "expansionPrompt": "Split into: 1) Create Board layout component with responsive column structure, 2) Implement Column component with header and card list, 3) Create CardTile component with card display and click handling, 4) Add CSS styling and responsive design",
-        "updatedAt": "2026-04-10T14:40:36.802Z",
+        "updatedAt": "2026-04-10T14:56:45.533Z",
         "metadata": {
           "assignee": "Alex",
-          "devSessionId": "cb5e1e68-776f-4d30-8af1-96026f228538"
+          "devSessionId": "cb5e1e68-776f-4d30-8af1-96026f228538",
+          "qaSessionId": "f80aae67-7341-419f-a9b6-27af42aae42e"
         }
       },
       {
@@ -1177,7 +1182,7 @@
         "dependencies": [
           "17"
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -1230,7 +1235,12 @@
         ],
         "complexity": 7,
         "recommendedSubtasks": 4,
-        "expansionPrompt": "Break down into: 1) Implement WebSocket connection lifecycle management, 2) Add automatic reconnection with exponential backoff, 3) Implement event parsing and callback handling, 4) Add proper cleanup and error handling"
+        "expansionPrompt": "Break down into: 1) Implement WebSocket connection lifecycle management, 2) Add automatic reconnection with exponential backoff, 3) Implement event parsing and callback handling, 4) Add proper cleanup and error handling",
+        "updatedAt": "2026-04-10T14:52:19.005Z",
+        "metadata": {
+          "assignee": "Irene",
+          "devSessionId": "05fb057f-a9fc-41fe-8c45-8f08606a561e"
+        }
       },
       {
         "id": "19",
@@ -1637,9 +1647,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-04-10T14:45:18.098Z",
+      "lastModified": "2026-04-10T14:56:45.534Z",
       "taskCount": 24,
-      "completedCount": 11,
+      "completedCount": 12,
       "tags": [
         "kanban-board"
       ]

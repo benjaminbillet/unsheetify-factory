@@ -1,3 +1,4 @@
+import Board from './components/Board/Board.jsx'
 import './App.css'
 
 function App() {
@@ -7,7 +8,7 @@ function App() {
         <h1>Kanban Board</h1>
       </header>
       <main className="app-main">
-        {/* Board component will be rendered here */}
+        <Board />
       </main>
     </div>
   )

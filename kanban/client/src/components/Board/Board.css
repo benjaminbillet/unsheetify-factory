@@ -1,0 +1,24 @@
+.board {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.board-loading {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+}
+
+.board-error {
+  padding: 1rem;
+  background: #fee;
+  color: #c00;
+  border-radius: 4px;
+}
+
+@media (max-width: 768px) {
+  .board {
+    flex-direction: column;
+  }
+}
