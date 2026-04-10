@@ -1,8 +1,9 @@
 import { useEffect, useState, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import './CardModal.css'
+import CommentList from '../CardModal/CommentList.jsx'
 
-export default function CardModal({ card, onClose, onUpdate, onDelete }) {
+export default function CardModal({ card, onClose, onUpdate, onDelete, onAddComment = () => Promise.resolve() }) {
   // Edit state
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [editTitle, setEditTitle]           = useState(card.title)
@@ -183,29 +184,10 @@ export default function CardModal({ card, onClose, onUpdate, onDelete }) {
         {saveError && <p role="alert" className="modal-error">{saveError}</p>}
 
         {/* 6. Comments section */}
-        <section className="modal-comments">
-          <h3 className="modal-comments-heading">Comments</h3>
-          {card.comments.length === 0 ? (
-            <p className="modal-no-comments">No comments yet</p>
-          ) : (
-            <ul className="modal-comments-list">
-              {card.comments.map(cm => (
-                <li key={cm.id} data-testid="comment" className="modal-comment">
-                  <div className="modal-comment-meta">
-                    <span className="modal-comment-author">{cm.author}</span>
-                    <time
-                      className="modal-comment-time"
-                      dateTime={new Date(cm.created_at).toISOString()}
-                    >
-                      {new Date(cm.created_at).toLocaleString()}
-                    </time>
-                  </div>
-                  <p className="modal-comment-content">{cm.content}</p>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
+        <CommentList
+          comments={card.comments}
+          onAddComment={(data) => onAddComment(card.id, data)}
+        />
 
         {/* 7. Delete button / confirmation */}
         {showDeleteConfirm ? (

@@ -54,13 +54,19 @@ import { useWebSocket } from './useWebSocket.js'
 vi.mock('./useWebSocket.js', () => ({ useWebSocket: vi.fn() }))
 ```
 
-Add a **single top-level `beforeEach`** (outside all describe blocks, right after the `vi.mock` lines) to set the default mock return for all tests:
+Add a **single top-level `beforeEach`** (outside all describe blocks, right after the `vi.mock` lines) using `mockImplementation`. This replaces the need for any separate `mockReturnValue` setup and also captures `onEvent` for WS event tests (used in Subtasks 2–4):
+
 ```js
+let simulateWsEvent
 beforeEach(() => {
-  useWebSocket.mockReturnValue({ status: 'connected', disconnect: vi.fn() })
+  useWebSocket.mockImplementation((url, opts) => {
+    simulateWsEvent = opts?.onEvent
+    return { status: 'connected', disconnect: vi.fn() }
+  })
 })
 ```
-This runs before every test. Because the existing `afterEach` blocks call `vi.clearAllMocks()` (which clears call counts but does NOT reset implementations), the top-level `beforeEach` ensures the mock is re-applied before each test. Do **not** modify individual existing `beforeEach` blocks.
+
+**Why `mockImplementation` (not `mockReturnValue`):** `vi.clearAllMocks()` — used by all existing `afterEach` blocks — clears call history but does **NOT** reset implementations. If any test overrides `mockImplementation` in its body (e.g., the reconnect tests in Subtask 4), a top-level `beforeEach` using `mockReturnValue` would be silently overridden by the stale implementation because `mockImplementation` takes precedence over `mockReturnValue`. Using `mockImplementation` in the top-level `beforeEach` ensures it always overrides any leftover implementation from the previous test. Do **not** modify individual existing `beforeEach` blocks.
 
 Add new describe block: `describe('WebSocket integration — initialization')`:
 1. `it('calls useWebSocket with a ws:// URL containing /ws')` — assert `useWebSocket` was called with a string matching `/^wss?:\/\/.+\/ws$/`
@@ -93,16 +99,7 @@ Add new describe block: `describe('WebSocket integration — initialization')`:
 
 #### Red: Tests to write first
 
-Add a helper at the top of the new test section to capture and invoke the `onEvent` callback:
-```js
-let simulateWsEvent
-beforeEach(() => {
-  useWebSocket.mockImplementation((url, opts) => {
-    simulateWsEvent = opts?.onEvent
-    return { status: 'connected', disconnect: vi.fn() }
-  })
-})
-```
+The `simulateWsEvent` variable is already captured by the top-level `beforeEach` added in Subtask 1. Each new describe block below adds its own `beforeEach` that calls `api.fetchCards.mockResolvedValue(FIXTURE_CARDS)`.
 
 Add describe blocks (all start with `api.fetchCards.mockResolvedValue(FIXTURE_CARDS)` in `beforeEach`):
 
@@ -117,7 +114,16 @@ Add describe blocks (all start with `api.fetchCards.mockResolvedValue(FIXTURE_CA
 **`describe('WebSocket event: card:updated')`**
 1. `it('updates card title in place')` — event updates `title` → state shows new title, card stays in same column
 2. `it('updates card assignee in place')` — event updates `assignee` → state reflects change
-3. `it('preserves existing comments when updating card')` — card had comments → comments still present after update
+3. `it('preserves existing comments when updating card')`:
+   - In the test body, override `fetchCards` to return a card with a pre-existing comment before rendering:
+     ```js
+     const cardWithComment = { ...FIXTURE_CARDS[0], comments: [{ id: 'c0', card_id: 'r1', author: 'Alice', content: 'Hi', created_at: 500 }] }
+     api.fetchCards.mockResolvedValue([cardWithComment, ...FIXTURE_CARDS.slice(1)])
+     const { result } = renderHook(() => useBoard())
+     await waitFor(() => expect(result.current.loading).toBe(false))
+     ```
+   - Then fire the event: `act(() => simulateWsEvent('card:updated', { id: 'r1', column: 'ready', position: 1, title: 'Updated', assignee: null, description: null, created_at: 1000 }))`
+   - Assert `result.current.cards.ready[0].comments` has length 1 and `comments[0].id === 'c0'`
 4. `it('does nothing when card does not exist')` — unknown ID → no state change, no crash
 5. `it('moves card to new column when column field changes (cross-client move sync)')`:
    - Initial state: `r1` in `ready`
@@ -135,7 +141,17 @@ Add describe blocks (all start with `api.fetchCards.mockResolvedValue(FIXTURE_CA
 2. `it('removes card from its original column')` — `cards.ready` length 0 after move
 3. `it('updates card column field to new column')` — `card.column === 'done'`
 4. `it('re-sorts target column by position after move')` — moved card with position 0.5 precedes existing position-1 card
-5. `it('preserves card comments when moving')` — card with existing comments keeps them after move
+5. `it('preserves card comments when moving')`:
+   - In the test body, override `fetchCards` to return a card with a pre-existing comment before rendering:
+     ```js
+     const cardWithComment = { ...FIXTURE_CARDS[0], comments: [{ id: 'c0', card_id: 'r1', author: 'Alice', content: 'Hi', created_at: 500 }] }
+     api.fetchCards.mockResolvedValue([cardWithComment, ...FIXTURE_CARDS.slice(1)])
+     const { result } = renderHook(() => useBoard())
+     await waitFor(() => expect(result.current.loading).toBe(false))
+     ```
+   - Then fire the event: `act(() => simulateWsEvent('card:moved', { id: 'r1', column: 'done', position: 2, title: 'Ready One', assignee: null, description: null, created_at: 1000 }))`
+   - Assert the card in `cards.done` has `comments` length 1 and `comments[0].id === 'c0'`
+6. `it('does nothing when card does not exist')` — unknown ID → no state change, no phantom card added, no crash
 
 **`describe('WebSocket event: comment:created')`**
 1. `it('appends comment to the card comments array')` — `cards.ready[0].comments` length 1
@@ -199,11 +215,13 @@ const handleWsEvent = useCallback((eventType, payload) => {
       applyCards(prev => {
         const next = {}
         let existingComments = []
+        let found = false
         for (const [k, col] of Object.entries(prev)) {
           const card = col.find(c => c.id === payload.id)
-          if (card) existingComments = card.comments ?? []
+          if (card) { existingComments = card.comments ?? []; found = true }
           next[k] = col.filter(c => c.id !== payload.id)
         }
+        if (!found) return prev
         next[newKey] = [...next[newKey], { ...payload, comments: existingComments }]
           .sort((a, b) => a.position - b.position)
         return next
@@ -251,30 +269,42 @@ For each test, use the `simulateWsEvent` helper from the subtask 2 setup.
    - After addComment + WS event: `cards.ready[0].comments` length 1 (not 2)
 
 3. `it('ignores card:updated WS event after local updateCard call')`:
+   - `api.updateCard.mockReturnValue(new Promise(() => {}))` (keep pending so suppression window is open)
    - `act(() => void result.current.updateCard('r1', { title: 'Local' }))`
-   - `act(() => simulateWsEvent('card:updated', { id: 'r1', title: 'Remote' }))`
-   - Assert card title is `'Local'` (WS event suppressed, rollback title would be 'Ready One')
-   - Resolve API to complete the op
+   - `act(() => simulateWsEvent('card:updated', { id: 'r1', column: 'ready', position: 1, title: 'Remote', assignee: null, description: null, created_at: 1000 }))`
+   - Assert `cards.ready[0].title` is `'Local'` (WS event suppressed; if not suppressed, handler runs and sets title to 'Remote')
+   - **Note:** The payload must include `column: 'ready'`. In the red phase of Subtask 3, the Subtask 2 handler is already in place but the suppression check (`if (consumeSuppression(payload.id)) break`) is not yet added. Without `column`, `columnToKey(undefined)` returns `undefined` and the card is re-inserted under an `undefined` key — this produces corrupt state and causes `cards.ready[0]` to be `undefined`, making the assertion throw a `TypeError` instead of a clean test failure.
 
 4. `it('ignores card:deleted WS event after local deleteCard call')`:
-   - Card is deleted → WS delete event arrives → no crash, card stays deleted
+   - `api.deleteCard.mockReturnValue(new Promise(() => {}))` (keep pending so suppression window is open)
+   - `act(() => void result.current.deleteCard('r1'))` — optimistic removal: `cards.ready` length 0
+   - `act(() => simulateWsEvent('card:deleted', { id: 'r1' }))`
+   - Assert `cards.ready` length remains 0 and no crash
 
 5. `it('ignores card:updated WS event (with column change) after local moveCard call')`:
    - **Note:** `moveCard` uses `apiUpdateCard` → `PATCH /api/cards/:id` → server broadcasts `card:updated`, NOT `card:moved`
+   - `api.updateCard.mockReturnValue(new Promise(() => {}))` (keep pending so suppression window is open)
    - `act(() => void result.current.moveCard('r1', 'done', 2))` → optimistic move: r1 in done
-   - `api.updateCard` (pending)
    - `act(() => simulateWsEvent('card:updated', { id: 'r1', column: 'done', position: 2, title: 'Ready One', assignee: null, description: null, created_at: 1000 }))`
    - Assert `cards.done` length 2 (original `d1` + moved `r1`), NOT 3 (no duplicate from WS event)
    - Assert `cards.ready` length 0
 
 6. `it('does NOT suppress WS event for a different card')`:
-   - Local `updateCard('r1', ...)` → WS `card:updated` for `'p1'` → `p1` IS updated in state
+   - `api.updateCard.mockReturnValue(new Promise(() => {}))` (keep pending so suppression window is open)
+   - `act(() => void result.current.updateCard('r1', { title: 'Changed' }))` — suppression registered for `'r1'`
+   - `act(() => simulateWsEvent('card:updated', { id: 'p1', column: 'in-progress', position: 1, title: 'Updated P1', assignee: null, description: null, created_at: 1000 }))`
+   - Assert `result.current.cards.in_progress[0].title === 'Updated P1'` (WS event for `p1` is NOT suppressed)
 
 7. `it('suppression is consumed: second WS event for same card is applied')`:
-   - Local updateCard('r1') → WS event #1 (suppressed) → WS event #2 (applied with new title)
-   - After both events, card has title from event #2
+   - `api.updateCard.mockReturnValue(new Promise(() => {}))` (pending)
+   - `act(() => void result.current.updateCard('r1', { title: 'Local' }))` → sets suppression for 'r1'
+   - `act(() => simulateWsEvent('card:updated', { id: 'r1', column: 'ready', position: 1, title: 'First Remote', assignee: null, description: null, created_at: 1000 }))` → suppressed (consumes the suppression entry)
+   - `act(() => simulateWsEvent('card:updated', { id: 'r1', column: 'ready', position: 1, title: 'Second Remote', assignee: null, description: null, created_at: 1000 }))` → NOT suppressed (entry already consumed)
+   - Assert `cards.ready[0].title === 'Second Remote'` (the second event was applied)
 
 #### Green: Implementation in `useBoard.js`
+
+**Placement note:** Add `suppressedRef` alongside the existing `useRef` calls near the top of the `useBoard` hook body (next to `pendingRef` and `cardsRef`), not scattered later in the function. Similarly, `hasConnectedRef` (added in Subtask 4) belongs in that same group of refs.
 
 Add suppression infrastructure inside `useBoard`:
 ```js
@@ -358,7 +388,9 @@ Add `describe('multi-client state consistency')`:
    - Assert `api.fetchCards` was called **twice** (initial + reconciliation)
 
 4. `it('does not refetch on initial connection (only on reconnect)')`:
-   - Normal mount with `mockWsStatus = 'connected'` and single `rerender` — assert `api.fetchCards` called exactly **once**
+   - The top-level `beforeEach` already returns `{ status: 'connected' }` from `useWebSocket`, so no special setup needed
+   - `renderHook(() => useBoard())` and `await waitFor(() => expect(result.current.loading).toBe(false))`
+   - Assert `api.fetchCards` was called exactly **once** (the initial load only, no reconnect refetch)
 
 5. `it('state reflects re-fetched data after reconnect')`:
    - First `fetchCards` returns `FIXTURE_CARDS`

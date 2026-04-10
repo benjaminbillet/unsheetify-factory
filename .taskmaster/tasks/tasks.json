@@ -815,7 +815,7 @@
         "dependencies": [
           "11"
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -854,7 +854,12 @@
         ],
         "complexity": 4,
         "recommendedSubtasks": 3,
-        "expansionPrompt": "Split into: 1) Create form component with input fields and validation, 2) Implement form submission and loading states, 3) Add form toggle functionality and error handling"
+        "expansionPrompt": "Split into: 1) Create form component with input fields and validation, 2) Implement form submission and loading states, 3) Add form toggle functionality and error handling",
+        "updatedAt": "2026-04-10T15:34:17.000Z",
+        "metadata": {
+          "assignee": "Ben",
+          "devSessionId": "a443680c-9834-4f17-a4c9-c900d58b7b90"
+        }
       },
       {
         "id": "13",
@@ -941,7 +946,7 @@
         "dependencies": [
           "11"
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -992,7 +997,12 @@
         ],
         "complexity": 6,
         "recommendedSubtasks": 4,
-        "expansionPrompt": "Split into: 1) Install BlockNote dependencies and create wrapper component, 2) Configure editor with required block types and features, 3) Implement edit/read-only mode toggle, 4) Add JSON serialization and styling integration"
+        "expansionPrompt": "Split into: 1) Install BlockNote dependencies and create wrapper component, 2) Configure editor with required block types and features, 3) Implement edit/read-only mode toggle, 4) Add JSON serialization and styling integration",
+        "updatedAt": "2026-04-10T15:34:19.070Z",
+        "metadata": {
+          "assignee": "Leo",
+          "devSessionId": "d0bf6865-bc45-4078-a0b4-33eacfbf2af8"
+        }
       },
       {
         "id": "15",
@@ -1004,7 +1014,7 @@
         "dependencies": [
           "11"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1012,9 +1022,10 @@
             "description": "Build the comment display functionality showing comments in chronological order with author names and timestamps",
             "dependencies": [],
             "details": "Create the comment list display section in CommentList.jsx that renders comments in chronological order (oldest first). Include author name display, comment text, and timestamp for each comment. Handle empty state when no comments exist with appropriate messaging. Ensure proper data structure handling for comment objects.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test comments display in correct chronological order, empty state shows appropriate message, comment data renders correctly",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T15:48:42.337Z"
           },
           {
             "id": 2,
@@ -1024,9 +1035,10 @@
               1
             ],
             "details": "Create comment creation form with author name input field and comment text area. Implement form validation to ensure both fields are required and not empty. Add form submission handling that calls the API to create new comments. Include loading state during submission and clear form after successful creation. Handle validation errors with user-friendly messages.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test form validation prevents empty submissions, successful submission creates comment and clears form, loading states work correctly",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T15:49:58.450Z"
           },
           {
             "id": 3,
@@ -1037,14 +1049,21 @@
               2
             ],
             "details": "Add timestamp formatting utility to display relative time format (e.g., '2 hours ago', 'yesterday', '3 days ago'). Apply CSS styling for comment threads including proper spacing, typography, and visual hierarchy. Style the comment form with consistent design patterns. Ensure responsive design for different screen sizes and proper contrast for accessibility.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test timestamp formatting shows correct relative times, styling renders consistently across browsers, responsive design works on mobile devices",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T15:50:46.792Z"
           }
         ],
         "complexity": 5,
         "recommendedSubtasks": 3,
-        "expansionPrompt": "Break down into: 1) Create comment display component with chronological ordering, 2) Implement comment creation form with validation, 3) Add timestamp formatting and styling"
+        "expansionPrompt": "Break down into: 1) Create comment display component with chronological ordering, 2) Implement comment creation form with validation, 3) Add timestamp formatting and styling",
+        "updatedAt": "2026-04-10T15:50:46.792Z",
+        "metadata": {
+          "assignee": "Tom",
+          "devSessionId": "76676112-c253-4875-8a79-6377d24269a9",
+          "qaSessionId": "2b29544d-e83a-498d-a080-f4555a3345ff"
+        }
       },
       {
         "id": "16",
@@ -1268,7 +1287,7 @@
         "dependencies": [
           "18"
         ],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1276,9 +1295,10 @@
             "description": "Connect the useWebSocket hook to the useBoard hook and establish the foundation for real-time state updates",
             "dependencies": [],
             "details": "Import and initialize useWebSocket within useBoard hook. Set up WebSocket connection with proper error handling and reconnection logic. Create event listener registration system for incoming WebSocket messages. Establish the connection between WebSocket events and board state reducer.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test WebSocket connection establishes successfully, reconnects on disconnect, and event listeners are properly registered",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T15:53:03.928Z"
           },
           {
             "id": 2,
@@ -1288,9 +1308,10 @@
               1
             ],
             "details": "Implement handleCardCreated to add new cards to appropriate columns. Create handleCardUpdated to update existing card properties. Add handleCardDeleted to remove cards from state. Implement handleCardMoved to update card position and column. Create handleCommentCreated to add comments to card's comment array. Ensure all handlers properly update the board state using the existing reducer pattern.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test each event handler correctly updates board state, handles edge cases like non-existent cards, and maintains data integrity",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T15:54:16.154Z"
           },
           {
             "id": 3,
@@ -1300,9 +1321,10 @@
               2
             ],
             "details": "Create optimistic update tracking system using action IDs or timestamps. Implement logic to ignore incoming WebSocket events that match recently performed local actions. Add debouncing mechanism to handle rapid successive updates. Create rollback functionality for failed optimistic updates. Ensure local actions are immediately reflected in UI while preventing duplicate processing of the same action from WebSocket.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test local actions don't cause duplicate updates, failed actions rollback properly, and rapid successive actions are handled correctly",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T15:55:54.447Z"
           },
           {
             "id": 4,
@@ -1312,15 +1334,16 @@
               3
             ],
             "details": "Add conflict resolution logic for simultaneous edits from multiple clients. Implement state reconciliation when WebSocket reconnects after disconnection. Create mechanism to handle out-of-order message delivery. Add periodic state synchronization checks to detect and resolve inconsistencies. Ensure proper handling of concurrent operations like moving cards to same position.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test multiple browser tabs stay synchronized, concurrent operations resolve correctly, and state remains consistent after network interruptions",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T15:56:43.247Z"
           }
         ],
         "complexity": 8,
         "recommendedSubtasks": 4,
         "expansionPrompt": "Split into: 1) Integrate WebSocket hook with board state management, 2) Implement event handlers for all card and comment operations, 3) Handle optimistic updates to avoid duplicates, 4) Ensure state consistency across multiple clients",
-        "updatedAt": "2026-04-10T15:14:41.213Z",
+        "updatedAt": "2026-04-10T15:56:43.247Z",
         "metadata": {
           "assignee": "Maria",
           "devSessionId": "d8a3babf-0df8-44dd-a928-9b57fbba0604"
@@ -1668,9 +1691,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-04-10T15:28:01.030Z",
+      "lastModified": "2026-04-10T15:56:43.247Z",
       "taskCount": 24,
-      "completedCount": 14,
+      "completedCount": 16,
       "tags": [
         "kanban-board"
       ]

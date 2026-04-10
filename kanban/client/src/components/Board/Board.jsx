@@ -5,7 +5,7 @@ import CardModal from './CardModal.jsx'
 import './Board.css'
 
 export default function Board() {
-  const { cards, loading, error, updateCard, deleteCard } = useBoard()
+  const { cards, loading, error, updateCard, deleteCard, addComment } = useBoard()
   const [selectedCardId, setSelectedCardId] = useState(null)
   const allCards = [...cards.ready, ...cards.in_progress, ...cards.done]
   const selectedCard = selectedCardId ? (allCards.find(c => c.id === selectedCardId) ?? null) : null
@@ -24,6 +24,7 @@ export default function Board() {
           onClose={() => setSelectedCardId(null)}
           onUpdate={updateCard}
           onDelete={deleteCard}
+          onAddComment={addComment}
         />
       )}
     </div>
