@@ -53,4 +53,18 @@ describe('Column', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Card One' }))
     expect(handler).toHaveBeenCalledWith(MOCK_CARDS[0])
   })
+
+  it('renders the footer prop below the cards area when provided', () => {
+    render(
+      <Column title="Ready" cards={[]} onCardClick={vi.fn()}
+        footer={<div data-testid="col-footer">Footer content</div>} />
+    )
+    expect(screen.getByTestId('col-footer')).toBeInTheDocument()
+  })
+
+  it('renders nothing extra when footer prop is not provided', () => {
+    const { container } = render(<Column title="Ready" cards={[]} onCardClick={vi.fn()} />)
+    const section = container.querySelector('.column')
+    expect(section.children).toHaveLength(2) // header + column-cards only
+  })
 })

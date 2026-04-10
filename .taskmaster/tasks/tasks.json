@@ -861,7 +861,8 @@
         "updatedAt": "2026-04-10T16:00:00.982Z",
         "metadata": {
           "assignee": "Ben",
-          "devSessionId": "a443680c-9834-4f17-a4c9-c900d58b7b90"
+          "devSessionId": "a443680c-9834-4f17-a4c9-c900d58b7b90",
+          "qaSessionId": "9f38f8fc-961f-424b-bce0-5e77fa2dbe22"
         }
       },
       {

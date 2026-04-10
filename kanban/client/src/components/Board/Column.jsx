@@ -1,7 +1,7 @@
 import CardTile from './CardTile.jsx'
 import './Column.css'
 
-export default function Column({ title, cards, onCardClick }) {
+export default function Column({ title, cards, onCardClick, footer }) {
   return (
     <section className="column" aria-label={title}>
       <header className="column-header">
@@ -19,6 +19,7 @@ export default function Column({ title, cards, onCardClick }) {
           ))
         )}
       </div>
+      {footer}
     </section>
   )
 }

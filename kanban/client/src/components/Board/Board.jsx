@@ -2,10 +2,11 @@ import { useState } from 'react'
 import { useBoard } from '../../hooks/useBoard.js'
 import Column from './Column.jsx'
 import CardModal from './CardModal.jsx'
+import CreateCardForm from '../CreateCardForm.jsx'
 import './Board.css'
 
 export default function Board() {
-  const { cards, loading, error, updateCard, deleteCard, addComment } = useBoard()
+  const { cards, loading, error, createCard, updateCard, deleteCard, addComment } = useBoard()
   const [selectedCardId, setSelectedCardId] = useState(null)
   const allCards = [...cards.ready, ...cards.in_progress, ...cards.done]
   const selectedCard = selectedCardId ? (allCards.find(c => c.id === selectedCardId) ?? null) : null
@@ -15,7 +16,12 @@ export default function Board() {
 
   return (
     <div className="board">
-      <Column title="Ready" cards={cards.ready} onCardClick={(card) => setSelectedCardId(card.id)} />
+      <Column
+        title="Ready"
+        cards={cards.ready}
+        onCardClick={(card) => setSelectedCardId(card.id)}
+        footer={<CreateCardForm onSubmit={createCard} />}
+      />
       <Column title="In Progress" cards={cards.in_progress} onCardClick={(card) => setSelectedCardId(card.id)} />
       <Column title="Done" cards={cards.done} onCardClick={(card) => setSelectedCardId(card.id)} />
       {selectedCard && (

@@ -1,0 +1,98 @@
+.create-card-form {
+  padding-top: 0.5rem;
+}
+
+.create-card-form-toggle {
+  width: 100%;
+  background: none;
+  border: 1px dashed #aaa;
+  border-radius: 4px;
+  padding: 0.4rem 0.75rem;
+  color: #555;
+  cursor: pointer;
+  font-size: 0.875rem;
+  text-align: left;
+}
+
+.create-card-form-toggle:hover {
+  border-color: #1a1a2e;
+  color: #1a1a2e;
+}
+
+.create-card-form-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.create-card-form-body label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #444;
+}
+
+.create-card-form-body input {
+  width: 100%;
+  padding: 0.3rem 0.5rem;
+  font-size: 0.875rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.create-card-form-body input:focus {
+  border-color: #1a1a2e;
+  outline: none;
+}
+
+.create-card-form-body input:disabled {
+  background: #f5f5f5;
+  cursor: not-allowed;
+}
+
+.create-card-form-error {
+  color: #c0392b;
+  font-size: 0.8rem;
+  margin: 0;
+}
+
+.create-card-form-actions {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.25rem;
+}
+
+.create-card-form-submit {
+  flex: 1;
+  background: #1a1a2e;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.create-card-form-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.create-card-form-cancel {
+  background: none;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  color: #555;
+}
+
+.create-card-form-cancel:hover {
+  border-color: #888;
+}
+
+.create-card-form-cancel:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

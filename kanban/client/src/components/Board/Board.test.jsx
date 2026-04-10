@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, within } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { useBoard } from '../../hooks/useBoard.js'
 import Board from './Board.jsx'
@@ -154,5 +154,38 @@ describe('Board', () => {
     })
     rerender(<Board />)
     expect(screen.queryByRole('dialog')).toBeNull()
+  })
+})
+
+describe('Board — CreateCardForm integration', () => {
+  it('renders the "+ Add card" button in the Ready column', () => {
+    render(<Board />)
+    const readyRegion = screen.getByRole('region', { name: 'Ready' })
+    expect(within(readyRegion).getByRole('button', { name: /\+ add card/i })).toBeInTheDocument()
+  })
+
+  it('does not render the "+ Add card" button in the In Progress column', () => {
+    render(<Board />)
+    const ipRegion = screen.getByRole('region', { name: 'In Progress' })
+    expect(within(ipRegion).queryByRole('button', { name: /\+ add card/i })).toBeNull()
+  })
+
+  it('does not render the "+ Add card" button in the Done column', () => {
+    render(<Board />)
+    const doneRegion = screen.getByRole('region', { name: 'Done' })
+    expect(within(doneRegion).queryByRole('button', { name: /\+ add card/i })).toBeNull()
+  })
+
+  it('calls createCard from useBoard when the form is submitted', async () => {
+    const createCard = vi.fn().mockResolvedValue(undefined)
+    useBoard.mockReturnValue({ ...DEFAULT_STATE, createCard })
+    render(<Board />)
+    const readyRegion = screen.getByRole('region', { name: 'Ready' })
+    fireEvent.click(within(readyRegion).getByRole('button', { name: /\+ add card/i }))
+    fireEvent.change(screen.getByLabelText(/title/i), { target: { value: 'My new card' } })
+    fireEvent.click(screen.getByRole('button', { name: /^add card$/i }))
+    await waitFor(() =>
+      expect(createCard).toHaveBeenCalledWith({ title: 'My new card', assignee: null })
+    )
   })
 })
