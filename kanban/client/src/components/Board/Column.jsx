@@ -1,7 +1,7 @@
 import CardTile from './CardTile.jsx'
 import './Column.css'
 
-export default function Column({ title, cards, onCardClick, footer }) {
+export default function Column({ title, cards, onCardClick, onUpdate, footer }) {
   return (
     <section className="column" aria-label={title}>
       <header className="column-header">
@@ -15,7 +15,7 @@ export default function Column({ title, cards, onCardClick, footer }) {
           <p className="column-empty">No cards</p>
         ) : (
           cards.map(card => (
-            <CardTile key={card.id} card={card} onCardClick={onCardClick} />
+            <CardTile key={card.id} card={card} onCardClick={onCardClick} onUpdate={onUpdate} />
           ))
         )}
       </div>

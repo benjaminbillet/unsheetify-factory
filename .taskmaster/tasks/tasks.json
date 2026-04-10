@@ -875,7 +875,7 @@
         "dependencies": [
           "12"
         ],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -883,9 +883,10 @@
             "description": "Install required dnd-kit packages and set up the basic DndContext wrapper around the Board component",
             "dependencies": [],
             "details": "Install @dnd-kit/core, @dnd-kit/sortable, and @dnd-kit/utilities packages. Wrap the Board component in DndContext with closestCenter collision detection algorithm. Configure sensors for mouse and touch interactions. Set up the basic structure for drag and drop functionality.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test that DndContext is properly initialized and collision detection works correctly",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T16:34:43.938Z"
           },
           {
             "id": 2,
@@ -895,9 +896,10 @@
               1
             ],
             "details": "Wrap each Column component with SortableContext to enable sorting within columns. Add useSortable hook to CardTile components to make individual cards draggable. Configure unique IDs for each sortable item and set up proper drag handles and accessibility attributes.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test that cards can be selected for dragging and columns properly handle sortable context",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T16:34:45.964Z"
           },
           {
             "id": 3,
@@ -907,9 +909,10 @@
               2
             ],
             "details": "Create onDragEnd handler in DndContext that determines the new position and column for dropped cards. Calculate fractional positions for proper ordering. Call moveCard API with updated position and column data. Handle both successful moves and error cases with proper state rollback.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test that drag end events properly update card positions via API calls and handle errors gracefully",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T16:34:47.944Z"
           },
           {
             "id": 4,
@@ -919,9 +922,10 @@
               2
             ],
             "details": "Implement CSS transforms for smooth drag animations using transform styles. Add visual feedback such as opacity changes, shadows, or overlays during drag operations. Style drag overlays and drop zones to clearly indicate valid drop targets. Ensure smooth transitions and responsive visual feedback.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test that visual feedback appears correctly during drag operations and animations are smooth",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T16:34:49.993Z"
           },
           {
             "id": 5,
@@ -931,15 +935,16 @@
               3
             ],
             "details": "Enhance the drag end handler to detect whether a card is being moved to a different column or reordered within the same column. Implement different position calculation logic for each scenario. For cross-column moves, update both column and position. For within-column reordering, only update position while maintaining column.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test that cards can be moved between columns and reordered within columns with correct position updates",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T16:34:52.040Z"
           }
         ],
         "complexity": 8,
         "recommendedSubtasks": 5,
         "expansionPrompt": "Break down into: 1) Install and configure dnd-kit with DndContext, 2) Implement sortable columns and cards, 3) Add drag end handler for position updates, 4) Implement visual feedback during drag operations, 5) Handle both cross-column and within-column reordering",
-        "updatedAt": "2026-04-10T16:04:02.788Z",
+        "updatedAt": "2026-04-10T16:34:52.040Z",
         "metadata": {
           "assignee": "Kate",
           "devSessionId": "465be850-b46a-4677-b02f-017469675fbd"
@@ -1430,7 +1435,7 @@
         "dependencies": [
           "20"
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -1505,7 +1510,12 @@
         ],
         "complexity": 8,
         "recommendedSubtasks": 6,
-        "expansionPrompt": "Break down into: 1) Set up Jest for unit testing database queries, 2) Add supertest for API integration tests, 3) Configure Playwright for E2E testing, 4) Create unit tests for React hooks, 5) Implement API endpoint tests, 6) Add E2E workflow tests and coverage reporting"
+        "expansionPrompt": "Break down into: 1) Set up Jest for unit testing database queries, 2) Add supertest for API integration tests, 3) Configure Playwright for E2E testing, 4) Create unit tests for React hooks, 5) Implement API endpoint tests, 6) Add E2E workflow tests and coverage reporting",
+        "updatedAt": "2026-04-10T16:32:19.741Z",
+        "metadata": {
+          "assignee": "Alice",
+          "devSessionId": "e152f977-e158-4bd0-ac49-754cc97f1de5"
+        }
       },
       {
         "id": "22",
@@ -1577,7 +1587,8 @@
         "updatedAt": "2026-04-10T16:23:14.590Z",
         "metadata": {
           "assignee": "Lydia",
-          "devSessionId": "64591555-f800-49d8-a8de-1311dc5c54ea"
+          "devSessionId": "64591555-f800-49d8-a8de-1311dc5c54ea",
+          "qaSessionId": "90098420-a517-4696-9a72-47bbfdf7b71d"
         }
       },
       {
@@ -1720,9 +1731,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-04-10T16:23:14.590Z",
+      "lastModified": "2026-04-10T16:34:52.040Z",
       "taskCount": 24,
-      "completedCount": 20,
+      "completedCount": 21,
       "tags": [
         "kanban-board"
       ]

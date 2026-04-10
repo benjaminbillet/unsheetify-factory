@@ -35,3 +35,29 @@
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
 }
+
+.card-tile-editing {
+  outline: 2px solid #4a6fa5;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+}
+
+.card-tile-field-edit {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.card-tile-field-edit input {
+  flex: 1;
+  font-size: 0.9rem;
+  padding: 0.15rem 0.3rem;
+  border: 1px solid #4a6fa5;
+  border-radius: 3px;
+}
+
+.card-tile-error {
+  font-size: 0.75rem;
+  color: #c0392b;
+  margin-top: 0.25rem;
+}

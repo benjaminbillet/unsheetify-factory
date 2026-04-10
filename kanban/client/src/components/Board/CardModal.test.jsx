@@ -223,6 +223,44 @@ describe('CardModal — edit title', () => {
     expect(screen.queryByRole('textbox', { name: /assignee/i })).not.toBeInTheDocument()
     expect(screen.getByRole('textbox', { name: /title/i })).toBeInTheDocument()
   })
+
+  it('blurring the title input calls onUpdate(id, { title })', async () => {
+    const onUpdate = vi.fn().mockResolvedValue({ ...card })
+    render(<CardModal card={card} onClose={vi.fn()} onUpdate={onUpdate} onDelete={vi.fn()} onAddComment={vi.fn()} />)
+    fireEvent.click(screen.getByRole('button', { name: /edit title/i }))
+    fireEvent.blur(screen.getByRole('textbox', { name: /title/i }))
+    await waitFor(() => expect(onUpdate).toHaveBeenCalledWith('1', { title: 'Fix bug' }))
+  })
+
+  it('blurring the title input does not call onUpdate when blur is caused by clicking Cancel', async () => {
+    const onUpdate = vi.fn()
+    render(<CardModal card={card} onClose={vi.fn()} onUpdate={onUpdate} onDelete={vi.fn()} onAddComment={vi.fn()} />)
+    fireEvent.click(screen.getByRole('button', { name: /edit title/i }))
+    const cancelButton = screen.getByRole('button', { name: /^cancel$/i })
+    fireEvent.mouseDown(cancelButton)
+    fireEvent.blur(screen.getByRole('textbox', { name: /title/i }))
+    expect(onUpdate).not.toHaveBeenCalled()
+  })
+
+  it('clicking the Save button does not trigger a double-save via blur', async () => {
+    const onUpdate = vi.fn().mockResolvedValue({ ...card, title: 'New title' })
+    render(<CardModal card={card} onClose={vi.fn()} onUpdate={onUpdate} onDelete={vi.fn()} onAddComment={vi.fn()} />)
+    fireEvent.click(screen.getByRole('button', { name: /edit title/i }))
+    fireEvent.change(screen.getByRole('textbox', { name: /title/i }), { target: { value: 'New title' } })
+    const saveButton = screen.getByRole('button', { name: /^save$/i })
+    fireEvent.mouseDown(saveButton)
+    fireEvent.blur(screen.getByRole('textbox', { name: /title/i }))
+    fireEvent.click(saveButton)
+    await waitFor(() => expect(onUpdate).toHaveBeenCalledTimes(1))
+  })
+
+  it('Escape key cancels title edit without calling onUpdate', () => {
+    const onUpdate = vi.fn()
+    render(<CardModal card={card} onClose={vi.fn()} onUpdate={onUpdate} onDelete={vi.fn()} onAddComment={vi.fn()} />)
+    fireEvent.click(screen.getByRole('button', { name: /edit title/i }))
+    fireEvent.keyDown(document.body, { key: 'Escape' })
+    expect(onUpdate).not.toHaveBeenCalled()
+  })
 })
 
 describe('CardModal — edit assignee', () => {
@@ -328,6 +366,44 @@ describe('CardModal — edit assignee', () => {
     fireEvent.click(screen.getByRole('button', { name: /edit assignee/i }))
     expect(screen.queryByRole('textbox', { name: /title/i })).not.toBeInTheDocument()
     expect(screen.getByRole('textbox', { name: /assignee/i })).toBeInTheDocument()
+  })
+
+  it('blurring the assignee input calls onUpdate(id, { assignee })', async () => {
+    const onUpdate = vi.fn().mockResolvedValue({ ...card })
+    render(<CardModal card={card} onClose={vi.fn()} onUpdate={onUpdate} onDelete={vi.fn()} onAddComment={vi.fn()} />)
+    fireEvent.click(screen.getByRole('button', { name: /edit assignee/i }))
+    fireEvent.blur(screen.getByRole('textbox', { name: /assignee/i }))
+    await waitFor(() => expect(onUpdate).toHaveBeenCalledWith('1', { assignee: 'Alice' }))
+  })
+
+  it('blurring the assignee input does not call onUpdate when blur is caused by clicking Cancel', async () => {
+    const onUpdate = vi.fn()
+    render(<CardModal card={card} onClose={vi.fn()} onUpdate={onUpdate} onDelete={vi.fn()} onAddComment={vi.fn()} />)
+    fireEvent.click(screen.getByRole('button', { name: /edit assignee/i }))
+    const cancelButton = screen.getByRole('button', { name: /^cancel$/i })
+    fireEvent.mouseDown(cancelButton)
+    fireEvent.blur(screen.getByRole('textbox', { name: /assignee/i }))
+    expect(onUpdate).not.toHaveBeenCalled()
+  })
+
+  it('clicking the assignee Save button does not trigger a double-save via blur', async () => {
+    const onUpdate = vi.fn().mockResolvedValue({ ...card, assignee: 'Bob' })
+    render(<CardModal card={card} onClose={vi.fn()} onUpdate={onUpdate} onDelete={vi.fn()} onAddComment={vi.fn()} />)
+    fireEvent.click(screen.getByRole('button', { name: /edit assignee/i }))
+    fireEvent.change(screen.getByRole('textbox', { name: /assignee/i }), { target: { value: 'Bob' } })
+    const saveButton = screen.getByRole('button', { name: /^save$/i })
+    fireEvent.mouseDown(saveButton)
+    fireEvent.blur(screen.getByRole('textbox', { name: /assignee/i }))
+    fireEvent.click(saveButton)
+    await waitFor(() => expect(onUpdate).toHaveBeenCalledTimes(1))
+  })
+
+  it('Escape key cancels assignee edit without calling onUpdate', () => {
+    const onUpdate = vi.fn()
+    render(<CardModal card={card} onClose={vi.fn()} onUpdate={onUpdate} onDelete={vi.fn()} onAddComment={vi.fn()} />)
+    fireEvent.click(screen.getByRole('button', { name: /edit assignee/i }))
+    fireEvent.keyDown(document.body, { key: 'Escape' })
+    expect(onUpdate).not.toHaveBeenCalled()
   })
 })
 

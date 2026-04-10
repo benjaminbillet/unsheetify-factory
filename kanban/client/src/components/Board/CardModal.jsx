@@ -19,8 +19,10 @@ export default function CardModal({ card, onClose, onUpdate, onDelete, onAddComm
   const [isDeleting, setIsDeleting]               = useState(false)
 
   // Focus refs
-  const titleInputRef    = useRef(null)
-  const assigneeInputRef = useRef(null)
+  const titleInputRef       = useRef(null)
+  const assigneeInputRef    = useRef(null)
+  const skipTitleBlurRef    = useRef(false)
+  const skipAssigneeBlurRef = useRef(false)
 
   // Focus effects
   useEffect(() => {
@@ -36,8 +38,10 @@ export default function CardModal({ card, onClose, onUpdate, onDelete, onAddComm
     function onKey(e) {
       if (e.key !== 'Escape') return
       if (isEditingTitle) {
+        skipTitleBlurRef.current = true   // prevent blur from triggering save
         setIsEditingTitle(false); setEditTitle(card.title); setSaveError(null)
       } else if (isEditingAssignee) {
+        skipAssigneeBlurRef.current = true   // prevent blur from triggering save
         setIsEditingAssignee(false); setEditAssignee(card.assignee ?? ''); setSaveError(null)
       } else if (isEditingDescription) {
         // BlockEditor owns its own Escape handler; CardModal just prevents modal close
@@ -113,14 +117,19 @@ export default function CardModal({ card, onClose, onUpdate, onDelete, onAddComm
               aria-label="Title"
               value={editTitle}
               onChange={e => setEditTitle(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter') handleSaveTitle() }}
+              onKeyDown={e => { if (e.key === 'Enter') { skipTitleBlurRef.current = true; handleSaveTitle() } }}
+              onBlur={() => {
+                if (skipTitleBlurRef.current) { skipTitleBlurRef.current = false; return }
+                handleSaveTitle()
+              }}
             />
-            <button aria-label="Save" onClick={handleSaveTitle} disabled={isSaving}>
+            <button aria-label="Save" onMouseDown={() => { skipTitleBlurRef.current = true }} onClick={handleSaveTitle} disabled={isSaving}>
               {isSaving ? 'Saving…' : 'Save'}
             </button>
             <button
               aria-label="Cancel"
               disabled={isSaving}
+              onMouseDown={() => { skipTitleBlurRef.current = true }}
               onClick={() => { setIsEditingTitle(false); setEditTitle(card.title); setSaveError(null) }}
             >
               Cancel
@@ -150,14 +159,19 @@ export default function CardModal({ card, onClose, onUpdate, onDelete, onAddComm
               aria-label="Assignee"
               value={editAssignee}
               onChange={e => setEditAssignee(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter') handleSaveAssignee() }}
+              onKeyDown={e => { if (e.key === 'Enter') { skipAssigneeBlurRef.current = true; handleSaveAssignee() } }}
+              onBlur={() => {
+                if (skipAssigneeBlurRef.current) { skipAssigneeBlurRef.current = false; return }
+                handleSaveAssignee()
+              }}
             />
-            <button aria-label="Save" onClick={handleSaveAssignee} disabled={isSaving}>
+            <button aria-label="Save" onMouseDown={() => { skipAssigneeBlurRef.current = true }} onClick={handleSaveAssignee} disabled={isSaving}>
               {isSaving ? 'Saving…' : 'Save'}
             </button>
             <button
               aria-label="Cancel"
               disabled={isSaving}
+              onMouseDown={() => { skipAssigneeBlurRef.current = true }}
               onClick={() => { setIsEditingAssignee(false); setEditAssignee(card.assignee ?? ''); setSaveError(null) }}
             >
               Cancel

@@ -20,10 +20,11 @@ export default function Board() {
         title="Ready"
         cards={cards.ready}
         onCardClick={(card) => setSelectedCardId(card.id)}
+        onUpdate={updateCard}
         footer={<CreateCardForm onSubmit={createCard} />}
       />
-      <Column title="In Progress" cards={cards.in_progress} onCardClick={(card) => setSelectedCardId(card.id)} />
-      <Column title="Done" cards={cards.done} onCardClick={(card) => setSelectedCardId(card.id)} />
+      <Column title="In Progress" cards={cards.in_progress} onCardClick={(card) => setSelectedCardId(card.id)} onUpdate={updateCard} />
+      <Column title="Done" cards={cards.done} onCardClick={(card) => setSelectedCardId(card.id)} onUpdate={updateCard} />
       {selectedCard && (
         <CardModal
           card={selectedCard}
