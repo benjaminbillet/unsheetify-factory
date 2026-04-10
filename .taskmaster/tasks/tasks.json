@@ -651,7 +651,7 @@
         "dependencies": [
           "9"
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -704,7 +704,12 @@
         ],
         "complexity": 6,
         "recommendedSubtasks": 4,
-        "expansionPrompt": "Split into: 1) Create Board layout component with responsive column structure, 2) Implement Column component with header and card list, 3) Create CardTile component with card display and click handling, 4) Add CSS styling and responsive design"
+        "expansionPrompt": "Split into: 1) Create Board layout component with responsive column structure, 2) Implement Column component with header and card list, 3) Create CardTile component with card display and click handling, 4) Add CSS styling and responsive design",
+        "updatedAt": "2026-04-10T14:40:36.802Z",
+        "metadata": {
+          "assignee": "Alex",
+          "devSessionId": "cb5e1e68-776f-4d30-8af1-96026f228538"
+        }
       },
       {
         "id": "11",
@@ -1109,7 +1114,7 @@
         "dependencies": [
           "16"
         ],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1119,9 +1124,10 @@
               16
             ],
             "details": "Import broadcast function into cards.js. Add broadcast calls after successful database operations for card creation, updates, deletion, and movement. Implement broadcast('card:created', card), broadcast('card:updated', card), broadcast('card:deleted', {id}), and broadcast('card:moved', card) calls. Ensure broadcasts only trigger after successful database writes.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test each card API operation (create, update, delete, move) triggers the correct WebSocket event with proper payload data",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T14:45:14.351Z"
           },
           {
             "id": 2,
@@ -1131,9 +1137,10 @@
               16
             ],
             "details": "Import broadcast function into comments.js route handlers. Add broadcast('comment:created', comment) call after successful comment creation in database. Ensure broadcast only happens after successful database write operation. Include complete comment object with card association in broadcast payload.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test comment creation API triggers comment:created WebSocket event with complete comment data including card reference",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T14:45:16.240Z"
           },
           {
             "id": 3,
@@ -1144,18 +1151,20 @@
               2
             ],
             "details": "Wrap all broadcast calls in try-catch blocks to handle potential WebSocket errors. Log broadcast failures for debugging but don't let them affect API response success. Implement fallback behavior when WebSocket server is unavailable. Ensure API operations complete successfully even if broadcasting fails.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test API operations succeed when WebSocket server is down, broadcast errors are logged properly, and client receives appropriate responses",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T14:45:18.098Z"
           }
         ],
         "complexity": 5,
         "recommendedSubtasks": 3,
         "expansionPrompt": "Split into: 1) Integrate broadcast calls into card operation endpoints, 2) Add broadcast calls to comment operations, 3) Implement error handling for broadcast failures",
-        "updatedAt": "2026-04-10T14:22:17.484Z",
+        "updatedAt": "2026-04-10T14:45:18.098Z",
         "metadata": {
           "assignee": "Henry",
-          "devSessionId": "2b0caf64-1f8e-4283-ac45-1792367a748c"
+          "devSessionId": "2b0caf64-1f8e-4283-ac45-1792367a748c",
+          "qaSessionId": "ffb93acc-1cd9-412a-b69d-125924c28eda"
         }
       },
       {
@@ -1628,9 +1637,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-04-10T14:34:27.068Z",
+      "lastModified": "2026-04-10T14:45:18.098Z",
       "taskCount": 24,
-      "completedCount": 10,
+      "completedCount": 11,
       "tags": [
         "kanban-board"
       ]

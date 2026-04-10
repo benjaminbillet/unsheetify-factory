@@ -3,6 +3,7 @@ import cors from 'cors';
 import { fileURLToPath } from 'node:url';
 import { resolve, dirname, join } from 'node:path';
 import commentsRouter from './api/comments.js';
+import cardsRouter from './api/cards.js';
 import { initWs } from './ws/broadcaster.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -22,6 +23,7 @@ function createApp() {
 
   // ── API Routes ────────────────────────────────────────────────────────────
   app.use('/api', commentsRouter);
+  app.use('/api', cardsRouter);
 
   // ── Routes ────────────────────────────────────────────────────────────────
   app.get('/health', (_req, res) => res.json({ ok: true }));

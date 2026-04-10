@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { createComment, ForeignKeyError } from '../db/queries.js';
+import { broadcast } from '../ws/broadcaster.js';
 
 const router = Router();
 
@@ -12,6 +13,7 @@ router.post('/cards/:id/comments', (req, res, next) => {
 
   try {
     const comment = createComment(req.params.id, { author, content });
+    try { broadcast('comment:created', comment); } catch { /* isolate broadcast errors */ }
     return res.status(201).json(comment);
   } catch (err) {
     if (err instanceof ForeignKeyError) {
