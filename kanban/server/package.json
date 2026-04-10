@@ -1,11 +1,26 @@
 {
   "name": "kanban-server",
   "version": "1.0.0",
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "dev": "nodemon index.js",
-    "start": "node index.js"
+    "start": "node index.js",
+    "test": "node --test test/server.test.mjs"
   },
-  "dependencies": {},
-  "devDependencies": {}
+  "nodemonConfig": {
+    "watch": ["./"],
+    "ext": "js,json",
+    "ignore": ["test/**", "node_modules/**"]
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "better-sqlite3": "^9.4.3",
+    "ws": "^8.16.0",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
 }

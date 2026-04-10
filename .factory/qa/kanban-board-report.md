@@ -152,6 +152,272 @@ The implementation used a TDD approach, writing tests before implementation and 
 ---
 ---
 
+# Task 3 — Setup Express Server with Health Endpoint
+
+**Date:** 2026-04-10
+**Worktree:** `/Users/benjamin/.sofactory/worktrees/kanban-board/kanban-board-3`
+**Branch:** `kanban-board/kanban-board-3`
+**Commit reviewed:** `3ec8d51`
+
+---
+
+## 1. Commands Found and Executed
+
+All commands were run from `kanban/` or the `server/` subdirectory, as appropriate.
+
+| Command | Location | Script Value | Result |
+|---|---|---|---|
+| `npm run test:setup` | `kanban/package.json` | `node --test test/*.test.mjs` | PASS |
+| `npm run test:server` | `kanban/package.json` | `npm -w server run test` | PASS |
+| `npm run test` | `kanban/server/package.json` | `node --test test/server.test.mjs` | PASS |
+| `npm run lint` | `kanban/client/package.json` | `eslint src` | PASS |
+| `npm run test` | `kanban/client/package.json` | `vitest run` | PASS |
+| `npm run build` | `kanban/package.json` | `npm -w client run build` | PASS |
+| Live server: `GET /health` | curl | — | PASS — `{"ok":true}` with HTTP 200 |
+| Live server: `OPTIONS /health` | curl (CORS preflight) | — | PASS — HTTP 204, CORS headers present |
+| Live server: `GET /nonexistent` | curl | — | PASS — HTTP 404 `{"error":"Not Found"}` |
+| Live server: `npm run dev` (nodemon) | `kanban/server/package.json` | `nodemon index.js` | PASS — server starts, `/health` responds |
+
+No typecheck script exists — TypeScript is not used in this project. No Makefile was found. No additional config files beyond `package.json` and `nodemonConfig` (embedded in `server/package.json`).
+
+### test:setup output (49 tests, 9 suites)
+
+```
+> kanban-app@1.0.0 test:setup
+> node --test test/*.test.mjs
+
+# tests 49
+# suites 9
+# pass 49
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 51.056ms
+```
+
+All 49 tests pass (both `setup.test.mjs` Task 1/2 tests and `client.setup.test.mjs` Task 2 tests).
+
+### test:server output (27 tests, 8 suites)
+
+```
+> kanban-app@1.0.0 test:server
+> npm -w server run test
+
+> kanban-server@1.0.0 test
+> node --test test/server.test.mjs
+
+# tests 27
+# suites 8
+# pass 27
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 133ms
+```
+
+All 27 server tests pass. Suites covered: Dependencies availability, CORS configuration, JSON body parsing, GET /health, Error handling middleware, 404 for unknown routes, Static file serving in production, Nodemon configuration.
+
+### client lint output
+
+```
+> kanban-client@1.0.0 lint
+> eslint src
+```
+
+Exit code 0. No warnings or errors.
+
+### client unit test output
+
+```
+> kanban-client@1.0.0 test
+> vitest run
+
+ ✓ src/App.test.jsx (4 tests) 32ms
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Duration  538ms
+```
+
+All 4 client unit tests pass.
+
+### build output
+
+```
+> kanban-app@1.0.0 build
+> npm -w client run build
+
+> kanban-client@1.0.0 build
+> vite build
+
+vite v5.4.21 building for production...
+✓ 31 modules transformed.
+dist/index.html                   0.48 kB │ gzip:  0.31 kB
+dist/assets/index-B_pynlF-.css    0.35 kB │ gzip:  0.24 kB
+dist/assets/index-DG_7CGO4.js   142.63 kB │ gzip: 45.80 kB
+✓ built in 229ms
+```
+
+Production build succeeds.
+
+---
+
+## 2. Live Server Verification
+
+The server was started directly via `node server/index.js` on the default port 3001 and tested with `curl`.
+
+### GET /health
+
+```
+HTTP/1.1 200 OK
+X-Powered-By: Express
+Vary: Origin
+Access-Control-Allow-Credentials: true
+Content-Type: application/json; charset=utf-8
+Content-Length: 11
+...
+
+{"ok":true}
+```
+
+**Result: PASS** — HTTP 200, body `{"ok":true}`, `Content-Type: application/json`.
+
+**Observation:** When no `Origin` header is sent (e.g., direct curl), the response does not include `Access-Control-Allow-Origin`. This is correct CORS behavior — the header is only reflected when an Origin is present in the request.
+
+### GET /health with Origin header
+
+```
+HTTP/1.1 200 OK
+Access-Control-Allow-Origin: http://localhost:5173
+Vary: Origin
+Access-Control-Allow-Credentials: true
+Content-Type: application/json; charset=utf-8
+...
+
+{"ok":true}
+```
+
+**Result: PASS** — `Access-Control-Allow-Origin` reflects the request's `Origin`. `Access-Control-Allow-Credentials: true` is set.
+
+### OPTIONS /health (CORS preflight)
+
+```
+HTTP/1.1 204 No Content
+Access-Control-Allow-Origin: http://localhost:5173
+Vary: Origin, Access-Control-Request-Headers
+Access-Control-Allow-Credentials: true
+Access-Control-Allow-Methods: GET,HEAD,PUT,PATCH,POST,DELETE
+Content-Length: 0
+...
+```
+
+**Result: PASS** — HTTP 204, all required CORS headers present, method list is correctly broad.
+
+### GET /nonexistent
+
+```
+HTTP/1.1 404 Not Found
+Content-Type: application/json; charset=utf-8
+...
+
+{"error":"Not Found"}
+```
+
+**Result: PASS** — HTTP 404 with JSON error body.
+
+### Dev mode (nodemon)
+
+```
+[nodemon] 3.1.14
+[nodemon] watching path(s): **/*
+[nodemon] watching extensions: js,json
+[nodemon] starting `node index.js`
+Server running on port 3001
+{"ok":true}
+```
+
+**Result: PASS** — nodemon starts, watches files, server responds to `/health`.
+
+---
+
+## 3. Implementation Verification
+
+### server/index.js
+
+| Requirement | Status | Notes |
+|---|---|---|
+| Express app created | PASS | `createApp()` factory function used |
+| CORS middleware | PASS | `cors({ origin: true, credentials: true })` in dev; `origin: false` in production |
+| `express.json()` middleware | PASS | Parses JSON request bodies |
+| `GET /health` returns `{ok: true}` | PASS | HTTP 200, JSON body `{"ok":true}` |
+| Error handling middleware (4-arg) | PASS | `(err, _req, res, _next)` — uses `err.status \|\| err.statusCode \|\| 500` |
+| 404 handler | PASS | Falls through to `(_req, res) => res.status(404).json({ error: 'Not Found' })` |
+| Static files in production | PASS | `express.static(join(__dirname, '..', 'client', 'dist'))` when `NODE_ENV=production` |
+| SPA fallback in production | PASS | `GET *` → `res.sendFile(join(distPath, 'index.html'))` |
+| Entry point guard | PASS | Uses `resolve(process.argv[1]) === fileURLToPath(import.meta.url)` before listening |
+| `createApp` exported | PASS | `export { createApp }` — enables test imports without starting the server |
+| PORT from env | PASS | `process.env.PORT \|\| 3001` |
+
+### server/package.json
+
+| Requirement | Status | Notes |
+|---|---|---|
+| `express` in dependencies | PASS | `"^4.18.2"` |
+| `cors` in dependencies | PASS | `"^2.8.5"` |
+| `better-sqlite3` in dependencies | PASS | `"^9.4.3"` |
+| `ws` in dependencies | PASS | `"^8.16.0"` |
+| `uuid` in dependencies | PASS | `"^9.0.0"` |
+| `nodemon` in devDependencies | PASS | `"^3.1.0"` |
+| `scripts.dev` uses nodemon | PASS | `"nodemon index.js"` |
+| `scripts.start` uses node | PASS | `"node index.js"` |
+| `scripts.test` present | PASS | `"node --test test/server.test.mjs"` |
+| `nodemonConfig.watch` is an array | PASS | `["./"]` |
+| `nodemonConfig.ext` is set | PASS | `"js,json"` |
+| `nodemonConfig.ignore` is set | PASS | `["test/**", "node_modules/**"]` |
+| `"type": "module"` | PASS | Required for `import`/`export` in Node.js |
+
+---
+
+## 4. Issues Found
+
+### Minor / Observations
+
+1. **`X-Powered-By: Express` header is not suppressed.** The response includes `X-Powered-By: Express` in all responses. This is a minor security concern (fingerprinting the server technology) that is standard practice to disable via `app.disable('x-powered-by')` or using `helmet`. It does not affect functionality, and no test checks for it, so it is not a failure for this task. *(Low severity)*
+
+2. **Nodemon watching path is `["./"]` (relative).** The `nodemonConfig.watch` array uses `"./"` rather than an absolute path or a path like `["./"]`. When run via `npm -w server run dev` from the workspace root, nodemon resolves `"./"` relative to the `server/` directory (the working directory for the script). This appears to work correctly in practice (confirmed by the live test), but the nodemon output shows `watching path(s): **/*` which suggests it expands the path correctly. This is not a defect but worth noting. *(Informational)*
+
+3. **No `engines` field in `server/package.json`.** The project uses ESM (`"type": "module"`) and Node.js v22 features. There is no `engines` field to enforce a minimum Node.js version. This could cause confusing errors on older Node.js versions. *(Low severity, informational)*
+
+4. **Dev-only routes (`/dev/echo`, `/dev/error`) are not clearly documented.** These routes are useful for testing but exist silently in development mode. They are correctly gated behind `if (!isProduction)`. Not a defect, but an observation. *(Informational)*
+
+### No Blockers
+
+All specified deliverables are fully implemented. All automated tests pass. The live server behaves correctly. No spec requirements were missed.
+
+---
+
+## 5. Overall Assessment
+
+**PASS**
+
+All Task 3 deliverables are correctly implemented:
+
+- `server/index.js` is created with a clean `createApp()` factory pattern
+- All required dependencies (`express`, `cors`, `better-sqlite3`, `ws`, `uuid`) are installed and importable
+- `nodemon` is installed as a devDependency and correctly configured in `server/package.json`
+- CORS is configured for development using `origin: true` (Origin reflection) with `credentials: true`
+- `GET /health` returns HTTP 200 with `{"ok":true}` and `Content-Type: application/json`
+- Nodemon restarts the server on `.js` and `.json` file changes, ignoring `test/` and `node_modules/`
+- Static files are served from `client/dist` in production mode, with SPA fallback
+- Error handling middleware (4-arity) is in place, using `err.status`/`err.statusCode`/`500`
+- 404 middleware catches all unknown routes
+- All 27 server tests pass, all 49 setup tests pass, client lint and unit tests pass, production build succeeds
+
+---
+---
+
 # Task 2 — Setup Vite + React Client Application
 
 **Date:** 2026-04-10

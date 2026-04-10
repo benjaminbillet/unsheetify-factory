@@ -208,7 +208,8 @@
         "updatedAt": "2026-04-10T09:32:00.905Z",
         "metadata": {
           "assignee": "Paul",
-          "devSessionId": "96fca5a0-7f53-4746-9b55-6625092fc1e4"
+          "devSessionId": "96fca5a0-7f53-4746-9b55-6625092fc1e4",
+          "qaSessionId": "82252523-e7db-486f-b9c0-244f4f98bf0d"
         }
       },
       {
@@ -221,7 +222,7 @@
         "dependencies": [
           "3"
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -260,7 +261,12 @@
         ],
         "complexity": 6,
         "recommendedSubtasks": 3,
-        "expansionPrompt": "Split into: 1) Design and create SQL schema files for cards and comments tables with proper relationships, 2) Implement migration runner system with version tracking, 3) Add database indexes and test migration execution"
+        "expansionPrompt": "Split into: 1) Design and create SQL schema files for cards and comments tables with proper relationships, 2) Implement migration runner system with version tracking, 3) Add database indexes and test migration execution",
+        "updatedAt": "2026-04-10T09:35:44.524Z",
+        "metadata": {
+          "assignee": "Grace",
+          "devSessionId": "43292131-9288-4835-a171-2ceb5fbee42d"
+        }
       },
       {
         "id": "5",
@@ -1555,7 +1561,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-04-10T09:32:00.906Z",
+      "lastModified": "2026-04-10T09:35:44.525Z",
       "taskCount": 24,
       "completedCount": 3,
       "tags": [
