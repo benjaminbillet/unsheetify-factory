@@ -2,6 +2,7 @@ import { renderHook, act, waitFor } from '@testing-library/react'
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { useBoard, columnToKey } from './useBoard.js'
 import * as api from '../api/client.js'
+import { useWebSocket } from './useWebSocket.js'
 
 vi.mock('../api/client.js', () => ({
   fetchCards: vi.fn(),
@@ -10,6 +11,22 @@ vi.mock('../api/client.js', () => ({
   deleteCard: vi.fn(),
   createComment: vi.fn(),
 }))
+
+vi.mock('./useWebSocket.js', () => ({ useWebSocket: vi.fn() }))
+
+// ---------------------------------------------------------------------------
+// Top-level WS mock setup — runs before every test
+// mockImplementation (not mockReturnValue) so it always wins over any stale
+// implementation left by tests that override it in their body (e.g. reconnect tests).
+// vi.clearAllMocks() clears call history but NOT implementations.
+// ---------------------------------------------------------------------------
+let simulateWsEvent
+beforeEach(() => {
+  useWebSocket.mockImplementation((url, opts) => {
+    simulateWsEvent = opts?.onEvent
+    return { status: 'connected', disconnect: vi.fn() }
+  })
+})
 
 // Shared fixture cards
 const FIXTURE_CARDS = [
@@ -669,6 +686,380 @@ describe('state shape', () => {
     // Both have same position — order should be stable (r1 before r2 as received)
     const ids = result.current.cards.ready.map(c => c.id)
     expect(ids).toEqual(['r1', 'r2'])
+  })
+})
+
+// ---------------------------------------------------------------------------
+// SUBTASK 19.1 — WebSocket hook integration
+// ---------------------------------------------------------------------------
+
+describe('WebSocket integration — initialization', () => {
+  beforeEach(() => { api.fetchCards.mockResolvedValue(FIXTURE_CARDS) })
+  afterEach(() => vi.clearAllMocks())
+
+  it('calls useWebSocket with a ws:// URL containing /ws', () => {
+    renderHook(() => useBoard())
+    const url = useWebSocket.mock.calls[0][0]
+    expect(url).toMatch(/^wss?:\/\/.+\/ws$/)
+  })
+
+  it('subscribes to all 5 event types', () => {
+    renderHook(() => useBoard())
+    const { events } = useWebSocket.mock.calls[0][1]
+    expect(events).toEqual(['card:created', 'card:updated', 'card:deleted', 'card:moved', 'comment:created'])
+  })
+
+  it('passes an onEvent callback to useWebSocket', () => {
+    renderHook(() => useBoard())
+    const { onEvent } = useWebSocket.mock.calls[0][1]
+    expect(typeof onEvent).toBe('function')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// SUBTASK 19.2 — WebSocket event handlers
+// ---------------------------------------------------------------------------
+
+describe('WebSocket event: card:created', () => {
+  beforeEach(() => { api.fetchCards.mockResolvedValue(FIXTURE_CARDS) })
+  afterEach(() => vi.clearAllMocks())
+
+  it('adds card to the ready column', async () => {
+    const { result } = renderHook(() => useBoard())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    act(() => simulateWsEvent('card:created', { id: 'ws1', title: 'WS', column: 'ready', position: 2, assignee: null, description: null, created_at: 2000 }))
+    expect(result.current.cards.ready).toHaveLength(2)
+  })
+
+  it('adds card to in_progress column for in-progress API value', async () => {
+    const { result } = renderHook(() => useBoard())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    act(() => simulateWsEvent('card:created', { id: 'ws2', title: 'WS IP', column: 'in-progress', position: 2, assignee: null, description: null, created_at: 2000 }))
+    expect(result.current.cards.in_progress).toHaveLength(2)
+    expect(result.current.cards.in_progress.find(c => c.id === 'ws2')).toBeTruthy()
+  })
+
+  it('adds card to done column', async () => {
+    const { result } = renderHook(() => useBoard())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    act(() => simulateWsEvent('card:created', { id: 'ws3', title: 'WS Done', column: 'done', position: 2, assignee: null, description: null, created_at: 2000 }))
+    expect(result.current.cards.done).toHaveLength(2)
+    expect(result.current.cards.done.find(c => c.id === 'ws3')).toBeTruthy()
+  })
+
+  it('initializes comments as empty array', async () => {
+    const { result } = renderHook(() => useBoard())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    act(() => simulateWsEvent('card:created', { id: 'ws1', title: 'WS', column: 'ready', position: 2, assignee: null, description: null, created_at: 2000 }))
+    const newCard = result.current.cards.ready.find(c => c.id === 'ws1')
+    expect(newCard.comments).toEqual([])
+  })
+
+  it('inserts card sorted by position', async () => {
+    const { result } = renderHook(() => useBoard())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    act(() => simulateWsEvent('card:created', { id: 'ws0', title: 'Before', column: 'ready', position: 0.5, assignee: null, description: null, created_at: 2000 }))
+    expect(result.current.cards.ready[0].id).toBe('ws0')
+    expect(result.current.cards.ready[1].id).toBe('r1')
+  })
+
+  it('ignores event if card already exists (idempotent)', async () => {
+    const { result } = renderHook(() => useBoard())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    const payload = { id: 'ws1', title: 'WS', column: 'ready', position: 2, assignee: null, description: null, created_at: 2000 }
+    act(() => simulateWsEvent('card:created', payload))
+    act(() => simulateWsEvent('card:created', payload))
+    expect(result.current.cards.ready).toHaveLength(2)
+  })
+})
+
+describe('WebSocket event: card:updated', () => {
+  beforeEach(() => { api.fetchCards.mockResolvedValue(FIXTURE_CARDS) })
+  afterEach(() => vi.clearAllMocks())
+
+  it('updates card title in place', async () => {
+    const { result } = renderHook(() => useBoard())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    act(() => simulateWsEvent('card:updated', { id: 'r1', column: 'ready', position: 1, title: 'New Title', assignee: null, description: null, created_at: 1000 }))
+    expect(result.current.cards.ready[0].title).toBe('New Title')
+    expect(result.current.cards.ready).toHaveLength(1)
+  })
+
+  it('updates card assignee in place', async () => {
+    const { result } = renderHook(() => useBoard())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    act(() => simulateWsEvent('card:updated', { id: 'r1', column: 'ready', position: 1, title: 'Ready One', assignee: 'Alice', description: null, created_at: 1000 }))
+    expect(result.current.cards.ready[0].assignee).toBe('Alice')
+  })
+
+  it('preserves existing comments when updating card', async () => {
+    const cardWithComment = { ...FIXTURE_CARDS[0], comments: [{ id: 'c0', card_id: 'r1', author: 'Alice', content: 'Hi', created_at: 500 }] }
+    api.fetchCards.mockResolvedValue([cardWithComment, ...FIXTURE_CARDS.slice(1)])
+    const { result } = renderHook(() => useBoard())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    act(() => simulateWsEvent('card:updated', { id: 'r1', column: 'ready', position: 1, title: 'Updated', assignee: null, description: null, created_at: 1000 }))
+    expect(result.current.cards.ready[0].comments).toHaveLength(1)
+    expect(result.current.cards.ready[0].comments[0].id).toBe('c0')
+  })
+
+  it('does nothing when card does not exist', async () => {
+    const { result } = renderHook(() => useBoard())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    const before = result.current.cards
+    act(() => simulateWsEvent('card:updated', { id: 'unknown', column: 'ready', position: 1, title: 'X', assignee: null, description: null, created_at: 1000 }))
+    expect(result.current.cards).toEqual(before)
+  })
+
+  it('moves card to new column when column field changes (cross-client move sync)', async () => {
+    const { result } = renderHook(() => useBoard())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    act(() => simulateWsEvent('card:updated', { id: 'r1', column: 'done', position: 2, title: 'Ready One', assignee: null, description: null, created_at: 1000 }))
+    expect(result.current.cards.ready).toHaveLength(0)
+    expect(result.current.cards.done).toHaveLength(2)
+    expect(result.current.cards.done.find(c => c.id === 'r1').column).toBe('done')
+  })
+})
+
+describe('WebSocket event: card:deleted', () => {
+  beforeEach(() => { api.fetchCards.mockResolvedValue(FIXTURE_CARDS) })
+  afterEach(() => vi.clearAllMocks())
+
+  it('removes card from its column', async () => {
+    const { result } = renderHook(() => useBoard())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    act(() => simulateWsEvent('card:deleted', { id: 'r1' }))
+    expect(result.current.cards.ready).toHaveLength(0)
+  })
+
+  it('does nothing when card does not exist', async () => {
+    const { result } = renderHook(() => useBoard())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    const before = result.current.cards
+    act(() => simulateWsEvent('card:deleted', { id: 'unknown' }))
+    expect(result.current.cards).toEqual(before)
+  })
+})
+
+describe('WebSocket event: card:moved', () => {
+  beforeEach(() => { api.fetchCards.mockResolvedValue(FIXTURE_CARDS) })
+  afterEach(() => vi.clearAllMocks())
+
+  it('moves card from ready to done', async () => {
+    const { result } = renderHook(() => useBoard())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    act(() => simulateWsEvent('card:moved', { id: 'r1', column: 'done', position: 2, title: 'Ready One', assignee: null, description: null, created_at: 1000 }))
+    expect(result.current.cards.done.find(c => c.id === 'r1')).toBeTruthy()
+  })
+
+  it('removes card from its original column', async () => {
+    const { result } = renderHook(() => useBoard())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    act(() => simulateWsEvent('card:moved', { id: 'r1', column: 'done', position: 2, title: 'Ready One', assignee: null, description: null, created_at: 1000 }))
+    expect(result.current.cards.ready).toHaveLength(0)
+  })
+
+  it('updates card column field to new column', async () => {
+    const { result } = renderHook(() => useBoard())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    act(() => simulateWsEvent('card:moved', { id: 'r1', column: 'done', position: 2, title: 'Ready One', assignee: null, description: null, created_at: 1000 }))
+    expect(result.current.cards.done.find(c => c.id === 'r1').column).toBe('done')
+  })
+
+  it('re-sorts target column by position after move', async () => {
+    const { result } = renderHook(() => useBoard())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    act(() => simulateWsEvent('card:moved', { id: 'r1', column: 'done', position: 0.5, title: 'Ready One', assignee: null, description: null, created_at: 1000 }))
+    expect(result.current.cards.done[0].id).toBe('r1')
+    expect(result.current.cards.done[1].id).toBe('d1')
+  })
+
+  it('preserves card comments when moving', async () => {
+    const cardWithComment = { ...FIXTURE_CARDS[0], comments: [{ id: 'c0', card_id: 'r1', author: 'Alice', content: 'Hi', created_at: 500 }] }
+    api.fetchCards.mockResolvedValue([cardWithComment, ...FIXTURE_CARDS.slice(1)])
+    const { result } = renderHook(() => useBoard())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    act(() => simulateWsEvent('card:moved', { id: 'r1', column: 'done', position: 2, title: 'Ready One', assignee: null, description: null, created_at: 1000 }))
+    const movedCard = result.current.cards.done.find(c => c.id === 'r1')
+    expect(movedCard.comments).toHaveLength(1)
+    expect(movedCard.comments[0].id).toBe('c0')
+  })
+
+  it('does nothing when card does not exist', async () => {
+    const { result } = renderHook(() => useBoard())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    const before = result.current.cards
+    act(() => simulateWsEvent('card:moved', { id: 'unknown', column: 'done', position: 1, title: 'X', assignee: null, description: null, created_at: 1000 }))
+    expect(result.current.cards).toEqual(before)
+  })
+})
+
+describe('WebSocket event: comment:created', () => {
+  beforeEach(() => { api.fetchCards.mockResolvedValue(FIXTURE_CARDS) })
+  afterEach(() => vi.clearAllMocks())
+
+  it('appends comment to the card comments array', async () => {
+    const { result } = renderHook(() => useBoard())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    act(() => simulateWsEvent('comment:created', { id: 'cm1', card_id: 'r1', author: 'Bob', content: 'Hey', created_at: 2000 }))
+    expect(result.current.cards.ready[0].comments).toHaveLength(1)
+  })
+
+  it('preserves existing comments when adding new one', async () => {
+    const cardWithComment = { ...FIXTURE_CARDS[0], comments: [{ id: 'c0', card_id: 'r1', author: 'Alice', content: 'First', created_at: 500 }] }
+    api.fetchCards.mockResolvedValue([cardWithComment, ...FIXTURE_CARDS.slice(1)])
+    const { result } = renderHook(() => useBoard())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    act(() => simulateWsEvent('comment:created', { id: 'cm1', card_id: 'r1', author: 'Bob', content: 'Second', created_at: 2000 }))
+    expect(result.current.cards.ready[0].comments).toHaveLength(2)
+  })
+
+  it('does nothing when card does not exist', async () => {
+    const { result } = renderHook(() => useBoard())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    const before = result.current.cards
+    act(() => simulateWsEvent('comment:created', { id: 'cm1', card_id: 'unknown', author: 'Bob', content: 'Hey', created_at: 2000 }))
+    expect(result.current.cards).toEqual(before)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// SUBTASK 19.3 — Optimistic update deduplication
+// ---------------------------------------------------------------------------
+
+describe('optimistic update deduplication', () => {
+  beforeEach(() => { api.fetchCards.mockResolvedValue(FIXTURE_CARDS) })
+  afterEach(() => vi.clearAllMocks())
+
+  it('ignores card:created WS event after local createCard succeeds', async () => {
+    const serverCard = { id: 'srv1', column: 'ready', position: 2, title: 'New', assignee: null, description: null, created_at: 2000, comments: [] }
+    api.createCard.mockResolvedValue(serverCard)
+    const { result } = renderHook(() => useBoard())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+
+    await act(async () => { await result.current.createCard({ title: 'New', column: 'ready' }) })
+    act(() => simulateWsEvent('card:created', { id: 'srv1', column: 'ready', position: 2, title: 'New', assignee: null, description: null, created_at: 2000 }))
+    expect(result.current.cards.ready).toHaveLength(2) // r1 + srv1, NOT 3
+  })
+
+  it('ignores comment:created WS event after local addComment succeeds', async () => {
+    api.createComment.mockResolvedValue({ id: 'cm1', card_id: 'r1', author: 'Bob', content: 'hi', created_at: 2000 })
+    const { result } = renderHook(() => useBoard())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+
+    await act(async () => { await result.current.addComment('r1', { author: 'Bob', content: 'hi' }) })
+    act(() => simulateWsEvent('comment:created', { id: 'cm1', card_id: 'r1', author: 'Bob', content: 'hi', created_at: 2000 }))
+    expect(result.current.cards.ready[0].comments).toHaveLength(1) // not 2
+  })
+
+  it('ignores card:updated WS event after local updateCard call', async () => {
+    api.updateCard.mockReturnValue(new Promise(() => {})) // keep pending
+    const { result } = renderHook(() => useBoard())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+
+    act(() => void result.current.updateCard('r1', { title: 'Local' }))
+    act(() => simulateWsEvent('card:updated', { id: 'r1', column: 'ready', position: 1, title: 'Remote', assignee: null, description: null, created_at: 1000 }))
+    expect(result.current.cards.ready[0].title).toBe('Local') // WS suppressed
+  })
+
+  it('ignores card:deleted WS event after local deleteCard call', async () => {
+    api.deleteCard.mockReturnValue(new Promise(() => {})) // keep pending
+    const { result } = renderHook(() => useBoard())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+
+    act(() => void result.current.deleteCard('r1'))
+    act(() => simulateWsEvent('card:deleted', { id: 'r1' }))
+    expect(result.current.cards.ready).toHaveLength(0) // stays deleted, no crash
+  })
+
+  it('ignores card:updated WS event (with column change) after local moveCard call', async () => {
+    api.updateCard.mockReturnValue(new Promise(() => {})) // keep pending
+    const { result } = renderHook(() => useBoard())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+
+    act(() => void result.current.moveCard('r1', 'done', 2))
+    act(() => simulateWsEvent('card:updated', { id: 'r1', column: 'done', position: 2, title: 'Ready One', assignee: null, description: null, created_at: 1000 }))
+    expect(result.current.cards.done).toHaveLength(2) // d1 + r1, NOT 3
+    expect(result.current.cards.ready).toHaveLength(0)
+  })
+
+  it('does NOT suppress WS event for a different card', async () => {
+    api.updateCard.mockReturnValue(new Promise(() => {})) // keep pending
+    const { result } = renderHook(() => useBoard())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+
+    act(() => void result.current.updateCard('r1', { title: 'Changed' }))
+    act(() => simulateWsEvent('card:updated', { id: 'p1', column: 'in-progress', position: 1, title: 'Updated P1', assignee: null, description: null, created_at: 1000 }))
+    expect(result.current.cards.in_progress[0].title).toBe('Updated P1') // not suppressed
+  })
+
+  it('suppression is consumed: second WS event for same card is applied', async () => {
+    api.updateCard.mockReturnValue(new Promise(() => {})) // keep pending
+    const { result } = renderHook(() => useBoard())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+
+    act(() => void result.current.updateCard('r1', { title: 'Local' }))
+    // First WS event — suppressed (consumes suppression entry)
+    act(() => simulateWsEvent('card:updated', { id: 'r1', column: 'ready', position: 1, title: 'First Remote', assignee: null, description: null, created_at: 1000 }))
+    // Second WS event — NOT suppressed (entry already consumed)
+    act(() => simulateWsEvent('card:updated', { id: 'r1', column: 'ready', position: 1, title: 'Second Remote', assignee: null, description: null, created_at: 1000 }))
+    expect(result.current.cards.ready[0].title).toBe('Second Remote')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// SUBTASK 19.4 — Multi-client state consistency
+// ---------------------------------------------------------------------------
+
+describe('multi-client state consistency', () => {
+  beforeEach(() => { api.fetchCards.mockResolvedValue(FIXTURE_CARDS) })
+  afterEach(() => vi.clearAllMocks())
+
+  it('WS card:created from another client adds card (not suppressed)', async () => {
+    const { result } = renderHook(() => useBoard())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    act(() => simulateWsEvent('card:created', { id: 'ext1', column: 'ready', position: 2, title: 'External', assignee: null, description: null, created_at: 2000 }))
+    expect(result.current.cards.ready).toHaveLength(2)
+  })
+
+  it('successive card:moved WS events apply in order (last write wins)', async () => {
+    const { result } = renderHook(() => useBoard())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    act(() => simulateWsEvent('card:moved', { id: 'r1', column: 'done', position: 2, title: 'Ready One', assignee: null, description: null, created_at: 1000 }))
+    act(() => simulateWsEvent('card:moved', { id: 'r1', column: 'in-progress', position: 2, title: 'Ready One', assignee: null, description: null, created_at: 1000 }))
+    expect(result.current.cards.in_progress.find(c => c.id === 'r1')).toBeTruthy()
+    expect(result.current.cards.done.find(c => c.id === 'r1')).toBeFalsy()
+  })
+
+  it('refetches board state when WebSocket reconnects after disconnect', async () => {
+    let mockWsStatus = 'connected'
+    useWebSocket.mockImplementation(() => ({ status: mockWsStatus, disconnect: vi.fn() }))
+    const { result, rerender } = renderHook(() => useBoard())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    // Simulate disconnect → reconnect
+    act(() => { mockWsStatus = 'disconnected'; rerender() })
+    act(() => { mockWsStatus = 'connected'; rerender() })
+    expect(api.fetchCards).toHaveBeenCalledTimes(2)
+  })
+
+  it('does not refetch on initial connection (only on reconnect)', async () => {
+    const { result } = renderHook(() => useBoard())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(api.fetchCards).toHaveBeenCalledTimes(1)
+  })
+
+  it('state reflects re-fetched data after reconnect', async () => {
+    const secondFetchData = [{ id: 'd2', title: 'New Done', column: 'done', position: 1, assignee: null, description: null, created_at: 2000, comments: [] }]
+    api.fetchCards.mockResolvedValueOnce(FIXTURE_CARDS).mockResolvedValueOnce(secondFetchData)
+    let mockWsStatus = 'connected'
+    useWebSocket.mockImplementation(() => ({ status: mockWsStatus, disconnect: vi.fn() }))
+    const { result, rerender } = renderHook(() => useBoard())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    // Simulate disconnect → reconnect
+    act(() => { mockWsStatus = 'disconnected'; rerender() })
+    act(() => { mockWsStatus = 'connected'; rerender() })
+    await waitFor(() => expect(result.current.cards.done).toHaveLength(1))
+    expect(result.current.cards.done[0].id).toBe('d2')
+    expect(result.current.cards.ready).toHaveLength(0)
   })
 })
 

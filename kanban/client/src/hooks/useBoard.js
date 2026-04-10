@@ -6,6 +6,7 @@ import {
   deleteCard as apiDeleteCard,
   createComment,
 } from '../api/client.js'
+import { useWebSocket } from './useWebSocket.js'
 
 // ---------------------------------------------------------------------------
 // Module-level helpers
@@ -46,6 +47,10 @@ function nextTempId() {
   return '__temp_' + (++_tempId)
 }
 
+// WebSocket constants (module-level — computed once on import)
+const WS_URL = `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}/ws`
+const WS_EVENTS = ['card:created', 'card:updated', 'card:deleted', 'card:moved', 'comment:created']
+
 // ---------------------------------------------------------------------------
 // useBoard hook
 // ---------------------------------------------------------------------------
@@ -85,6 +90,12 @@ export function useBoard() {
   // before the updater runs).
   const cardsRef = useRef(EMPTY_BOARD)
 
+  // Suppression map — consume-once with 5s TTL to ignore WS echo of local actions
+  const suppressedRef = useRef(new Map())
+
+  // Tracks whether we've had at least one successful connection (for reconnect detection)
+  const hasConnectedRef = useRef(false)
+
   /**
    * Apply a state update eagerly: compute the next value synchronously from
    * cardsRef.current, update the ref, then call setCards with the plain
@@ -98,6 +109,127 @@ export function useBoard() {
 
   function beginOp() { pendingRef.current++; setLoading(true) }
   function endOp()   { if (--pendingRef.current === 0) setLoading(false) }
+
+  function suppressWsEvent(id) {
+    suppressedRef.current.set(id, Date.now() + 5000)
+  }
+
+  function consumeSuppression(id) {
+    const expiry = suppressedRef.current.get(id)
+    if (expiry === undefined) return false
+    suppressedRef.current.delete(id)
+    return Date.now() <= expiry
+  }
+
+  // -------------------------------------------------------------------------
+  // WebSocket event handler (stub — filled in Subtask 2)
+  // -------------------------------------------------------------------------
+
+  // useCallback([]) is safe: applyCards/consumeSuppression close only over stable refs
+  const handleWsEvent = useCallback((eventType, payload) => {
+    switch (eventType) {
+      case 'card:created': {
+        if (consumeSuppression(payload.id)) break
+        const key = columnToKey(payload.column)
+        applyCards(prev => {
+          if (prev[key].some(c => c.id === payload.id)) return prev
+          return {
+            ...prev,
+            [key]: [...prev[key], { ...payload, comments: payload.comments ?? [] }]
+              .sort((a, b) => a.position - b.position),
+          }
+        })
+        break
+      }
+      case 'card:updated': {
+        if (consumeSuppression(payload.id)) break
+        // Remove from current column, re-insert in correct column.
+        // Handles both in-place updates AND cross-column moves via PATCH /api/cards/:id.
+        // Preserves existing comments (WS payload does not include comments array).
+        const newKey = columnToKey(payload.column)
+        applyCards(prev => {
+          let existingComments = []
+          let found = false
+          const next = {}
+          for (const [k, col] of Object.entries(prev)) {
+            const card = col.find(c => c.id === payload.id)
+            if (card) { existingComments = card.comments ?? []; found = true }
+            next[k] = col.filter(c => c.id !== payload.id)
+          }
+          if (!found) return prev
+          next[newKey] = [...next[newKey], { ...payload, comments: existingComments }]
+            .sort((a, b) => a.position - b.position)
+          return next
+        })
+        break
+      }
+      case 'card:deleted': {
+        if (consumeSuppression(payload.id)) break
+        applyCards(prev => {
+          const next = {}
+          for (const [k, col] of Object.entries(prev)) {
+            next[k] = col.filter(c => c.id !== payload.id)
+          }
+          return next
+        })
+        break
+      }
+      case 'card:moved': {
+        if (consumeSuppression(payload.id)) break
+        const newKey = columnToKey(payload.column)
+        applyCards(prev => {
+          const next = {}
+          let existingComments = []
+          let found = false
+          for (const [k, col] of Object.entries(prev)) {
+            const card = col.find(c => c.id === payload.id)
+            if (card) { existingComments = card.comments ?? []; found = true }
+            next[k] = col.filter(c => c.id !== payload.id)
+          }
+          if (!found) return prev
+          next[newKey] = [...next[newKey], { ...payload, comments: existingComments }]
+            .sort((a, b) => a.position - b.position)
+          return next
+        })
+        break
+      }
+      case 'comment:created': {
+        if (consumeSuppression(payload.id)) break
+        applyCards(prev => {
+          const next = {}
+          for (const [k, col] of Object.entries(prev)) {
+            next[k] = col.map(c =>
+              c.id === payload.card_id
+                ? { ...c, comments: [...c.comments, payload] }
+                : c
+            )
+          }
+          return next
+        })
+        break
+      }
+    }
+  }, [])
+
+  const { status: wsStatus } = useWebSocket(WS_URL, { onEvent: handleWsEvent, events: WS_EVENTS })
+
+  // -------------------------------------------------------------------------
+  // Reconnect reconciliation — re-fetch on WS reconnect to recover missed events
+  // -------------------------------------------------------------------------
+
+  useEffect(() => {
+    if (wsStatus === 'connected') {
+      if (hasConnectedRef.current) {
+        // Reconnect detected — re-fetch to reconcile any missed events
+        let cancelled = false
+        fetchCards()
+          .then(data => { if (!cancelled) applyCards(groupCards(data)) })
+          .catch(() => {}) // silent fail; don't disrupt existing state
+        return () => { cancelled = true }
+      }
+      hasConnectedRef.current = true
+    }
+  }, [wsStatus])
 
   // -------------------------------------------------------------------------
   // Initial data load
@@ -148,6 +280,7 @@ export function useBoard() {
 
     try {
       const created = await apiCreateCard(data)
+      suppressWsEvent(created.id)
       const createdKey = columnToKey(created.column)
       applyCards(prev => {
         const next = { ...prev }
@@ -181,6 +314,7 @@ export function useBoard() {
 
     // Capture rollback synchronously from the ref (not inside a lazy updater)
     const rollback = cardsRef.current
+    suppressWsEvent(id)
     applyCards(prev => {
       const next = {}
       for (const [k, col] of Object.entries(prev)) {
@@ -215,6 +349,7 @@ export function useBoard() {
   const deleteCard = useCallback(async (id) => {
     // Capture rollback synchronously from the ref
     const rollback = cardsRef.current
+    suppressWsEvent(id)
     applyCards(prev => {
       const next = {}
       for (const [k, col] of Object.entries(prev)) {
@@ -244,6 +379,7 @@ export function useBoard() {
 
     // Capture rollback synchronously from the ref
     const rollback = cardsRef.current
+    suppressWsEvent(id)
     applyCards(prev => {
       let cardToMove = null
       const next = {}
@@ -323,6 +459,7 @@ export function useBoard() {
 
     try {
       const comment = await createComment(cardId, data)
+      suppressWsEvent(comment.id)
       applyCards(prev => {
         const next = {}
         for (const [k, col] of Object.entries(prev)) {
