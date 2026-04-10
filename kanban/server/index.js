@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { fileURLToPath } from 'node:url';
 import { resolve, dirname, join } from 'node:path';
+import commentsRouter from './api/comments.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -17,6 +18,9 @@ function createApp() {
     credentials: true,
   }));
   app.use(express.json());
+
+  // ── API Routes ────────────────────────────────────────────────────────────
+  app.use('/api', commentsRouter);
 
   // ── Routes ────────────────────────────────────────────────────────────────
   app.get('/health', (_req, res) => res.json({ ok: true }));

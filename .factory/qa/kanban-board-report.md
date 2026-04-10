@@ -872,3 +872,133 @@ All Task 5 deliverables are correctly implemented:
 - All 81 automated tests pass with zero failures
 - All 49 setup/client tests continue to pass (no regressions)
 - The implementation is clean, well-structured, and follows the singleton + prepared-statements pattern appropriate for a single-process Node.js server
+
+---
+
+---
+
+# Task 7 — Create REST API routes for comments
+
+**Date:** 2026-04-10  
+**Worktree:** `/Users/benjamin/.sofactory/worktrees/kanban-board/kanban-board-7`  
+**Assignee:** Emma  
+
+---
+
+## 1. Commands Found and Executed
+
+| Command | Location | Result |
+|---|---|---|
+| `npm run test:server` | `kanban/` root | ✅ PASS |
+| `npm run test:setup` | `kanban/` root | ✅ PASS |
+| `npm -w client run test` | `kanban/` root | ❌ FAIL (env issue — pre-existing) |
+| `npm -w client run lint` | `kanban/` root | ❌ FAIL (env issue — pre-existing) |
+| `npm run build` | `kanban/` root | ❌ FAIL (env issue — pre-existing) |
+
+---
+
+## 2. Implementation Review
+
+### Files Created / Modified
+
+**`kanban/server/api/comments.js`** (new file, ~24 lines)
+- Creates an Express `Router`
+- Registers `POST /cards/:id/comments` (prefix `/api` applied at mount point)
+- Destructures `author` and `content` from `req.body ?? {}`
+- Returns `400` with `{ error: 'author and content are required' }` when either field is falsy
+- Calls `createComment(req.params.id, { author, content })` inside try/catch
+- On `ForeignKeyError` (card does not exist in DB), returns `404` with `{ error: err.message }`
+- All other errors forwarded to Express generic error handler (500)
+- Returns `201` with the created comment object on success
+
+**`kanban/server/index.js`** (modified)
+- Imports `commentsRouter` from `./api/comments.js`
+- Mounts it at `app.use('/api', commentsRouter)` — full path is `POST /api/cards/:id/comments`
+- CORS, JSON body parsing, and other middleware correctly configured
+
+### Task Requirements Checklist
+
+| Requirement | Status |
+|---|---|
+| `POST /api/cards/:id/comments` endpoint exists | ✅ PASS |
+| Validates card exists — 404 if not found | ✅ PASS — catches `ForeignKeyError` from `createComment` |
+| Validates required fields (author and content) — 400 if missing | ✅ PASS — `!author \|\| !content` guard |
+| Calls `createComment` database function | ✅ PASS |
+| Router mounted in `server/index.js` | ✅ PASS — `app.use('/api', commentsRouter)` |
+| No separate GET endpoint (comments via `getCards()`) | ✅ PASS — no GET endpoint added |
+
+---
+
+## 3. Detailed Command Results
+
+### ✅ `npm run test:server` — PASS
+
+Runs: `node --test test/server.test.mjs test/db.test.mjs test/comments.test.mjs`
+
+- **91 tests across 17 suites — 91 PASS, 0 FAIL**
+- `comments.test.mjs`: 10 tests covering all POST endpoint scenarios — all pass:
+  - Creates comment successfully (201)
+  - Returns 404 for non-existent card
+  - Returns 400 for missing `author`
+  - Returns 400 for missing `content`
+  - Returns 400 for missing both fields
+  - Edge cases (whitespace, etc.)
+- All `db.test.mjs` and `server.test.mjs` tests pass as well
+
+### ✅ `npm run test:setup` — PASS
+
+Runs: `node --test test/*.test.mjs`
+
+- **49 tests across 9 suites — 49 PASS, 0 FAIL**
+
+### ❌ `npm -w client run test` — FAIL (pre-existing environment issue)
+
+```
+sh: vitest: command not found
+exit code: 127
+```
+
+`kanban/client/node_modules` does not exist. Client dependencies were never installed. **Pre-existing issue not caused by this task.**
+
+### ❌ `npm -w client run lint` — FAIL (pre-existing environment issue)
+
+```
+sh: eslint: command not found
+exit code: 127
+```
+
+Same root cause — client dependencies not installed.
+
+### ❌ `npm run build` — FAIL (pre-existing environment issue)
+
+```
+sh: vite: command not found
+exit code: 127
+```
+
+Same root cause — `vite` requires client `node_modules`.
+
+---
+
+## 4. Issues Found
+
+### Pre-existing Environment Issue (not introduced by this task)
+**Severity:** Low  
+**Description:** Client workspace dependencies (`vitest`, `eslint`, `vite`) are not installed. Running `npm install` from `kanban/` at the workspace root would resolve all three failing commands.  
+**Impact:** Client tests and build cannot be verified. This task is purely server-side, so it does not affect the correctness of the implementation.
+
+---
+
+## 5. Overall Assessment
+
+**PASS**
+
+The implementation is correct and complete. All server-side tests pass (91/91 for server suite, 49/49 for setup suite). The `comments.js` router correctly implements:
+
+- Comment creation with proper field validation (400 for missing author/content)
+- Card existence validation via database foreign key errors (404 for non-existent card)
+- Appropriate HTTP status codes (201, 400, 404, 500)
+- Clean integration with the existing Express application
+- Proper router mounting at `/api` prefix in `server/index.js`
+
+The failing client commands are a pre-existing environment issue (missing `npm install` for client workspace) and are unrelated to this task's deliverables.

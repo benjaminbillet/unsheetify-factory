@@ -372,7 +372,7 @@
         "dependencies": [
           "5"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -380,9 +380,10 @@
             "description": "Create the core Express router with basic CRUD operations for cards",
             "dependencies": [],
             "details": "Create server/api/cards.js with Express router. Implement GET /api/cards endpoint that calls getCards() function. Add POST /api/cards endpoint that calls createCard() function. Implement PATCH /api/cards/:id endpoint that calls updateCard() function. Add DELETE /api/cards/:id endpoint that calls deleteCard() function. Set up basic route structure without validation or error handling.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Unit tests for each endpoint to verify correct function calls and basic response structure",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T10:51:07.901Z"
           },
           {
             "id": 2,
@@ -392,9 +393,10 @@
               1
             ],
             "details": "Add input validation middleware using express-validator or manual validation. Validate required title field for POST requests. Validate card existence for PATCH and DELETE operations. Create error handling middleware to catch and format validation errors. Implement proper error response structure with meaningful error messages.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test validation errors return 400 status, missing required fields are caught, invalid IDs are handled",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T10:51:09.806Z"
           },
           {
             "id": 3,
@@ -404,9 +406,10 @@
               1
             ],
             "details": "Import and integrate getCards(), createCard(), updateCard(), and deleteCard() functions from the database layer. Ensure proper data flow between API endpoints and database operations. Handle database connection errors and query failures. Test integration between API layer and database layer.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Integration tests to verify data persistence, database errors are handled gracefully",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T10:51:11.672Z"
           },
           {
             "id": 4,
@@ -417,14 +420,20 @@
               3
             ],
             "details": "Add proper HTTP status codes: 400 for validation errors, 404 for not found resources, 500 for server errors. Create consistent error response format with error messages and status codes. Mount the router in server/index.js at /api path. Add final error handling middleware for uncaught errors. Test all error scenarios return appropriate status codes.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test 404 for unknown card IDs, 400 for validation failures, 500 for server errors, verify error response format",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T10:51:13.592Z"
           }
         ],
         "complexity": 5,
         "recommendedSubtasks": 4,
-        "expansionPrompt": "Split into: 1) Implement basic CRUD endpoints (GET, POST, PATCH, DELETE), 2) Add input validation middleware and error handling, 3) Integrate with database query functions, 4) Add comprehensive error responses with proper HTTP status codes"
+        "expansionPrompt": "Split into: 1) Implement basic CRUD endpoints (GET, POST, PATCH, DELETE), 2) Add input validation middleware and error handling, 3) Integrate with database query functions, 4) Add comprehensive error responses with proper HTTP status codes",
+        "updatedAt": "2026-04-10T10:51:13.592Z",
+        "metadata": {
+          "assignee": "Maria",
+          "devSessionId": "1f202747-7e76-4ed7-a89b-9c59c29443af"
+        }
       },
       {
         "id": "7",
@@ -436,7 +445,7 @@
         "dependencies": [
           "6"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -444,9 +453,10 @@
             "description": "Create the Express router and POST endpoint for creating comments on cards",
             "dependencies": [],
             "details": "Create server/api/comments.js file with Express router. Implement POST /api/cards/:id/comments endpoint that extracts cardId from URL params, validates required fields (author and content), and calls the createComment database function. Set up proper request body parsing and response formatting.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Unit tests for endpoint logic, verify correct parameters are passed to createComment function",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T13:41:59.354Z"
           },
           {
             "id": 2,
@@ -456,9 +466,10 @@
               1
             ],
             "details": "Add middleware to validate that the card exists before creating a comment by checking the database. Validate that required fields (author and content) are present and not empty. Return appropriate HTTP status codes: 404 if card not found, 400 for missing or invalid fields. Include descriptive error messages in responses.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Integration tests for validation scenarios, test 404 for non-existent cards, test 400 for missing fields",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T13:42:01.246Z"
           },
           {
             "id": 3,
@@ -468,14 +479,21 @@
               2
             ],
             "details": "Implement try-catch blocks for database operations and other potential errors. Add proper error response formatting with consistent structure. Mount the comments router in server/index.js at the appropriate path. Ensure the router is properly integrated with existing middleware and error handling patterns.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Integration tests for complete comment creation flow, verify router mounting works correctly, test error responses",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T13:42:03.096Z"
           }
         ],
         "complexity": 4,
         "recommendedSubtasks": 3,
-        "expansionPrompt": "Break down into: 1) Implement POST endpoint for comment creation, 2) Add validation for card existence and required fields, 3) Integrate error handling and mount router"
+        "expansionPrompt": "Break down into: 1) Implement POST endpoint for comment creation, 2) Add validation for card existence and required fields, 3) Integrate error handling and mount router",
+        "updatedAt": "2026-04-10T13:42:03.096Z",
+        "metadata": {
+          "assignee": "Emma",
+          "devSessionId": "88340ddb-97a2-4152-849d-c7592d5dd567",
+          "qaSessionId": "0fd2a582-9909-4e18-966c-d303274ab3b1"
+        }
       },
       {
         "id": "8",
@@ -1575,9 +1593,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-04-10T10:34:39.271Z",
+      "lastModified": "2026-04-10T13:42:03.097Z",
       "taskCount": 24,
-      "completedCount": 5,
+      "completedCount": 7,
       "tags": [
         "kanban-board"
       ]
