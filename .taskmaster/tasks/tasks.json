@@ -726,7 +726,7 @@
         "dependencies": [
           "10"
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -792,7 +792,12 @@
         ],
         "complexity": 7,
         "recommendedSubtasks": 5,
-        "expansionPrompt": "Break down into: 1) Create modal structure with React Portal, 2) Implement editable fields with save/cancel functionality, 3) Add delete confirmation and keyboard shortcuts, 4) Integrate comments section display, 5) Add modal styling and backdrop effects"
+        "expansionPrompt": "Break down into: 1) Create modal structure with React Portal, 2) Implement editable fields with save/cancel functionality, 3) Add delete confirmation and keyboard shortcuts, 4) Integrate comments section display, 5) Add modal styling and backdrop effects",
+        "updatedAt": "2026-04-10T15:04:12.607Z",
+        "metadata": {
+          "assignee": "Helen",
+          "devSessionId": "d74e1e9a-6604-49ab-a38a-6e6aaa10fffc"
+        }
       },
       {
         "id": "12",
@@ -1182,7 +1187,7 @@
         "dependencies": [
           "17"
         ],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1190,9 +1195,10 @@
             "description": "Create the core WebSocket connection management functionality including connect, disconnect, and connection state tracking",
             "dependencies": [],
             "details": "Implement useRef for WebSocket instance, useState for connection status (connecting, connected, disconnected, error). Create connect() function that establishes WebSocket connection to server endpoint. Add disconnect() function for clean connection termination. Track connection state changes and update component state accordingly. Handle WebSocket onopen, onclose, and onerror events.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test connection establishes successfully, state updates correctly on connect/disconnect, connection can be manually closed",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T15:04:41.023Z"
           },
           {
             "id": 2,
@@ -1202,9 +1208,10 @@
               1
             ],
             "details": "Create reconnection logic with exponential backoff starting at 1 second, doubling up to maximum of 30 seconds. Track reconnection attempts and reset counter on successful connection. Implement useRef for reconnection timeout and attempt counter. Add logic to automatically reconnect on connection loss unless explicitly disconnected by user. Prevent multiple simultaneous reconnection attempts.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test reconnection triggers after connection loss, backoff timing increases correctly, reconnection stops after manual disconnect",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T15:06:52.261Z"
           },
           {
             "id": 3,
@@ -1214,9 +1221,10 @@
               1
             ],
             "details": "Implement WebSocket onmessage handler that parses incoming JSON events safely with try-catch. Accept onEvent callback parameter in hook that gets called with parsed event data. Add event type validation and error handling for malformed JSON. Support different event types and pass them to callback with event type and payload. Add optional event filtering by event type.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test JSON parsing handles valid and invalid messages, callback receives correct event data, event filtering works properly",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T15:08:16.923Z"
           },
           {
             "id": 4,
@@ -1228,18 +1236,20 @@
               3
             ],
             "details": "Add useEffect cleanup function that closes WebSocket connection and clears reconnection timeouts on component unmount. Implement comprehensive error handling for connection failures, network errors, and parsing errors. Add error callback parameter for custom error handling. Clear all timeouts and intervals on cleanup. Handle edge cases like rapid connect/disconnect cycles and component re-renders.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test cleanup runs on unmount, no memory leaks from timeouts, error callbacks receive proper error information, handles rapid state changes gracefully",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T15:09:22.411Z"
           }
         ],
         "complexity": 7,
         "recommendedSubtasks": 4,
         "expansionPrompt": "Break down into: 1) Implement WebSocket connection lifecycle management, 2) Add automatic reconnection with exponential backoff, 3) Implement event parsing and callback handling, 4) Add proper cleanup and error handling",
-        "updatedAt": "2026-04-10T14:52:19.005Z",
+        "updatedAt": "2026-04-10T15:09:22.411Z",
         "metadata": {
           "assignee": "Irene",
-          "devSessionId": "05fb057f-a9fc-41fe-8c45-8f08606a561e"
+          "devSessionId": "05fb057f-a9fc-41fe-8c45-8f08606a561e",
+          "qaSessionId": "104edc26-9e0c-491e-a5c6-0e80e77d07c1"
         }
       },
       {
@@ -1647,9 +1657,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-04-10T14:56:45.534Z",
+      "lastModified": "2026-04-10T15:09:22.412Z",
       "taskCount": 24,
-      "completedCount": 12,
+      "completedCount": 13,
       "tags": [
         "kanban-board"
       ]
