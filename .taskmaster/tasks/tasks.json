@@ -726,7 +726,7 @@
         "dependencies": [
           "10"
         ],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -734,9 +734,10 @@
             "description": "Set up the basic modal component structure using React Portal for proper DOM rendering",
             "dependencies": [],
             "details": "Create CardModal.jsx component with React Portal implementation. Set up modal container that renders outside the main app DOM tree. Include basic modal wrapper, overlay backdrop, and modal content container. Implement modal open/close state management and proper cleanup on unmount.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test modal renders in correct DOM location, opens and closes properly, portal cleanup works on unmount",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T15:24:59.307Z"
           },
           {
             "id": 2,
@@ -746,9 +747,10 @@
               1
             ],
             "details": "Create editable input fields for card title and assignee with controlled components. Implement edit mode toggle, form validation for required fields, save functionality that calls API, and cancel functionality that reverts changes. Add loading states during save operations and error handling for failed saves.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test edit mode toggles correctly, save persists changes via API, cancel reverts to original values, validation prevents empty title",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T15:27:55.239Z"
           },
           {
             "id": 3,
@@ -758,9 +760,10 @@
               1
             ],
             "details": "Add delete button with confirmation dialog to prevent accidental deletions. Implement keyboard event handlers for Escape key to close modal, Enter key for save actions, and proper focus management. Add event listener cleanup and prevent event bubbling where needed.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test delete confirmation prevents accidental deletion, Escape key closes modal, keyboard navigation works properly, focus management is correct",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T15:27:57.148Z"
           },
           {
             "id": 4,
@@ -770,9 +773,10 @@
               1
             ],
             "details": "Create comments section within modal that displays existing comments with author names and timestamps. Integrate with CommentList component or implement basic comment display. Add proper spacing and layout within modal content area. Handle empty comments state with appropriate messaging.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test comments display correctly in modal, empty state shows appropriate message, layout doesn't break with long comments",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T15:27:59.071Z"
           },
           {
             "id": 5,
@@ -785,18 +789,20 @@
               4
             ],
             "details": "Add CSS styling for modal backdrop with blur effect, center modal positioning with responsive design, proper z-index layering, smooth animations for open/close transitions. Style modal content with appropriate padding, borders, shadows, and responsive breakpoints for mobile devices.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test modal appears centered on all screen sizes, backdrop blur effect works, animations are smooth, mobile responsiveness functions correctly",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T15:28:01.030Z"
           }
         ],
         "complexity": 7,
         "recommendedSubtasks": 5,
         "expansionPrompt": "Break down into: 1) Create modal structure with React Portal, 2) Implement editable fields with save/cancel functionality, 3) Add delete confirmation and keyboard shortcuts, 4) Integrate comments section display, 5) Add modal styling and backdrop effects",
-        "updatedAt": "2026-04-10T15:04:12.607Z",
+        "updatedAt": "2026-04-10T15:28:01.030Z",
         "metadata": {
           "assignee": "Helen",
-          "devSessionId": "d74e1e9a-6604-49ab-a38a-6e6aaa10fffc"
+          "devSessionId": "d74e1e9a-6604-49ab-a38a-6e6aaa10fffc",
+          "qaSessionId": "09bcda25-81c1-450d-b44d-9225e563c57c"
         }
       },
       {
@@ -1262,7 +1268,7 @@
         "dependencies": [
           "18"
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -1313,7 +1319,12 @@
         ],
         "complexity": 8,
         "recommendedSubtasks": 4,
-        "expansionPrompt": "Split into: 1) Integrate WebSocket hook with board state management, 2) Implement event handlers for all card and comment operations, 3) Handle optimistic updates to avoid duplicates, 4) Ensure state consistency across multiple clients"
+        "expansionPrompt": "Split into: 1) Integrate WebSocket hook with board state management, 2) Implement event handlers for all card and comment operations, 3) Handle optimistic updates to avoid duplicates, 4) Ensure state consistency across multiple clients",
+        "updatedAt": "2026-04-10T15:14:41.213Z",
+        "metadata": {
+          "assignee": "Maria",
+          "devSessionId": "d8a3babf-0df8-44dd-a928-9b57fbba0604"
+        }
       },
       {
         "id": "20",
@@ -1657,9 +1668,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-04-10T15:09:22.412Z",
+      "lastModified": "2026-04-10T15:28:01.030Z",
       "taskCount": 24,
-      "completedCount": 13,
+      "completedCount": 14,
       "tags": [
         "kanban-board"
       ]

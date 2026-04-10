@@ -27,16 +27,41 @@ The task dependency (#10) is complete. All existing tests (10 CardModal, 11 Boar
 ### Tests first (`Board.test.jsx`) — RED
 
 ```js
-it('modal reflects updated card data after useBoard cards state changes', () => {
-  // useBoard initially returns card with title 'Old Title'
-  // After re-mock to cards with 'New Title', re-render
-  // Assert dialog contains 'New Title'
+it('modal reflects updated card data when useBoard cards state changes', () => {
+  const card = { ...MOCK_CARD, title: 'Old Title' }
+  useBoard.mockReturnValue({
+    ...DEFAULT_STATE,
+    cards: { ready: [card], in_progress: [], done: [] },
+  })
+  const { rerender } = render(<Board />)
+  fireEvent.click(screen.getByRole('button', { name: 'Old Title' }))
+  expect(screen.getByRole('dialog')).toHaveTextContent('Old Title')
+
+  // Simulate useBoard updating the card in place (e.g. after updateCard resolves)
+  useBoard.mockReturnValue({
+    ...DEFAULT_STATE,
+    cards: { ready: [{ ...card, title: 'New Title' }], in_progress: [], done: [] },
+  })
+  rerender(<Board />)
+  expect(screen.getByRole('dialog')).toHaveTextContent('New Title')
 })
 
-it('modal closes automatically when selected card no longer exists in cards state', () => {
-  // useBoard returns state with one card → open modal
-  // Re-mock useBoard to return empty cards → re-render
-  // Assert queryByRole('dialog') is null
+it('modal closes automatically when selected card is removed from cards state', () => {
+  useBoard.mockReturnValue({
+    ...DEFAULT_STATE,
+    cards: { ready: [MOCK_CARD], in_progress: [], done: [] },
+  })
+  const { rerender } = render(<Board />)
+  fireEvent.click(screen.getByRole('button', { name: 'Test Card' }))
+  expect(screen.getByRole('dialog')).toBeInTheDocument()
+
+  // Simulate card being deleted from state
+  useBoard.mockReturnValue({
+    ...DEFAULT_STATE,
+    cards: { ready: [], in_progress: [], done: [] },
+  })
+  rerender(<Board />)
+  expect(screen.queryByRole('dialog')).toBeNull()
 })
 ```
 
@@ -93,7 +118,9 @@ it('cleans up portal content from document.body on unmount', () => {
 })
 ```
 
-**Note**: All existing tests still pass because `screen.getByRole` searches `document.body` by default.
+**Note on existing tests**: All 10 existing CardModal tests render with `<CardModal card={card} onClose={vi.fn()} />` (no `onUpdate`/`onDelete`). After the enhancement these props are required for Edit/Delete interactions. The existing tests do not click those buttons, so they will continue to pass — but **all existing `render(...)` calls in `CardModal.test.jsx` must be updated** to include `onUpdate={vi.fn()} onDelete={vi.fn()}` to make the test suite robust and consistent with the new interface.
+
+**Note on portal discoverability**: `screen.getByRole` searches `document.body` by default, so all existing role-based queries keep working after the portal change.
 
 ### Implementation (`CardModal.jsx`)
 
@@ -117,7 +144,9 @@ New props in signature: `{ card, onClose, onUpdate, onDelete }`
 
 ## Subtask 3 — Editable Title and Assignee Fields
 
-### New state in `CardModal.jsx`
+### New state and refs in `CardModal.jsx`
+
+Add to the `react` import: `useState`, `useRef` (in addition to the existing `useEffect`).
 
 ```jsx
 const [isEditingTitle, setIsEditingTitle] = useState(false)
@@ -126,9 +155,30 @@ const [isEditingAssignee, setIsEditingAssignee] = useState(false)
 const [editAssignee, setEditAssignee]     = useState(card.assignee ?? '')
 const [isSaving, setIsSaving]             = useState(false)
 const [saveError, setSaveError]           = useState(null)
+
+const titleInputRef    = useRef(null)
+const assigneeInputRef = useRef(null)
 ```
 
+**Focus management**: When edit mode is entered, focus must move to the corresponding input automatically. Implement with two effects:
+
+```jsx
+useEffect(() => {
+  if (isEditingTitle && titleInputRef.current) titleInputRef.current.focus()
+}, [isEditingTitle])
+
+useEffect(() => {
+  if (isEditingAssignee && assigneeInputRef.current) assigneeInputRef.current.focus()
+}, [isEditingAssignee])
+```
+
+Attach the refs to the inputs (see JSX below): `ref={titleInputRef}` on the title input and `ref={assigneeInputRef}` on the assignee input.
+
+**Edit mode mutual exclusivity**: Only one field may be in edit mode at a time. Opening one edit field must close the other. This is enforced in the `onClick` handlers (see JSX below). Because mutual exclusivity is enforced, the shared `isSaving` flag is safe — at most one save can be in flight at a time.
+
 ### Escape key handler update
+
+**Replace** the existing `useEffect` Escape handler entirely — do not add a second one. Having two handlers would call `onClose` twice in view mode, breaking the existing test `'calls onClose when Escape key is pressed'` which asserts `toHaveBeenCalledTimes(1)`.
 
 When editing, Escape cancels the edit (does NOT close modal):
 ```jsx
@@ -152,6 +202,11 @@ useEffect(() => {
 
 ```jsx
 async function handleSaveTitle() {
+  // Validation: title is required
+  if (editTitle.trim() === '') {
+    setSaveError('Title is required')
+    return
+  }
   setIsSaving(true); setSaveError(null)
   try {
     await onUpdate(card.id, { title: editTitle })
@@ -175,7 +230,13 @@ async function handleSaveAssignee() {
 ```jsx
 {isEditingTitle ? (
   <div className="modal-field-edit">
-    <input aria-label="Title" value={editTitle} onChange={e => setEditTitle(e.target.value)} />
+    <input
+      ref={titleInputRef}
+      aria-label="Title"
+      value={editTitle}
+      onChange={e => setEditTitle(e.target.value)}
+      onKeyDown={e => { if (e.key === 'Enter') handleSaveTitle() }}
+    />
     <button aria-label="Save" onClick={handleSaveTitle} disabled={isSaving}>
       {isSaving ? 'Saving…' : 'Save'}
     </button>
@@ -187,25 +248,81 @@ async function handleSaveAssignee() {
 ) : (
   <div className="modal-field-view">
     <h2 className="modal-title">{card.title}</h2>
-    <button aria-label="Edit title"
-      onClick={() => { setIsEditingTitle(true); setEditTitle(card.title) }}>Edit</button>
+    <button aria-label="Edit title" onClick={() => {
+      setIsEditingTitle(true); setEditTitle(card.title)
+      // Mutual exclusivity: close assignee edit if open
+      setIsEditingAssignee(false); setEditAssignee(card.assignee ?? ''); setSaveError(null)
+    }}>Edit</button>
   </div>
 )}
 ```
 
-Mirror the same pattern for the assignee field (aria-label="Edit assignee", aria-label="Assignee" on input).
+JSX structure for assignee field (mirrors title; `aria-label="Assignee"` on input, `aria-label="Edit assignee"` on button):
 
-Shared error display (render once in modal-content):
+```jsx
+{isEditingAssignee ? (
+  <div className="modal-field-edit">
+    <input
+      ref={assigneeInputRef}
+      aria-label="Assignee"
+      value={editAssignee}
+      onChange={e => setEditAssignee(e.target.value)}
+      onKeyDown={e => { if (e.key === 'Enter') handleSaveAssignee() }}
+    />
+    <button aria-label="Save" onClick={handleSaveAssignee} disabled={isSaving}>
+      {isSaving ? 'Saving…' : 'Save'}
+    </button>
+    <button aria-label="Cancel" disabled={isSaving}
+      onClick={() => { setIsEditingAssignee(false); setEditAssignee(card.assignee ?? ''); setSaveError(null) }}>
+      Cancel
+    </button>
+  </div>
+) : (
+  <div className="modal-field-view">
+    <p className="modal-assignee"><strong>Assignee:</strong> {card.assignee ?? 'Unassigned'}</p>
+    <button aria-label="Edit assignee" onClick={() => {
+      setIsEditingAssignee(true); setEditAssignee(card.assignee ?? '')
+      // Mutual exclusivity: close title edit if open
+      setIsEditingTitle(false); setEditTitle(card.title); setSaveError(null)
+    }}>Edit</button>
+  </div>
+)}
+```
+
+Description display (read-only, kept from existing implementation — place between assignee field and the error alert):
+```jsx
+<p className="modal-description">{card.description ?? 'No description'}</p>
+```
+
+Shared error display (render once in modal-content, below description):
 ```jsx
 {saveError && <p role="alert" className="modal-error">{saveError}</p>}
 ```
 
+**Full content order inside `.modal-content`**:
+1. Close button (`aria-label="Close"`)
+2. Title field (editable block)
+3. Assignee field (editable block)
+4. Description paragraph (read-only)
+5. Error alert (`role="alert"`, only when `saveError` is set)
+6. Comments section (`<section>`)
+7. Delete button / confirmation block
+
+**Async test pattern**: Any test that asserts on the outcome of `onUpdate` or `onDelete` (which are async) must use `await waitFor(...)`. Example:
+```js
+const onUpdate = vi.fn().mockResolvedValue({ ...card, title: 'New title' })
+// ... render, click edit, change input, click Save ...
+await waitFor(() => expect(onUpdate).toHaveBeenCalledWith('1', { title: 'New title' }))
+```
+Import `waitFor` from `@testing-library/react`. Tests checking the *loading* state (isSaving while promise is pending) do not need `waitFor` — they check synchronous state after `fireEvent.click`.
+
 ### Tests (`CardModal.test.jsx`) — new `describe('edit title', ...)` and `describe('edit assignee', ...)`
 
-**Title tests** (10):
+**Title tests** (15):
 - `shows Edit title button in view mode`
 - `clicking Edit title shows an input with current title value`
 - `clicking Edit title hides the static heading`
+- `clicking Edit title focuses the title input`
 - `shows Save and Cancel buttons when editing title`
 - `Cancel restores original title and exits edit mode`
 - `Escape key cancels title edit without closing modal`
@@ -213,11 +330,16 @@ Shared error display (render once in modal-content):
 - `Save disables button and shows Saving… while pending`
 - `Save exits edit mode on success`
 - `Save shows alert with error message on rejection`
+- `Save stays in edit mode on rejection`
+- `Save shows validation error and does not call onUpdate when title is empty`
+- `Enter key in title input triggers save`
+- `opening title edit cancels any open assignee edit`
 
-**Assignee tests** (10):
+**Assignee tests** (13):
 - `shows Edit assignee button in view mode`
 - `clicking Edit assignee shows an input with current assignee value`
 - `clicking Edit assignee shows empty input when assignee is null`
+- `clicking Edit assignee focuses the assignee input`
 - `shows Save and Cancel buttons when editing assignee`
 - `Cancel restores original assignee and exits edit mode`
 - `Escape key cancels assignee edit without closing modal`
@@ -225,6 +347,8 @@ Shared error display (render once in modal-content):
 - `Save with empty input calls onUpdate(id, { assignee: null })`
 - `Save shows alert with error message on rejection`
 - `Save stays in edit mode on rejection`
+- `Enter key in assignee input triggers save`
+- `opening assignee edit cancels any open title edit`
 
 ---
 
@@ -316,8 +440,9 @@ async function handleConfirmDelete() {
 ### Tests — new `describe('comments', ...)` (7)
 
 ```js
+// `card` is the file-level fixture already defined at the top of CardModal.test.jsx
 const cardWithComments = {
-  ...baseCard,
+  ...card,
   comments: [
     { id: 'cm1', card_id: '1', author: 'Bob', content: 'Looks good!', created_at: 1700000000000 },
     { id: 'cm2', card_id: '1', author: 'Alice', content: 'Needs work', created_at: 1700000001000 },
@@ -388,14 +513,15 @@ Add to `CardModal.css`:
 
 ```
 1. Board.test.jsx    → 2 new tests (RED) → update Board.jsx (GREEN)
-2. CardModal.test.jsx → 2 portal tests (RED) → add createPortal (GREEN)
-3. CardModal.test.jsx → 20 edit tests (RED) → add edit state + JSX (GREEN)
+2. CardModal.test.jsx → update all 10 existing render calls to include onUpdate={vi.fn()} onDelete={vi.fn()}
+                     → 2 portal tests (RED) → add createPortal (GREEN)
+3. CardModal.test.jsx → 28 edit tests (RED) → add edit state + refs + focus effects + mutual exclusivity + validation + Enter key (GREEN)
 4. CardModal.test.jsx → 8 delete tests (RED) → add delete confirm (GREEN)
 5. CardModal.test.jsx → 7 comment tests (RED) → add comments JSX (GREEN)
 6. CardModal.css only → update styles (no new tests)
 ```
 
-Total new tests: ~39 (2 Board + 37 CardModal)
+Total new tests: ~47 (2 Board + 45 CardModal)
 All 21 existing tests must remain green throughout.
 
 ---
@@ -408,8 +534,8 @@ cd client && npm test
 
 All tests pass. Manual checks:
 - Open board, click a card → modal opens centered with blur backdrop
-- Edit title → input appears, save → title updates in place
-- Edit assignee → same flow; set empty → saves as "Unassigned"
+- Edit title → input appears with focus, save → title updates in place
+- Edit assignee → same flow; input receives focus; set empty → saves as "Unassigned"
 - Delete → confirmation appears → confirm → modal closes, card gone from board
 - Escape key: if editing → cancels edit; if viewing → closes modal
 - Comments display with author + timestamp; empty state shows "No comments yet"

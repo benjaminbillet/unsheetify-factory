@@ -5,19 +5,26 @@ import CardModal from './CardModal.jsx'
 import './Board.css'
 
 export default function Board() {
-  const { cards, loading, error } = useBoard()
-  const [selectedCard, setSelectedCard] = useState(null)
+  const { cards, loading, error, updateCard, deleteCard } = useBoard()
+  const [selectedCardId, setSelectedCardId] = useState(null)
+  const allCards = [...cards.ready, ...cards.in_progress, ...cards.done]
+  const selectedCard = selectedCardId ? (allCards.find(c => c.id === selectedCardId) ?? null) : null
 
   if (loading) return <div className="board-loading" aria-label="Loading">Loading…</div>
   if (error) return <div className="board-error" role="alert">{error}</div>
 
   return (
     <div className="board">
-      <Column title="Ready" cards={cards.ready} onCardClick={setSelectedCard} />
-      <Column title="In Progress" cards={cards.in_progress} onCardClick={setSelectedCard} />
-      <Column title="Done" cards={cards.done} onCardClick={setSelectedCard} />
+      <Column title="Ready" cards={cards.ready} onCardClick={(card) => setSelectedCardId(card.id)} />
+      <Column title="In Progress" cards={cards.in_progress} onCardClick={(card) => setSelectedCardId(card.id)} />
+      <Column title="Done" cards={cards.done} onCardClick={(card) => setSelectedCardId(card.id)} />
       {selectedCard && (
-        <CardModal card={selectedCard} onClose={() => setSelectedCard(null)} />
+        <CardModal
+          card={selectedCard}
+          onClose={() => setSelectedCardId(null)}
+          onUpdate={updateCard}
+          onDelete={deleteCard}
+        />
       )}
     </div>
   )

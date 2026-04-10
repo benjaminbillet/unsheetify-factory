@@ -1,17 +1,17 @@
-# QA Report — Task 18: Create useWebSocket Hook for Real-Time Updates
+# QA Report — Task 11: Create CardModal Component for Card Details
 
 **Date:** 2026-04-10
 **Reviewer:** QA Agent
-**Task:** Implement React hook for WebSocket connection and event handling
-**Branch:** kanban-board/kanban-board-18
-**Status:** PASS
+**Task:** Build modal component for viewing and editing card details
+**Branch:** kanban-board/kanban-board-11
+**Status:** PASS with one notable deviation
 
 ---
 
 ## 1. Project Structure Overview
 
 ```
-kanban-board-18/
+kanban-board-11/
 └── kanban/
     ├── package.json              (workspace root: "kanban-app")
     ├── client/
@@ -19,34 +19,35 @@ kanban-board-18/
     │   ├── eslint.config.js
     │   ├── vite.config.js        (test: vitest, environment: jsdom)
     │   └── src/
-    │       ├── hooks/
-    │       │   ├── useWebSocket.js      ← primary file under review
-    │       │   ├── useWebSocket.test.js ← test suite
-    │       │   ├── useBoard.js
-    │       │   └── useBoard.test.js
     │       ├── components/Board/
+    │       │   ├── CardModal.jsx        ← primary file under review
+    │       │   ├── CardModal.css        ← styles under review
+    │       │   ├── CardModal.test.jsx   ← test suite (55 tests)
+    │       │   ├── Board.jsx            ← integration point
+    │       │   ├── Board.test.jsx
+    │       │   ├── Column.jsx / .css / .test.jsx
+    │       │   └── CardTile.jsx / .css / .test.jsx
+    │       ├── hooks/useBoard.js + useWebSocket.js (with tests)
     │       ├── api/client.js + client.test.js
     │       └── App.jsx + App.test.jsx
     ├── server/
-    │   ├── ws/                   (WebSocket broadcaster, task 16/17)
-    │   └── test/
+    │   └── (no node_modules — dependencies not installed)
     └── test/
 ```
 
-No `Makefile` found. No TypeScript in this project (no typecheck command exists).
+No TypeScript in this project (no typecheck command). No Makefile.
 
 ---
 
 ## 2. Commands Found and Executed
 
-| Command | Location | Script |
-|---|---|---|
-| `npm -w client run test` | `kanban/package.json` (workspace root) | `vitest run` |
-| `npm -w client run lint` | `kanban/package.json` (workspace root) | `eslint src` |
-| `npm -w client run build` | `kanban/package.json` (workspace root) | `vite build` |
-| `npm run test:server` | `kanban/package.json` (workspace root) | `npm -w server run test` |
-
-No `test:setup` command was run as it was absent from the workspace root `package.json` scripts in this worktree. No Makefile was present.
+| Command | Location | Script | Scope |
+|---|---|---|---|
+| `npm -w client run test` | `kanban/package.json` | `vitest run` | All client tests |
+| `npm -w client run lint` | `kanban/package.json` | `eslint src` | Client source |
+| `npm run build` | `kanban/package.json` | `npm -w client run build` | Client production build |
+| `npm run test:setup` | `kanban/package.json` | `node --test test/*.test.mjs` | Project setup validation |
+| `npm run test:server` | `kanban/package.json` | `npm -w server run test` | Server tests |
 
 ---
 
@@ -54,221 +55,310 @@ No `test:setup` command was run as it was absent from the workspace root `packag
 
 ### `npm -w client run test` — PASS
 
-All 173 tests across 8 test files passed. The `useWebSocket.test.js` file contributed 42 tests:
+All 220 tests across 8 test files passed. The `CardModal.test.jsx` suite contributed 55 tests:
 
 ```
-✓ src/api/client.test.js                     (27 tests)   22ms
-✓ src/App.test.jsx                            (4 tests)   59ms
-✓ src/components/Board/Column.test.jsx        (6 tests)   74ms
-✓ src/components/Board/CardTile.test.jsx      (9 tests)   71ms
+✓ src/api/client.test.js                     (27 tests)    7ms
+✓ src/components/Board/CardTile.test.jsx      (9 tests)   57ms
 ✓ src/hooks/useWebSocket.test.js             (42 tests)   82ms
-✓ src/components/Board/Board.test.jsx        (11 tests)   96ms
-✓ src/components/Board/CardModal.test.jsx    (10 tests)   96ms
-✓ src/hooks/useBoard.test.js                 (64 tests) 3094ms
+✓ src/components/Board/Column.test.jsx        (6 tests)   90ms
+✓ src/App.test.jsx                            (4 tests)   54ms
+✓ src/components/Board/Board.test.jsx        (13 tests)  113ms
+✓ src/components/Board/CardModal.test.jsx    (55 tests)  310ms
+✓ src/hooks/useBoard.test.js                 (64 tests) 3060ms
 
 Test Files  8 passed (8)
-     Tests  173 passed (173)
-  Duration  3.96s
+     Tests  220 passed (220)
+  Duration  3.93s
 ```
 
 ### `npm -w client run lint` — PASS
 
-ESLint ran against `src/` with zero errors or warnings. Exit code 0, no output.
+ESLint ran with zero errors or warnings. Exit code 0, no output.
 
-### `npm -w client run build` — PASS
+### `npm run build` — PASS
 
-Vite production build completed successfully in ~252ms:
+Vite production build completed in ~253ms:
 
 ```
-dist/index.html                   0.48 kB │ gzip:  0.31 kB
-dist/assets/index-DA879vGP.css    2.26 kB │ gzip:  0.87 kB
-dist/assets/index-DMkIm4BC.js   148.94 kB │ gzip: 47.99 kB
-✓ built in 252ms
+dist/index.html                   0.48 kB │ gzip:  0.30 kB
+dist/assets/index-GUy2npcC.css    3.94 kB │ gzip:  1.29 kB
+dist/assets/index-BnjTzzql.js   152.30 kB │ gzip: 48.79 kB
+✓ built in 253ms
 ```
 
-### `npm run test:server` — PASS
+### `npm run test:setup` — PASS
 
-All 146 server-side tests across 27 suites passed (0 failures). This includes the WebSocket broadcaster tests (tasks 16 and 17), which are a dependency of this hook. The server-side infrastructure the hook connects to is fully tested and operational.
+All 49 project-setup validation tests passed across 9 suites (dependency checks, script checks, directory structure checks, vite config checks).
+
+### `npm run test:server` — FAIL (pre-existing, unrelated to this task)
+
+4 server test suites failed with `ERR_MODULE_NOT_FOUND` for `express` and `better-sqlite3`. The root cause is that server-side `node_modules` are not installed in this worktree. The WebSocket suite (ws.test.mjs) has 21 passing tests. The 4 failing test files (server.test.mjs, db.test.mjs, comments.test.mjs, cards.test.mjs) all fail because the server package's `node_modules` directory does not exist. This is a pre-existing environment issue unrelated to the CardModal component.
 
 ---
 
 ## 4. Requirements Verification
 
-### Requirement 1 — WebSocket connection establishment
+### Requirement 1 — `CardModal.jsx` exists at `client/src/components/CardModal/CardModal.jsx`
+
+**Status: DEVIATION — file exists but at wrong path**
+
+The task specification states the file should be created at:
+```
+client/src/components/CardModal/CardModal.jsx
+```
+
+The actual file location is:
+```
+client/src/components/Board/CardModal.jsx
+```
+
+The file was co-located with the Board component directory rather than in its own dedicated `CardModal/` subdirectory. There is no `client/src/components/CardModal/` directory at all. The CSS companion file is similarly at `client/src/components/Board/CardModal.css`.
+
+The co-location approach is functional and the component is fully integrated and tested, but it deviates from the path specified in the task requirements.
+
+### Requirement 2 — React Portal is used for rendering
 
 **Status: PASS**
 
-`useWebSocket.js` establishes a WebSocket connection via `new WebSocket(url)` inside a `useEffect` that runs on mount and re-runs on URL change. The initial status is set to `'connecting'` synchronously before the socket is created. The `ws.onopen` handler transitions status to `'connected'`. The hook accepts a required `url` string parameter and an optional options object.
-
-### Requirement 2 — Connection lifecycle handling (connect, disconnect, reconnect)
-
-**Status: PASS**
-
-All three lifecycle phases are handled:
-
-- **Connect:** `ws.onopen` sets status to `'connected'` and resets `reconnectAttemptsRef` to 0.
-- **Disconnect:** `ws.onclose` sets status to `'disconnected'`. The `disconnect()` function (returned from the hook) allows intentional disconnection, setting `intentionalCloseRef.current = true` to suppress automatic reconnection.
-- **Reconnect:** Described in detail under Requirement 3.
-
-The hook exposes a `{ status, disconnect }` return value. `status` can be `'connecting'`, `'connected'`, `'disconnected'`, or `'error'`.
-
-### Requirement 3 — Automatic reconnection with exponential backoff
-
-**Status: PASS**
-
-The reconnection logic in `ws.onclose` computes delay as:
+`createPortal` is imported from `react-dom` and used to render the modal content into `document.body`:
 
 ```js
-const delay = Math.min(
-  INITIAL_BACKOFF_MS * Math.pow(2, reconnectAttemptsRef.current),
-  MAX_BACKOFF_MS
+import { createPortal } from 'react-dom'
+// ...
+return createPortal(
+  <div className="modal-overlay" onClick={onClose}>
+    ...
+  </div>,
+  document.body
 )
 ```
 
-Where `INITIAL_BACKOFF_MS = 1000` and `MAX_BACKOFF_MS = 30_000`. The attempt counter increments after each failed connection. Reconnection is suppressed when `intentionalCloseRef.current` is `true` (set by `disconnect()` or the cleanup function). A `clearTimeout` guard prevents multiple simultaneous timers from accumulating on repeated `onclose` events.
+The portal behavior is explicitly tested in the `CardModal — portal` describe block (2 tests), verifying that the modal renders outside the React root container and is cleaned up on unmount.
 
-The backoff sequence is: 1000ms → 2000ms → 4000ms → 8000ms → 16000ms → 30000ms (capped).
-
-Tests confirm each step of this sequence, including cap enforcement and counter reset on successful connection.
-
-### Requirement 4 — JSON event parsing and onEvent callback
+### Requirement 3 — Editable fields for title and assignee exist
 
 **Status: PASS**
 
-Incoming messages are parsed in `ws.onmessage`:
+Both fields are implemented with a view/edit toggle pattern:
+- **Title:** View mode shows an `<h2>` heading with an "Edit title" button. Edit mode shows a text `<input>` with `aria-label="Title"`, a Save button, and a Cancel button.
+- **Assignee:** View mode shows a `<p>` with the assignee name (or "Unassigned" if null) and an "Edit assignee" button. Edit mode shows a text `<input>` with `aria-label="Assignee"`, a Save button, and a Cancel button.
 
-```js
-const { event: eventType, payload } = JSON.parse(data)
-if (!eventType) return
-if (eventsRef.current && !eventsRef.current.includes(eventType)) return
-onEventRef.current?.(eventType, payload)
+The two fields have mutual exclusivity: opening one edit closes the other. This is implemented in both directions (opening title edit closes assignee edit; opening assignee edit closes title edit).
+
+Both editable fields are covered by 14 tests each in the `CardModal — edit title` and `CardModal — edit assignee` describe blocks, all passing.
+
+### Requirement 4 — Description display area exists
+
+**Status: PASS**
+
+The description is rendered as a read-only paragraph:
+
+```jsx
+<p className="modal-description">{card.description ?? 'No description'}</p>
 ```
 
-- Messages with no `event` field are silently ignored.
-- An optional `events` array allowlist filters which event types trigger the callback.
-- The `onEvent` callback is stored in a ref (`onEventRef`), so the latest callback is always used without triggering reconnection on prop changes (stable ref pattern).
-- All five server event types (`card:created`, `card:updated`, `card:deleted`, `card:moved`, `comment:created`) are tested and work correctly.
+It is styled with `font-size: 0.875rem`, `line-height: 1.5`, and appropriate color. Tests verify both the presence of a description string and the fallback "No description" text when `description` is null.
 
-### Requirement 5 — Error handling
+The description is read-only (display-only). The task specifies "description display area" without requiring editability, so this is compliant.
 
-**Status: PASS**
-
-Two error paths are handled:
-
-1. **WebSocket `onerror` event:** Sets status to `'error'` and calls `onErrorRef.current?.(new Error('WebSocket connection error'))`. Graceful when no `onError` callback is provided (optional chaining).
-2. **Malformed JSON in `onmessage`:** The `try/catch` block calls `onErrorRef.current?.(err)` with the parse error. Does not throw, does not call `onEvent`. Graceful when no `onError` is provided.
-
-The `onError` callback is also stored in a ref, ensuring the latest callback is always used without reconnection side effects.
-
-### Requirement 6 — Cleanup on component unmount
+### Requirement 5 — Comments section exists
 
 **Status: PASS**
 
-The `useEffect` cleanup function:
+A `<section className="modal-comments">` contains a "Comments" heading (`<h3>`), a list of comments (`<ul className="modal-comments-list">`), and a "No comments yet" fallback. Each comment item renders author, timestamp (via `toLocaleString()`), and content.
+
+7 tests in the `CardModal — comments` describe block cover: heading presence, rendering author/content/timestamp for each comment, ordering, and the empty-state fallback.
+
+### Requirement 6 — Save/cancel functionality for edits
+
+**Status: PASS**
+
+Both title and assignee edits have Save and Cancel buttons:
+
+- **Save:** Calls `onUpdate(card.id, { field: newValue })` asynchronously. Disables buttons and shows "Saving…" while the promise is pending. Exits edit mode on success. Stays in edit mode on rejection and shows an error alert with `role="alert"`. Title save validates that the value is non-empty (shows "Title is required" without calling `onUpdate`).
+- **Cancel:** Restores the original value from the `card` prop and exits edit mode without calling `onUpdate`.
+- **Enter key:** In both input fields, `onKeyDown` calls the save handler when `Enter` is pressed.
+
+All save/cancel behaviors are covered by the test suites and all tests pass.
+
+### Requirement 7 — Delete card button with confirmation exists
+
+**Status: PASS**
+
+The delete flow is a two-step confirmation:
+1. A "Delete" button (`className="modal-delete"`, `aria-label="Delete"`) is visible by default.
+2. Clicking it shows a confirmation region with text "Are you sure you want to delete this card?" and two buttons: "Confirm delete" and "Keep card".
+3. "Keep card" dismisses the confirmation and returns to normal view.
+4. "Confirm delete" calls `onDelete(card.id)`. On success, calls `onClose()`. On failure, shows an error alert, dismisses the confirmation region, and returns to view mode.
+
+8 tests in the `CardModal — delete` describe block cover all branches, all passing.
+
+### Requirement 8 — Keyboard shortcut: Escape to close
+
+**Status: PASS**
+
+A `useEffect` attaches a `keydown` listener on `document`:
 
 ```js
-return () => {
-  intentionalCloseRef.current = true
-  clearTimeout(reconnectTimerRef.current)
-  wsRef.current?.close()
-  wsRef.current = null
+function onKey(e) {
+  if (e.key !== 'Escape') return
+  if (isEditingTitle) {
+    setIsEditingTitle(false); setEditTitle(card.title); setSaveError(null)
+  } else if (isEditingAssignee) {
+    setIsEditingAssignee(false); setEditAssignee(card.assignee ?? ''); setSaveError(null)
+  } else {
+    onClose()
+  }
+}
+document.addEventListener('keydown', onKey)
+return () => document.removeEventListener('keydown', onKey)
+```
+
+The Escape key behavior is contextual:
+- When a field is being edited: cancels the edit (does not close the modal).
+- When no field is being edited: closes the modal by calling `onClose()`.
+
+Three tests verify this behavior:
+- `calls onClose when Escape key is pressed` (base modal close)
+- `Escape key cancels title edit without closing modal`
+- `Escape key cancels assignee edit without closing modal`
+
+All three pass.
+
+### Requirement 9 — Backdrop blur and centered positioning styling
+
+**Status: PASS**
+
+In `CardModal.css`:
+
+```css
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;      /* vertical centering */
+  justify-content: center;  /* horizontal centering */
+  z-index: 100;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  animation: modal-fade-in 150ms ease;
+}
+
+.modal-content {
+  background: #fff;
+  border-radius: 8px;
+  padding: 1.5rem;
+  max-width: 480px;
+  width: 90%;
+  position: relative;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  max-height: 90vh;
+  overflow-y: auto;
 }
 ```
 
-This:
-- Marks the close as intentional (suppresses reconnect from `onclose`).
-- Cancels any pending reconnection timer.
-- Closes the WebSocket if open.
-- Nullifies the ref to prevent dangling callbacks.
-
-Tests confirm that no reconnect is triggered after unmount, even if a `close` event fires asynchronously after the cleanup function runs.
+- `backdrop-filter: blur(4px)` with the `-webkit-` vendor prefix satisfies the backdrop blur requirement.
+- `display: flex; align-items: center; justify-content: center` on a `position: fixed; inset: 0` overlay satisfies the centered positioning requirement.
+- Entrance animations are present (`modal-fade-in` on overlay, `modal-slide-in` on content).
+- A responsive mobile bottom-sheet layout is provided via `@media (max-width: 600px)`.
 
 ---
 
-## 5. Test Coverage Review
+## 5. Code Review Findings
 
-The required test strategy specifies: *"Test WebSocket connects on mount, receives events correctly, reconnects after disconnection, cleans up properly."*
+### Finding 1 — DEVIATION: File location does not match task specification
 
-The test file at `client/src/hooks/useWebSocket.test.js` covers all four required areas plus additional edge cases, organized into six `describe` blocks:
+**Severity: Minor**
+**File:** `kanban/client/src/components/Board/CardModal.jsx`
 
-| Describe block | Tests | Required area covered |
-|---|---|---|
-| `connection lifecycle` | 6 | Connects on mount |
-| `reconnection with exponential backoff` | 9 | Reconnects after disconnection |
-| `event parsing and callback handling` | 9 | Receives events correctly |
-| `event type filtering` | 4 | Receives events correctly (filtering) |
-| `cleanup on unmount` | 5 | Cleans up properly |
-| `error handling via onError callback` | 4 | Error handling |
-| `url change handling` | 3 | Bonus: URL changes |
-| `edge cases` | 1 | Bonus: disconnect when already disconnected |
+The task specification explicitly states: *"Create `client/src/components/CardModal/CardModal.jsx`"*. The implementation places the file at `client/src/components/Board/CardModal.jsx` alongside the Board, Column, and CardTile components. There is no `CardModal/` subdirectory.
 
-**Total: 42 tests, all passing.**
+Co-locating with Board components is a defensible architectural choice (the modal is tightly coupled to the Board feature), but it does not match the specified path. The companion CSS and test files are also in the Board directory (`CardModal.css`, `CardModal.test.jsx`).
 
-Key test highlights:
-- Exponential backoff delays are verified at each step (1000ms, 2000ms, 4000ms) and at cap (30000ms) using `vi.useFakeTimers()`.
-- Counter reset on successful open is verified.
-- Multiple simultaneous timer accumulation is verified not to occur.
-- Unmount during `connecting` state (before `onopen`) is tested.
-- Rapid mount/unmount cycle is tested.
-- Ref-pattern callback stability (no reconnect on callback prop change) is tested for both `onEvent`, `onError`, and `events` filter.
+### Finding 2 — INFO: `card.comments` is accessed without null guard
 
----
+**Severity: Low**
+**File:** `kanban/client/src/components/Board/CardModal.jsx`, line 188
 
-## 6. Code Review Findings
-
-### Finding 1 — INFO: `useWebSocket` is not yet consumed by any other module
-
-**Files:** `client/src/hooks/useWebSocket.js`
-
-A search across `client/src/` shows `useWebSocket` is referenced only by its own test file. The hook is not yet imported in `useBoard.js`, `Board.jsx`, `App.jsx`, or any other application file. This is expected for this task (Task 18 delivers the hook; integration into `useBoard` would be a subsequent task), but it means the hook has not been exercised in the live application render path. This is an integration gap, not a bug in the implementation.
-
-### Finding 2 — INFO: No reconnect guard on `onerror` → `onclose` double-fire
-
-**File:** `client/src/hooks/useWebSocket.js`
-
-When a WebSocket emits `onerror`, browsers typically fire `onclose` immediately afterward. This means status will transition `'error'` → `'disconnected'` and a reconnect timer will be scheduled. The `onerror` handler sets status to `'error'` but does not set `intentionalCloseRef`, so the subsequent `onclose` will schedule a reconnect. This is standard WebSocket behavior and arguably desirable (retry on error), but the transient `'error'` status is observable only briefly before being overwritten by `'disconnected'`. Consumers that read `status` asynchronously may not see the `'error'` state. This is a design trade-off, not a bug. Tests confirm `onerror` sets status to `'error'` without independently testing the subsequent `onclose` interaction.
-
-### Finding 3 — INFO: `disconnect()` does not nullify `wsRef` after calling `close()`
-
-**File:** `client/src/hooks/useWebSocket.js`
-
-```js
-const disconnect = useCallback(() => {
-  intentionalCloseRef.current = true
-  clearTimeout(reconnectTimerRef.current)
-  wsRef.current?.close()
-  setStatus('disconnected')
-}, [])
+```jsx
+{card.comments.length === 0 ? (
 ```
 
-Unlike the cleanup function, `disconnect()` does not set `wsRef.current = null` after closing. The `onclose` callback attached to the still-referenced socket will fire (because `ws.close()` triggers it), set status to `'disconnected'`, and check `intentionalCloseRef.current` (which is `true`) — so no reconnect will be scheduled. The behavior is correct, but the ref holds a reference to a closed WebSocket object until the next render cycle or effect re-run. This is a minor memory consideration with no practical impact at this scale.
+The component accesses `card.comments.length` directly. If `card.comments` is `undefined` or `null`, this will throw a `TypeError` at render time. The test fixture always provides `comments: []`, so this is not caught by tests. In production, if the API returns a card without a `comments` field (e.g., a response missing the comments relation), the modal will crash.
+
+A safe guard such as `{(card.comments ?? []).length === 0 ?` or `{!card.comments?.length ?` would prevent this. Similarly, the `card.comments.map(...)` on line 191 shares this risk.
+
+### Finding 3 — INFO: The `editTitle` and `editAssignee` states are not reset when `card` prop changes
+
+**Severity: Low**
+**File:** `kanban/client/src/components/Board/CardModal.jsx`
+
+The component uses `useState(card.title)` and `useState(card.assignee ?? '')` to initialize edit state. If the parent component updates the `card` prop (e.g., a successful save returns an updated card object), the internal edit state will still hold the previous `editTitle`/`editAssignee` values. While the save flow correctly calls `setIsEditingTitle(false)` on success (which hides the input), if the parent re-renders with a new card value while editing is open, the input may display a stale value.
+
+This is a common React pattern limitation. A `useEffect` syncing from `card.title` and `card.assignee` to the local state when not in edit mode would mitigate it.
+
+The Board component (`Board.jsx`) does pass the live card reference from `useBoard` state to `CardModal`, so this scenario can occur in the integration between Task 9 (useBoard) and Task 11 (CardModal). The Board test at line 122 (`'modal reflects updated card data when useBoard cards state changes'`) verifies the *displayed* title updates on re-render, which works because the view-mode path reads from `card.title` directly. The potential issue is in the edit-mode input value.
+
+### Finding 4 — INFO: No `aria-live` or focus trap for the modal
+
+**Severity: Low (accessibility)**
+**File:** `kanban/client/src/components/Board/CardModal.jsx`
+
+The modal uses `role="dialog"` and `aria-modal="true"`, which is correct. However:
+1. There is no focus trap: keyboard navigation (Tab) will escape the modal boundary and reach elements behind the overlay.
+2. Focus is not moved to the modal on open (e.g., to the close button or the first interactive element).
+3. After close, focus is not restored to the triggering element (the CardTile button).
+
+These are WCAG 2.1 guidelines for modal dialogs (ARIA Practices Guide §3.8). They do not affect the stated task requirements but represent potential accessibility issues in production use.
+
+### Finding 5 — INFO: Overlay click-to-close does not suppress during save/delete operations
+
+**Severity: Low**
+**File:** `kanban/client/src/components/Board/CardModal.jsx`, line 90
+
+```jsx
+<div className="modal-overlay" onClick={onClose}>
+```
+
+The overlay click always calls `onClose`, even while a save (`isSaving`) or delete (`isDeleting`) operation is in flight. A user could dismiss the modal mid-save, potentially losing the save's result. The inner content correctly stops propagation (`onClick={e => e.stopPropagation()}`), but the overlay itself has no guard. Adding a condition like `onClick={() => { if (!isSaving && !isDeleting) onClose() }}` would prevent premature dismissal.
 
 ---
 
-## 7. Overall Assessment
+## 6. Overall Assessment
 
-All six stated requirements are implemented correctly and fully tested. The 42 tests in `useWebSocket.test.js` pass completely and comprehensively cover the required test strategy (connect on mount, receive events correctly, reconnect after disconnection, clean up properly) as well as additional edge cases. ESLint reports zero violations and the production build succeeds.
+The CardModal component is a well-implemented, fully-functional modal with all required behaviors present and tested. All 220 client tests pass, lint reports zero violations, and the production build succeeds.
 
-The three findings above are informational observations. None represent bugs or requirement violations. Finding 1 (hook not yet integrated into application code) is an expected state for an isolated hook delivery task.
+The primary structural deviation is the file location: the component was created at `client/src/components/Board/CardModal.jsx` instead of the specified `client/src/components/CardModal/CardModal.jsx`. This does not affect functionality but represents a non-compliance with the task specification.
+
+Findings 2–5 are informational observations. None represent bugs that currently cause test failures or build failures.
 
 ---
 
-## 8. Summary
+## 7. Summary Table
 
 | Check | Result |
 |---|---|
-| `npm -w client run test` (173 tests total, 42 for useWebSocket) | PASS |
+| File path: `client/src/components/CardModal/CardModal.jsx` | DEVIATION (at `Board/CardModal.jsx` instead) |
+| React Portal (`createPortal`) used | PASS |
+| Editable title field with save/cancel | PASS |
+| Editable assignee field with save/cancel | PASS |
+| Description display area (read-only) | PASS |
+| Comments section with list and empty state | PASS |
+| Save functionality (async, loading state, error state) | PASS |
+| Cancel functionality (restores original value) | PASS |
+| Delete button with confirmation dialog | PASS |
+| Escape key to close modal | PASS |
+| Escape key cancels edit without closing modal | PASS |
+| Backdrop blur styling (`backdrop-filter: blur(4px)`) | PASS |
+| Centered positioning (flexbox on fixed overlay) | PASS |
+| `npm -w client run test` (220 tests) | PASS |
 | `npm -w client run lint` | PASS |
-| `npm -w client run build` | PASS |
-| `npm run test:server` (146 tests) | PASS |
-| WebSocket connection establishment | PASS |
-| Connection lifecycle (connect, disconnect, reconnect) | PASS |
-| JSON event parsing and onEvent callback | PASS |
-| Automatic reconnection with exponential backoff | PASS |
-| Error handling (onerror + malformed JSON) | PASS |
-| Cleanup on component unmount | PASS |
-| Test coverage of required strategy | PASS (42 tests) |
+| `npm run build` | PASS |
+| `npm run test:setup` (49 tests) | PASS |
+| `npm run test:server` | FAIL (pre-existing: server `node_modules` not installed) |
 
-**Overall Status: PASS**
+**Overall Status: PASS with one minor deviation (file path)**
 
-The implementation is correct, complete, and well-tested. All automated checks pass with zero violations. Three low-severity informational observations were noted; none are blocking.
+The implementation is complete, well-tested, and fully functional. The only requirement not strictly met is the output file path; all behavioral requirements are correctly implemented.

@@ -118,4 +118,41 @@ describe('Board', () => {
     fireEvent.click(screen.getByRole('button', { name: /close/i }))
     expect(screen.queryByRole('dialog')).toBeNull()
   })
+
+  it('modal reflects updated card data when useBoard cards state changes', () => {
+    const card = { ...MOCK_CARD, title: 'Old Title' }
+    useBoard.mockReturnValue({
+      ...DEFAULT_STATE,
+      cards: { ready: [card], in_progress: [], done: [] },
+    })
+    const { rerender } = render(<Board />)
+    fireEvent.click(screen.getByRole('button', { name: 'Old Title' }))
+    expect(screen.getByRole('dialog')).toHaveTextContent('Old Title')
+
+    // Simulate useBoard updating the card in place (e.g. after updateCard resolves)
+    useBoard.mockReturnValue({
+      ...DEFAULT_STATE,
+      cards: { ready: [{ ...card, title: 'New Title' }], in_progress: [], done: [] },
+    })
+    rerender(<Board />)
+    expect(screen.getByRole('dialog')).toHaveTextContent('New Title')
+  })
+
+  it('modal closes automatically when selected card is removed from cards state', () => {
+    useBoard.mockReturnValue({
+      ...DEFAULT_STATE,
+      cards: { ready: [MOCK_CARD], in_progress: [], done: [] },
+    })
+    const { rerender } = render(<Board />)
+    fireEvent.click(screen.getByRole('button', { name: 'Test Card' }))
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+
+    // Simulate card being deleted from state
+    useBoard.mockReturnValue({
+      ...DEFAULT_STATE,
+      cards: { ready: [], in_progress: [], done: [] },
+    })
+    rerender(<Board />)
+    expect(screen.queryByRole('dialog')).toBeNull()
+  })
 })
