@@ -1,6 +1,22 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
+import { useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import CardTile from './CardTile.jsx'
+
+vi.mock('@dnd-kit/sortable', () => ({
+  useSortable: vi.fn(() => ({
+    attributes: { 'aria-roledescription': 'sortable' },
+    listeners: { onPointerDown: vi.fn() },
+    setNodeRef: vi.fn(),
+    transform: null,
+    transition: null,
+    isDragging: false,
+  })),
+}))
+vi.mock('@dnd-kit/utilities', () => ({
+  CSS: { Transform: { toString: vi.fn(() => '') } },
+}))
 
 const card = {
   id: '1',
@@ -63,6 +79,51 @@ describe('CardTile', () => {
   it('is keyboard-focusable', () => {
     render(<CardTile card={card} onCardClick={vi.fn()} />)
     expect(screen.getByRole('button')).toHaveAttribute('tabindex', '0')
+  })
+
+  it('useSortable is called with the card id', () => {
+    render(<CardTile card={card} onCardClick={vi.fn()} />)
+    expect(useSortable).toHaveBeenCalledWith({ id: card.id })
+  })
+
+  it('CardTile spreads aria attributes from useSortable', () => {
+    render(<CardTile card={card} onCardClick={vi.fn()} />)
+    expect(screen.getByRole('button')).toHaveAttribute('aria-roledescription', 'sortable')
+  })
+
+  it('CardTile does not have dragging class when isDragging is false', () => {
+    render(<CardTile card={card} onCardClick={vi.fn()} />)
+    expect(screen.getByRole('button')).not.toHaveClass('card-tile-dragging')
+  })
+
+  it('CardTile has dragging class when isDragging is true', () => {
+    useSortable.mockReturnValueOnce({
+      attributes: { 'aria-roledescription': 'sortable' },
+      listeners: { onPointerDown: vi.fn() },
+      setNodeRef: vi.fn(),
+      transform: null,
+      transition: null,
+      isDragging: true,
+    })
+    render(<CardTile card={card} onCardClick={vi.fn()} />)
+    expect(screen.getByRole('button')).toHaveClass('card-tile-dragging')
+  })
+
+  it('CardTile applies inline transform style from useSortable', () => {
+    CSS.Transform.toString.mockReturnValueOnce('translate3d(0px,10px,0)')
+    useSortable.mockReturnValueOnce({
+      attributes: { 'aria-roledescription': 'sortable' },
+      listeners: { onPointerDown: vi.fn() },
+      setNodeRef: vi.fn(),
+      transform: { x: 0, y: 10, scaleX: 1, scaleY: 1 },
+      transition: 'transform 200ms ease',
+      isDragging: false,
+    })
+    render(<CardTile card={card} onCardClick={vi.fn()} />)
+    expect(screen.getByRole('button')).toHaveStyle({
+      transform: 'translate3d(0px,10px,0)',
+      transition: 'transform 200ms ease',
+    })
   })
 })
 

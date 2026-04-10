@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
+import { useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import './CardTile.css'
 
 export default function CardTile({ card, onCardClick, onUpdate }) {
@@ -12,6 +14,13 @@ export default function CardTile({ card, onCardClick, onUpdate }) {
   const skipAssigneeBlurRef                       = useRef(false)
   const titleInputRef                             = useRef(null)
   const assigneeInputRef                          = useRef(null)
+
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: card.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  }
 
   // Auto-focus input when entering edit mode (mirrors CardModal pattern)
   useEffect(() => {
@@ -45,17 +54,29 @@ export default function CardTile({ card, onCardClick, onUpdate }) {
 
   const isEditing = isEditingTitle || isEditingAssignee
 
+  const { onKeyDown: dndKeyDown, ...restListeners } = listeners ?? {}
+
+  function handleKeyDown(e) {
+    if (isEditing) return
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onCardClick(card) }
+    dndKeyDown?.(e)
+  }
+
+  const classes = ['card-tile', isEditing && 'card-tile-editing', isDragging && 'card-tile-dragging']
+    .filter(Boolean).join(' ')
+
   return (
     <div
-      className={`card-tile${isEditing ? ' card-tile-editing' : ''}`}
+      ref={setNodeRef}
+      style={style}
+      className={classes}
       role="button"
       tabIndex={0}
       onClick={() => !isEditing && onCardClick(card)}
-      onKeyDown={e => {
-        if (isEditing) return
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onCardClick(card) }
-      }}
+      onKeyDown={handleKeyDown}
       aria-label={card.title}
+      {...attributes}
+      {...restListeners}
     >
       {/* Title */}
       {isEditingTitle ? (
