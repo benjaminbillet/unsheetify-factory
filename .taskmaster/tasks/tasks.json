@@ -505,7 +505,7 @@
         "dependencies": [
           "7"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -513,9 +513,10 @@
             "description": "Implement the core API wrapper functions for all REST endpoints without error handling",
             "dependencies": [],
             "details": "Create client/src/api/client.js with basic fetch wrapper functions: fetchCards() for GET /api/cards, createCard(data) for POST /api/cards, updateCard(id, data) for PATCH /api/cards/:id, deleteCard(id) for DELETE /api/cards/:id, and createComment(cardId, data) for POST /api/cards/:id/comments. Focus on correct HTTP methods, URL construction, and request body formatting.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Mock fetch to verify correct HTTP methods, URLs, and request payloads are sent for each endpoint",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T13:57:30.762Z"
           },
           {
             "id": 2,
@@ -525,9 +526,10 @@
               1
             ],
             "details": "Enhance the API wrapper functions with comprehensive error handling. Catch network errors (connection failures, timeouts), handle HTTP error status codes (4xx, 5xx), and create meaningful error objects with status codes and messages. Implement retry logic for transient failures and provide user-friendly error messages.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Mock various error scenarios including network failures, 404, 500 errors to verify proper error handling and user feedback",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T13:58:15.595Z"
           },
           {
             "id": 3,
@@ -537,9 +539,10 @@
               2
             ],
             "details": "Add proper JSON parsing to all wrapper functions with error handling for malformed JSON responses. Implement consistent response processing that extracts data from successful responses and handles empty responses. Add content-type validation and handle non-JSON responses appropriately.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test with various response types including valid JSON, malformed JSON, empty responses, and non-JSON content types",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T13:58:59.752Z"
           },
           {
             "id": 4,
@@ -549,14 +552,21 @@
               3
             ],
             "details": "Add TypeScript-style JSDoc comments to all API wrapper functions including parameter types, return types, and usage examples. Document error scenarios and expected response formats. Add @param, @returns, @throws annotations for comprehensive IDE intellisense support. Include usage examples in comments.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify JSDoc comments provide proper IDE autocomplete and type hints, validate documentation accuracy against implementation",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T13:59:33.761Z"
           }
         ],
         "complexity": 5,
         "recommendedSubtasks": 4,
-        "expansionPrompt": "Split into: 1) Create basic fetch wrapper functions for all endpoints, 2) Implement comprehensive error handling for network and HTTP errors, 3) Add proper JSON parsing and response handling, 4) Add JSDoc comments and type annotations"
+        "expansionPrompt": "Split into: 1) Create basic fetch wrapper functions for all endpoints, 2) Implement comprehensive error handling for network and HTTP errors, 3) Add proper JSON parsing and response handling, 4) Add JSDoc comments and type annotations",
+        "updatedAt": "2026-04-10T13:59:33.761Z",
+        "metadata": {
+          "assignee": "Grace",
+          "devSessionId": "f207df90-8f4f-4960-a787-b3bb7418e975",
+          "qaSessionId": "f7922d65-1f61-488b-b0dd-f771094ce110"
+        }
       },
       {
         "id": "9",
@@ -1015,7 +1025,7 @@
         "dependencies": [
           "7"
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -1067,7 +1077,12 @@
         ],
         "complexity": 7,
         "recommendedSubtasks": 4,
-        "expansionPrompt": "Break down into: 1) Set up WebSocket server and client connection handling, 2) Implement broadcast functionality to all connected clients, 3) Add heartbeat/ping mechanism for connection health, 4) Handle client disconnection and cleanup"
+        "expansionPrompt": "Break down into: 1) Set up WebSocket server and client connection handling, 2) Implement broadcast functionality to all connected clients, 3) Add heartbeat/ping mechanism for connection health, 4) Handle client disconnection and cleanup",
+        "updatedAt": "2026-04-10T13:46:19.875Z",
+        "metadata": {
+          "assignee": "David",
+          "devSessionId": "7d9e5b54-81f9-4b54-92d1-4147faf4645a"
+        }
       },
       {
         "id": "17",
@@ -1593,9 +1608,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-04-10T13:42:03.097Z",
+      "lastModified": "2026-04-10T13:59:33.762Z",
       "taskCount": 24,
-      "completedCount": 7,
+      "completedCount": 8,
       "tags": [
         "kanban-board"
       ]

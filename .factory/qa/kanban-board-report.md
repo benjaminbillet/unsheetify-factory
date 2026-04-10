@@ -1001,4 +1001,178 @@ The implementation is correct and complete. All server-side tests pass (91/91 fo
 - Clean integration with the existing Express application
 - Proper router mounting at `/api` prefix in `server/index.js`
 
+---
+
+# Task 8 — Create API Client Wrapper Functions
+
+**Date:** 2026-04-10
+**Worktree:** `/Users/benjamin/.sofactory/worktrees/kanban-board/kanban-board-8`
+**Branch:** `kanban-board/kanban-board-8`
+**Commit reviewed:** `13d39b1`
+**Implementation file:** `kanban/client/src/api/client.js`
+
+---
+
+## 1. Commands Found and Executed
+
+| Command | Location | Script | Result |
+|---|---|---|---|
+| `npm run test` | `kanban/client/package.json` | `vitest run` | PASS |
+| `npm run lint` | `kanban/client/package.json` | `eslint src` | PASS |
+| `npm run build` | `kanban/client/package.json` | `vite build` | PASS |
+| `npm run test:setup` | `kanban/package.json` | `node --test test/*.test.mjs` | PASS |
+| `npm run test:server` | `kanban/package.json` | `npm -w server run test` | PASS |
+
+No Makefile relevant to the task. No TypeScript compiler (`tsc`) is configured — the project uses plain JS with JSDoc annotations. No separate typecheck script exists in any `package.json`.
+
+---
+
+## 2. Command Results
+
+### `npm run test` (client — vitest)
+
+```
+ RUN  v2.1.9 /…/kanban-board-8/kanban/client
+
+ ✓ src/api/client.test.js (27 tests) 6ms
+ ✓ src/App.test.jsx (4 tests) 32ms
+
+ Test Files  2 passed (2)
+      Tests  31 passed (31)
+   Start at  16:01:25
+   Duration  442ms
+```
+
+**Result: PASS** — All 27 client.js-specific tests and 4 App tests pass.
+
+### `npm run lint` (client — ESLint)
+
+```
+> eslint src
+(no output)
+```
+
+**Result: PASS** — ESLint exited with code 0, no warnings or errors reported.
+
+### `npm run build` (client — Vite)
+
+```
+vite v5.4.21 building for production...
+✓ 31 modules transformed.
+dist/index.html                   0.48 kB │ gzip:  0.31 kB
+dist/assets/index-B_pynlF-.css    0.35 kB │ gzip:  0.24 kB
+dist/assets/index-DG_7CGO4.js   142.63 kB │ gzip: 45.80 kB
+✓ built in 224ms
+```
+
+**Result: PASS** — Production build succeeds without errors.
+
+### `npm run test:setup` (root — node:test)
+
+```
+# tests 49
+# suites 9
+# pass 49
+# fail 0
+```
+
+**Result: PASS** — All 49 setup/structural tests pass.
+
+### `npm run test:server` (server — node:test)
+
+```
+# tests 91
+# suites 17
+# pass 91
+# fail 0
+```
+
+**Result: PASS** — All 91 server-side integration and unit tests pass. (Included for regression assurance; the task did not modify server code.)
+
+---
+
+## 3. Required Function Checklist
+
+| Function | Signature | Present | HTTP Method | Endpoint |
+|---|---|---|---|---|
+| `fetchCards()` | `() → Promise<Card[]>` | YES | GET | `/api/cards` |
+| `createCard(data)` | `(data) → Promise<Card>` | YES | POST | `/api/cards` |
+| `updateCard(id, data)` | `(id, data) → Promise<Card>` | YES | PATCH | `/api/cards/:id` |
+| `deleteCard(id)` | `(id) → Promise<null>` | YES | DELETE | `/api/cards/:id` |
+| `createComment(cardId, data)` | `(cardId, data) → Promise<Comment>` | YES | POST | `/api/cards/:id/comments` |
+
+All five required functions are present and exported.
+
+---
+
+## 4. Implementation Quality Findings
+
+### 4.1 Error Handling
+
+- A custom `ApiError` class extends `Error` with `name`, `status` (HTTP status or `0` for network failures), and `data` (parsed error body or `null`) properties.
+- Network-level failures (`fetch` rejection) are caught and re-thrown as `ApiError` with `status: 0` and the original error message embedded.
+- Non-2xx HTTP responses parse the response body for a structured `{ error: "…" }` message and fall back gracefully to `"HTTP error <status>"` when the body is not valid JSON.
+- Successful response parsing failures (malformed JSON) throw `ApiError` with the actual HTTP status and the parse error message.
+- `204 No Content` and `content-length: 0` responses return `null` without attempting `response.json()`.
+
+No issues found in error handling.
+
+### 4.2 JSON Parsing
+
+- Request bodies are serialised with `JSON.stringify(data)` before sending.
+- `Content-Type: application/json` is set automatically whenever a `body` option is present; it is correctly absent for GET and DELETE requests.
+- Response parsing is handled inside a `try/catch` so parse errors propagate as `ApiError` rather than raw `SyntaxError`.
+
+No issues found in JSON handling.
+
+### 4.3 JSDoc Comments
+
+All five public functions have JSDoc blocks. Each block includes:
+- `@param` with named type and description for every parameter.
+- `@returns` with the resolved Promise type.
+- `@throws {ApiError}` documenting when the error is thrown.
+- `@example` showing a realistic usage snippet.
+
+`@typedef` blocks for `Card` and `Comment` define all relevant fields with types.
+`ApiError` constructor parameters are also documented inline.
+
+Minor observation (not a defect): The `@typedef` for `Card` documents `created_at` as `{number}` (Unix ms timestamp). The server stores it as an integer; the field name and type are consistent with the server schema so this is accurate.
+
+### 4.4 Internal Architecture
+
+- A private `apiFetch(path, options)` helper centralises all fetch logic, avoiding duplication across the five public functions.
+- Relative URLs are used throughout (`/api/…`), correctly relying on Vite's dev proxy and same-origin production serving — as documented in the file's module-level comment.
+- No hardcoded base URL or environment variable usage, which is appropriate for this project setup.
+
+### 4.5 Test Coverage
+
+The 27 tests in `client.test.js` cover:
+- Correct URL and HTTP method for each of the five functions.
+- Presence/absence of `Content-Type` header based on whether a body is sent.
+- JSON serialisation of request bodies.
+- Successful response parsing for all functions.
+- `204` and `content-length: 0` responses returning `null` without calling `.json()`.
+- Network failure → `ApiError` with `status: 0`.
+- HTTP 404 and 500 → `ApiError` with matching status.
+- Error body `{ error }` string used as `ApiError.message`.
+- Fallback message when error body is non-JSON.
+- `ApiError.data` contains parsed error body.
+- Malformed success response → `ApiError`.
+
+Coverage is comprehensive and maps directly to the specified requirements.
+
+---
+
+## 5. Issues Found
+
+None. No defects, missing requirements, failing tests, lint errors, or build failures were identified.
+
+---
+
+## 6. Overall Assessment
+
+**PASS**
+
+The implementation is complete and high quality. All five required API wrapper functions are present, correctly implemented, and thoroughly tested. Error handling covers all specified edge cases (network errors, HTTP errors, non-JSON error bodies, malformed success bodies, empty responses). JSDoc annotations are accurate and include types, parameter descriptions, return types, thrown error documentation, and usage examples. The build, lint, and all test suites pass without errors.
+
 The failing client commands are a pre-existing environment issue (missing `npm install` for client workspace) and are unrelated to this task's deliverables.
