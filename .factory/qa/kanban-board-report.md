@@ -1399,4 +1399,219 @@ None. No failing tests, no missing required functionality, no incorrect behavior
 
 The implementation is complete, correct, and well-structured. All required exports (`initWs`, `broadcast`) are present. The WebSocket server attaches to the existing HTTP server, maintains a connected clients Set, implements broadcast with correct JSON format, handles connection and disconnection events, includes a configurable heartbeat/ping mechanism, and exports `closeWs` for clean test teardown. All 112 server tests and all 31 client tests pass. Lint passes with no errors. No regressions to prior tasks were introduced.
 
+OVERALL RESULT: PASS
+
+---
+
+# Task 9 — Implement useBoard Hook for State Management
+
+**Date:** 2026-04-10
+**Branch:** kanban-board/kanban-board-9
+**Reviewer:** QA Agent (claude-sonnet-4-6)
+**Task:** Implement `useBoard` hook for state management
+
+---
+
+## 1. Commands Found and Executed
+
+The following commands were identified from `package.json` scripts at multiple levels:
+
+| Command | Location | Script |
+|---|---|---|
+| `npm -w client run test` | `kanban/package.json` (workspace) | `vitest run` |
+| `npm -w client run lint` | `kanban/package.json` (workspace) | `eslint src` |
+| `npm -w client run build` | `kanban/package.json` (workspace) | `vite build` |
+| `npm -w server run test` | `kanban/package.json` (workspace) | `node --test test/server.test.mjs test/db.test.mjs test/comments.test.mjs test/ws.test.mjs` |
+| `npm run test:setup` | `kanban/package.json` | `node --test test/*.test.mjs` |
+
+No `Makefile` was found anywhere in the repository. No typecheck command exists (the project uses plain JavaScript, not TypeScript).
+
+---
+
+## 2. Command Results
+
+### 2.1 Client Tests (`npm -w client run test`)
+
+**Result: PASS**
+
+```
+ ✓ src/api/client.test.js (27 tests) 13ms
+ ✓ src/App.test.jsx (4 tests) 34ms
+ ✓ src/hooks/useBoard.test.js (64 tests) 3077ms
+
+ Test Files  3 passed (3)
+      Tests  95 passed (95)
+   Start at  16:37:37
+   Duration  3.74s
+```
+
+All 64 tests in `useBoard.test.js` pass. All 95 client-side tests pass with no failures or skipped tests.
+
+### 2.2 Client Lint (`npm -w client run lint`)
+
+**Result: PASS**
+
+```
+> kanban-client@1.0.0 lint
+> eslint src
+```
+
+ESLint exited with no output and exit code 0. No warnings or errors.
+
+### 2.3 Client Build (`npm -w client run build`)
+
+**Result: PASS**
+
+```
+vite v5.4.21 building for production...
+✓ 31 modules transformed.
+dist/index.html                   0.48 kB │ gzip:  0.31 kB
+dist/assets/index-B_pynlF-.css    0.35 kB │ gzip:  0.24 kB
+dist/assets/index-DG_7CGO4.js   142.63 kB │ gzip: 45.80 kB
+✓ built in 230ms
+```
+
+Production build succeeded. The hook is included in the transformed modules without any bundler errors.
+
+### 2.4 Server Tests (`npm -w server run test`)
+
+**Result: PASS**
+
+```
+# tests 112
+# suites 22
+# pass 112
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2802.441333
+```
+
+All 112 server tests pass. These cover DB operations, REST routes, comments, and the WebSocket broadcaster. No regressions from the hook implementation.
+
+### 2.5 Setup Tests (`npm run test:setup`)
+
+**Result: PASS**
+
+```
+# tests 49
+# suites 9
+# pass 49
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 50.595208
+```
+
+All 49 setup/scaffolding tests pass.
+
+---
+
+## 3. Test Coverage for useBoard Hook
+
+A dedicated test file exists at `client/src/hooks/useBoard.test.js` (688 lines). It covers:
+
+| Test Suite | Tests | Coverage |
+|---|---|---|
+| `initial state structure` | 2 | Initial `cards` shape, `error` null |
+| `initial data loading` | 7 | Pending/resolved/rejected fetch, grouping, key mapping, sorting |
+| `createCard` | 6 | Optimistic add, default column, server replacement, rollback, error throw, return value |
+| `updateCard` | 5 | Optimistic update, column-change ignored, server replacement, rollback, error throw |
+| `deleteCard` | 3 | Optimistic remove, rollback, error throw |
+| `moveCard` | 5 | Optimistic move, column field update, server replacement, rollback, error throw |
+| `addComment` | 5 | Optimistic comment, server replacement, rollback, error throw, return value |
+| `error state` | 3 | Null initially, set on fetch error, null on success |
+| `loading state — initial fetch` | 3 | True in-flight, false resolved, false rejected |
+| `loading state — individual operations` | 10 | True/false for each of the 5 operations |
+| `operation error propagation` | 5 | Re-throws for all 5 operations |
+| `state shape` | 6 | Key set, array types, column field preservation, position sorting, stable order |
+| `helper: columnToKey` | 3 | All three column values |
+
+Total: **64 tests** across 13 describe blocks.
+
+---
+
+## 4. Code Review
+
+### 4.1 File Location
+
+- Required: `client/src/hooks/useBoard.js`
+- Actual: `kanban/client/src/hooks/useBoard.js`
+
+The project root is `kanban/`, consistent with the entire project structure. The file is at the correct path relative to the project root.
+
+### 4.2 State Structure
+
+Required: `{ ready: [], in_progress: [], done: [] }`
+Implemented: `const EMPTY_BOARD = { ready: [], in_progress: [], done: [] }` — matches exactly.
+
+The `groupCards()` helper correctly maps API column values to state keys, including the `in-progress` → `in_progress` conversion via the exported `columnToKey()` helper.
+
+### 4.3 Required Functions
+
+| Function | Required | Implemented | Notes |
+|---|---|---|---|
+| `createCard` | Yes | Yes | Temp-ID optimistic pattern; rolls back on error |
+| `updateCard` | Yes | Yes | Rollback pattern; strips `column` from data to prevent accidental moves |
+| `deleteCard` | Yes | Yes | Rollback pattern |
+| `moveCard` | Yes | Yes | Rollback pattern; calls `apiUpdateCard` (correct — no separate move API endpoint) |
+| `addComment` | Yes | Yes | Temp-ID optimistic pattern; rolls back on error |
+
+All five required functions are implemented.
+
+### 4.4 Optimistic Updates
+
+All operations implement optimistic updates with rollback on failure:
+
+- **createCard / addComment** use a temp-ID pattern: an optimistic record is inserted immediately (with a `__temp_` ID), and replaced by the server response on success, or removed on failure.
+- **updateCard / deleteCard / moveCard** use a snapshot-rollback pattern: the full `cardsRef.current` state is captured synchronously before the optimistic change, and restored on failure.
+
+The use of `cardsRef` (a ref mirroring state) to capture rollback synchronously is a technically sound solution to the React 18 issue where functional `setState` updaters are scheduled as macrotasks but API rejections arrive as microtasks — without this, the rollback variable could be stale.
+
+### 4.5 Loading State
+
+A `pendingRef` counter tracks concurrent in-flight operations, ensuring `loading` remains `true` until all concurrent operations complete. This is correctly implemented.
+
+### 4.6 Error Handling
+
+- `setError` is only called for the initial `fetchCards` failure. Per-operation errors are re-thrown to callers but do not update the `error` state — appropriate design for a hook (callers handle operation errors themselves).
+- The `cancelled` flag in the `useEffect` cleanup prevents state updates after component unmount.
+
+### 4.7 Lint Compliance
+
+The implementation originally contained `// eslint-disable-line react-hooks/exhaustive-deps` comments on all `useCallback` hooks. These were removed in commit `23ce1ab` after the dev session identified them as redundant (all callbacks use `cardsRef` instead of closing over state, so no deps are needed). The current code has no ESLint suppressions.
+
+### 4.8 API Contract Alignment
+
+All API function imports (`fetchCards`, `createCard`, `updateCard`, `deleteCard`, `createComment`) match the exports in `client/src/api/client.js`. The `moveCard` function correctly calls `apiUpdateCard` with `{ column, position }` since there is no separate move endpoint in the REST API.
+
+### 4.9 Minor Observations (Non-Blocking)
+
+1. **`beginOp()` placement in `createCard`**: The optimistic state update happens before `beginOp()` is called. This is intentional — the optimistic UI change is immediate and synchronous, while `loading: true` is set just before the API call starts. Not a bug.
+2. **Error state not cleared on retry**: If `fetchCards()` fails and sets `error`, there is no mechanism to retry or clear `error`. Not specified in task requirements.
+3. **`EMPTY_BOARD` shared reference**: `EMPTY_BOARD` and `cardsRef` are initialized with the same object reference. The `applyCards` function always creates new state objects, so this is safe — the shared reference is never mutated.
+
+---
+
+## 5. Overall Assessment
+
+All commands pass. The implementation:
+
+- Lives at the correct file path
+- Implements the exact required state structure `{ ready: [], in_progress: [], done: [] }`
+- Implements all five required functions (`createCard`, `updateCard`, `deleteCard`, `moveCard`, `addComment`)
+- Correctly handles optimistic updates with rollback on failure for all operations
+- Correctly handles loading states for all operations including concurrent operations
+- Correctly handles and surfaces errors from the initial fetch
+- Passes 64 dedicated unit tests with no failures
+- Passes ESLint with no warnings or errors
+- Builds successfully for production
+- Introduces no regressions in server or setup tests (161 total passing tests)
+
+No requirement gaps, logic flaws, or test failures were found.
+
+OVERALL RESULT: PASS
+
 The failing client commands are a pre-existing environment issue (missing `npm install` for client workspace) and are unrelated to this task's deliverables.

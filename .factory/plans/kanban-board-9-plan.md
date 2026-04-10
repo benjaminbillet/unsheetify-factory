@@ -166,24 +166,35 @@ The `void` discards the returned Promise so `act()` does not await it, freezing 
 ```js
 let rollback = null
 setCards(prev => { rollback = prev; return /* new optimistic state */ })
+beginOp()
 try {
-  const result = await apiCall(...)
+  const updated = await apiCall(...)
   setCards(/* replace with server result */)
-  return result
+  return updated
 } catch (err) {
   setCards(rollback)
   throw err
+} finally {
+  endOp()
 }
 ```
+`beginOp()` is called AFTER the synchronous optimistic `setCards` but BEFORE the `await`. `endOp()` is always called in `finally` so loading clears on both success and failure.
 
 **Temp-ID pattern (used by createCard, addComment):** module-level counter `let _tempId = 0`; `function nextTempId() { return '__temp_' + (++_tempId) }`
 
 **`createCard(data)`** — `useCallback(async (data) => {...}, [])`:
 1. Generate `tempId`, derive `key = columnToKey(data.column ?? 'ready')`
-2. Build `optimisticCard` with temp id, `Infinity` position, empty comments
+2. Build `optimisticCard`:
+   ```js
+   { id: tempId, title: data.title, assignee: data.assignee ?? null,
+     column: data.column ?? 'ready', position: Infinity,
+     description: data.description ?? null, created_at: Date.now(), comments: [] }
+   ```
 3. `setCards(prev => ({ ...prev, [key]: [...prev[key], optimisticCard] }))`
-4. Call `beginOp()` before API call; call `endOp()` in both success and failure paths (try/finally)
-5. `await apiCreateCard(data)` → on success: `setCards` to remove temp by id and insert server card (sort by position); on failure: `setCards` to filter out temp, then re-throw
+4. `beginOp()`
+5. `try { const created = await apiCreateCard(data) ... } catch { ... } finally { endOp() }`
+   - **Success:** `setCards(prev => { const next = {...prev}; next[key] = next[key].filter(c => c.id !== tempId); const createdKey = columnToKey(created.column); next[createdKey] = [...next[createdKey], created].sort((a,b) => a.position - b.position); return next })`. Note: remove temp from `key`, insert server card into `columnToKey(created.column)` (may differ if server normalised the column).
+   - **Failure:** `setCards(prev => ({ ...prev, [key]: prev[key].filter(c => c.id !== tempId) }))`, then re-throw.
 
 **`updateCard(id, data)`** — rollback pattern:
 - Compute `safeData = { ...data }; delete safeData.column` (strip any `column` property — column changes must go through `moveCard`)
@@ -209,10 +220,16 @@ try {
 - Failure: restore rollback
 
 **`addComment(cardId, data)`** — temp-ID pattern:
-1. Build `optimisticComment` with temp id
-2. `setCards`: map over all columns, for matching `cardId` append `optimisticComment` to `card.comments`
-3. Call `beginOp()` before API call; call `endOp()` in both success and failure paths (try/finally)
-4. `await createComment(cardId, data)` → success: replace temp comment with real one; failure: remove temp comment and re-throw
+1. `const tempId = nextTempId()`. Build `optimisticComment`:
+   ```js
+   { id: tempId, card_id: cardId, author: data.author,
+     content: data.content, created_at: Date.now() }
+   ```
+2. `setCards`: map over all columns; for the card matching `cardId`, append `optimisticComment` to its `comments` array (leave all other cards untouched)
+3. `beginOp()`
+4. `try { const comment = await createComment(cardId, data) ... } catch { ... } finally { endOp() }`
+   - **Success:** `setCards`: replace `optimisticComment` (matched by `id === tempId`) with the real `comment` in the card's `comments` array; return the `comment`.
+   - **Failure:** `setCards`: remove `optimisticComment` from the card's `comments` array by filtering on `id !== tempId`; re-throw.
 
 ---
 
@@ -220,14 +237,23 @@ try {
 
 ### Tests to write first (`useBoard.test.js` — Subtask 3 block)
 
+All `describe` blocks in this subtask need mock setup. For tests about the initial fetch, configure `fetchCards` per-test. For tests about individual operations, use `beforeEach(() => api.fetchCards.mockResolvedValue(FIXTURE_CARDS))` and `await waitFor(() => expect(result.current.loading).toBe(false))` to settle the initial load before exercising the operation.
+
+**Important:** Always use `await waitFor(() => expect(result.current.loading).toBe(false))` — never `await waitFor(() => !result.current.loading)`. `waitFor` only retries when the callback *throws*; a callback that returns `false` without throwing is treated as success and resolves immediately, making the wait ineffective.
+
 ```
 describe('error state', () => {
-  it('error is null initially')
+  afterEach(() => vi.clearAllMocks())
+  it('error is null initially', () => {
+    api.fetchCards.mockReturnValue(new Promise(() => {}))
+    // check synchronously after renderHook
+  })
   it('error is set to err.message when fetchCards rejects')
   it('error remains null when fetchCards succeeds')
 })
 
 describe('loading state — initial fetch', () => {
+  // afterEach: vi.clearAllMocks(); configure fetchCards per-test
   // Use a never-resolving mock to check in-flight state; await waitFor for async assertions
   it('loading is true while fetchCards is in flight')
   it('loading is false after fetchCards resolves successfully')
@@ -235,9 +261,10 @@ describe('loading state — initial fetch', () => {
 })
 
 describe('loading state — individual operations', () => {
-  // Each of these confirms loading becomes true during the pending API call
-  // and false after it resolves or rejects. Use a never-settling Promise
-  // to capture the in-flight loading=true moment.
+  // beforeEach: api.fetchCards.mockResolvedValue(FIXTURE_CARDS)
+  // afterEach: vi.clearAllMocks()
+  // Each test: renderHook + waitFor(loading===false) to settle initial load,
+  // then start operation with act(() => void ...) and await waitFor(loading===true/false).
   it('loading becomes true while createCard API call is pending')
   it('loading returns to false after createCard succeeds')
   it('loading returns to false after createCard fails')
@@ -252,6 +279,9 @@ describe('loading state — individual operations', () => {
 })
 
 describe('operation error propagation', () => {
+  // beforeEach: api.fetchCards.mockResolvedValue(FIXTURE_CARDS)
+  // afterEach: vi.clearAllMocks()
+  // Each test: renderHook + waitFor(loading===false), then await expect(fn()).rejects...
   it('createCard re-throws API error after rollback')
   it('updateCard re-throws API error after rollback')
   it('deleteCard re-throws API error after rollback')
@@ -276,6 +306,9 @@ The `cancelled` flag in `useEffect` from Subtask 1 prevents stale-closure state 
 
 ```
 describe('state shape', () => {
+  // beforeEach: api.fetchCards.mockResolvedValue(FIXTURE_CARDS)
+  // afterEach: vi.clearAllMocks()
+  // Each test: renderHook + await waitFor(() => expect(result.current.loading).toBe(false))
   it('cards object has exactly the keys: ready, in_progress, done')
   it('each column key holds an array')
   it('cards in each column have their .column field preserved as-is from API')

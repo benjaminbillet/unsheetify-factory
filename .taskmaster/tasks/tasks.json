@@ -578,7 +578,7 @@
         "dependencies": [
           "8"
         ],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -586,9 +586,10 @@
             "description": "Create the useBoard hook with initial state structure and data loading functionality",
             "dependencies": [],
             "details": "Create client/src/hooks/useBoard.js with useState for board data structured as {ready: [], in_progress: [], done: []}. Implement useEffect to call fetchCards() on mount and populate the initial state. Set up basic hook structure with proper imports and exports.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test hook initialization, verify state structure is correct, test initial data loading with mocked fetchCards",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T14:34:18.399Z"
           },
           {
             "id": 2,
@@ -598,9 +599,10 @@
               1
             ],
             "details": "Implement createCard, updateCard, deleteCard, moveCard, and addComment functions that immediately update local state optimistically before making API calls. Each function should update the appropriate column arrays and handle state synchronization when API responses return.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test each operation updates state immediately, verify API calls are made, test state rollback on API failures",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T14:34:20.354Z"
           },
           {
             "id": 3,
@@ -610,9 +612,10 @@
               2
             ],
             "details": "Add loading state tracking for initial data fetch and individual operations. Implement error handling with state rollback for failed optimistic updates. Add error state management and retry mechanisms. Provide loading and error states in hook return value.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test loading states during operations, verify error handling rolls back optimistic updates, test error recovery mechanisms",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T14:34:25.152Z"
           },
           {
             "id": 4,
@@ -622,18 +625,20 @@
               3
             ],
             "details": "Ensure state is structured as {ready: [], in_progress: [], done: []} for direct column mapping. Add helper functions for common operations like finding cards, getting column data, and managing card positions. Optimize state updates to minimize re-renders.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test state structure matches expected format, verify helper functions work correctly, test rendering performance with large datasets",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-04-10T14:34:27.067Z"
           }
         ],
         "complexity": 7,
         "recommendedSubtasks": 4,
         "expansionPrompt": "Break down into: 1) Set up basic state structure and initial data loading, 2) Implement optimistic updates for card operations, 3) Add error handling and loading states, 4) Structure state for efficient column-based rendering",
-        "updatedAt": "2026-04-10T14:03:21.931Z",
+        "updatedAt": "2026-04-10T14:34:27.067Z",
         "metadata": {
           "assignee": "Sam",
-          "devSessionId": "8b5381bc-18e3-4964-8936-c266d6ba848f"
+          "devSessionId": "8b5381bc-18e3-4964-8936-c266d6ba848f",
+          "qaSessionId": "6e6aae63-4f34-4df9-a5a6-b9b6a157f32b"
         }
       },
       {
@@ -1104,7 +1109,7 @@
         "dependencies": [
           "16"
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -1146,7 +1151,12 @@
         ],
         "complexity": 5,
         "recommendedSubtasks": 3,
-        "expansionPrompt": "Split into: 1) Integrate broadcast calls into card operation endpoints, 2) Add broadcast calls to comment operations, 3) Implement error handling for broadcast failures"
+        "expansionPrompt": "Split into: 1) Integrate broadcast calls into card operation endpoints, 2) Add broadcast calls to comment operations, 3) Implement error handling for broadcast failures",
+        "updatedAt": "2026-04-10T14:22:17.484Z",
+        "metadata": {
+          "assignee": "Henry",
+          "devSessionId": "2b0caf64-1f8e-4283-ac45-1792367a748c"
+        }
       },
       {
         "id": "18",
@@ -1618,9 +1628,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-04-10T14:14:31.619Z",
+      "lastModified": "2026-04-10T14:34:27.068Z",
       "taskCount": 24,
-      "completedCount": 9,
+      "completedCount": 10,
       "tags": [
         "kanban-board"
       ]
