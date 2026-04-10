@@ -2,28 +2,1366 @@
   "master": {
     "tasks": [],
     "metadata": {
-      "created": "2026-04-08T15:47:55.642Z",
-      "updated": "2026-04-08T15:47:55.642Z",
+      "created": "2026-04-09T19:08:45.342Z",
+      "updated": "2026-04-09T19:08:45.342Z",
       "description": "Tasks for master context"
     }
   },
-  "hello-world": {
+  "kanban-board": {
     "tasks": [
       {
         "id": 1,
-        "title": "Create hello.sh script with proper shebang and Hello World output",
-        "description": "Create the main hello.sh script file with bash shebang and echo command to output 'Hello World'",
-        "details": "Create a file named 'hello.sh' in the project root directory. Add the shebang line '#!/usr/bin/env bash' for portability across different systems. Include a single echo command that outputs 'Hello World' followed by a newline. The script should be minimal with no additional logic or dependencies. Use '#!/usr/bin/env bash' instead of '#!/bin/bash' for better portability as specified in the risk mitigation section.",
-        "testStrategy": "Execute the script and verify that it prints exactly 'Hello World' to stdout and exits with code 0. Test by running './hello.sh' and asserting stdout equals 'Hello World' with newline.",
+        "title": "Initialize monorepo structure and workspace configuration",
+        "description": "Set up the project foundation with proper workspace structure, package.json configuration, and development scripts",
+        "details": "Create root package.json with workspaces configuration for client/ and server/ directories. Set up npm scripts: 'dev' (runs both client and server concurrently), 'build' (builds client for production), 'start' (serves production build). Install concurrently for parallel script execution. Create basic directory structure: kanban/client/, kanban/server/, kanban/server/db/, kanban/server/api/, kanban/server/ws/, kanban/client/src/. Initialize package.json files in both workspaces.",
+        "testStrategy": "Verify npm run dev starts both processes, npm run build completes without errors, and directory structure matches specification",
         "priority": "high",
         "dependencies": [],
-        "status": "pending"
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create root package.json with workspace configuration",
+            "description": "Set up the main package.json file with npm workspaces configuration for client and server directories",
+            "dependencies": [],
+            "details": "Create root package.json with workspaces array containing 'client' and 'server'. Set private: true, name: 'kanban-app', and version: '1.0.0'. Configure workspaces to enable npm workspace commands for managing dependencies across the monorepo.",
+            "status": "pending",
+            "testStrategy": "Verify npm workspace commands work correctly and both client and server are recognized as workspaces"
+          },
+          {
+            "id": 2,
+            "title": "Set up npm scripts for development and production",
+            "description": "Configure npm scripts in root package.json for concurrent development, building, and production serving",
+            "dependencies": [
+              1
+            ],
+            "details": "Add npm scripts: 'dev' using concurrently to run both client and server in parallel, 'build' to build client for production, 'start' to serve production build. Install concurrently package as devDependency. Configure scripts to handle cross-platform compatibility.",
+            "status": "pending",
+            "testStrategy": "Test npm run dev starts both processes concurrently, npm run build completes successfully, and npm run start serves the application"
+          },
+          {
+            "id": 3,
+            "title": "Create directory structure for client and server",
+            "description": "Establish the complete folder hierarchy for both client and server workspaces with all required subdirectories",
+            "dependencies": [],
+            "details": "Create directory structure: kanban/client/, kanban/server/, kanban/server/db/, kanban/server/api/, kanban/server/ws/, kanban/client/src/. Ensure proper permissions and that all directories are created recursively. Add .gitkeep files where necessary to maintain empty directories in version control.",
+            "status": "pending",
+            "testStrategy": "Verify all directories exist with correct structure and are accessible for file operations"
+          },
+          {
+            "id": 4,
+            "title": "Initialize individual workspace package.json files",
+            "description": "Create separate package.json files for client and server workspaces with appropriate configurations",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "Create client/package.json with React/Vite configuration, name: 'kanban-client', scripts for dev/build/preview. Create server/package.json with Node.js configuration, name: 'kanban-server', scripts for dev/start. Set appropriate main entry points and ensure workspace dependencies are properly configured.",
+            "status": "pending",
+            "testStrategy": "Verify both package.json files are valid JSON, contain required fields, and workspace commands can target individual packages"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Setup Vite + React client application",
+        "description": "Initialize the React frontend with Vite build tool and basic routing configuration",
+        "details": "Run 'npm create vite@latest client -- --template react' in the client directory. Configure vite.config.js with proxy settings for /api and /ws endpoints to localhost:3001. Set up basic App.jsx component structure. Install required dependencies: react, react-dom, @vitejs/plugin-react. Configure index.html with proper meta tags and title. Ensure HMR works correctly.",
+        "testStrategy": "Verify localhost:5173 serves React app without errors, HMR updates work, and proxy configuration is ready for API calls",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Initialize Vite React project and install dependencies",
+            "description": "Create new Vite React project using the official template and install all required dependencies",
+            "dependencies": [],
+            "details": "Run 'npm create vite@latest client -- --template react' in the client directory. Install required dependencies: react, react-dom, @vitejs/plugin-react. Clean up default template files and prepare project structure for custom implementation.",
+            "status": "pending",
+            "testStrategy": "Verify project creates successfully, all dependencies install without errors, and basic Vite dev server starts on localhost:5173"
+          },
+          {
+            "id": 2,
+            "title": "Configure vite.config.js with proxy settings for API endpoints",
+            "description": "Set up Vite configuration file with proxy settings to route API and WebSocket calls to the backend server",
+            "dependencies": [
+              1
+            ],
+            "details": "Configure vite.config.js with proxy settings for /api and /ws endpoints to localhost:3001. Set up proper proxy configuration to handle both REST API calls and WebSocket connections. Ensure CORS and development server settings are properly configured.",
+            "status": "pending",
+            "testStrategy": "Test that proxy configuration routes requests correctly by making test calls to /api endpoints and verifying they reach localhost:3001"
+          },
+          {
+            "id": 3,
+            "title": "Set up basic App.jsx structure and verify HMR functionality",
+            "description": "Create the main App component structure and configure index.html with proper meta tags, then verify Hot Module Replacement works correctly",
+            "dependencies": [
+              2
+            ],
+            "details": "Set up basic App.jsx component structure with placeholder content. Configure index.html with proper meta tags, title, and viewport settings. Test Hot Module Replacement (HMR) functionality to ensure development workflow is smooth and changes reflect immediately.",
+            "status": "pending",
+            "testStrategy": "Verify localhost:5173 serves React app without errors, make changes to App.jsx and confirm HMR updates work instantly, check console for any errors"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Setup Express server with health endpoint",
+        "description": "Create the Node.js Express server with basic routing and health check endpoint",
+        "details": "Create server/index.js with Express app setup. Install dependencies: express, cors, better-sqlite3, ws, uuid, nodemon (dev). Configure CORS for development. Add GET /health endpoint returning {ok: true}. Set up nodemon for development with proper file watching. Configure Express to serve static files from client/dist in production mode. Add error handling middleware.",
+        "testStrategy": "Verify GET /health returns 200 with {ok: true}, server restarts on file changes in dev mode, and CORS headers are present",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create basic Express app with dependencies installation",
+            "description": "Set up the foundational Express application structure and install all required dependencies for the server",
+            "dependencies": [],
+            "details": "Create server/index.js file with basic Express app initialization. Install required dependencies using npm: express, cors, better-sqlite3, ws, uuid, and nodemon as dev dependency. Initialize package.json if not exists and configure basic npm scripts for development and production.",
+            "status": "pending",
+            "testStrategy": "Verify all dependencies are installed correctly and Express app can be imported without errors"
+          },
+          {
+            "id": 2,
+            "title": "Configure CORS and middleware setup",
+            "description": "Set up CORS configuration for development environment and configure essential Express middleware",
+            "dependencies": [
+              1
+            ],
+            "details": "Configure CORS middleware to allow cross-origin requests during development. Set up Express JSON parsing middleware for handling request bodies. Configure any additional middleware needed for request processing and logging.",
+            "status": "pending",
+            "testStrategy": "Test CORS headers are present in responses and JSON request bodies are parsed correctly"
+          },
+          {
+            "id": 3,
+            "title": "Implement health endpoint and error handling",
+            "description": "Create the health check endpoint and implement comprehensive error handling middleware",
+            "dependencies": [
+              2
+            ],
+            "details": "Add GET /health endpoint that returns {ok: true} with 200 status code. Implement error handling middleware to catch and properly format errors with appropriate HTTP status codes. Ensure proper error responses for different types of failures.",
+            "status": "pending",
+            "testStrategy": "Verify GET /health returns 200 status with {ok: true} response and error handling middleware catches and formats errors properly"
+          },
+          {
+            "id": 4,
+            "title": "Set up nodemon for development and static file serving",
+            "description": "Configure development environment with nodemon and production static file serving capabilities",
+            "dependencies": [
+              3
+            ],
+            "details": "Configure nodemon for development with proper file watching patterns and restart behavior. Set up Express to serve static files from client/dist directory in production mode. Add environment-specific configuration to distinguish between development and production modes.",
+            "status": "pending",
+            "testStrategy": "Test server restarts automatically on file changes in development mode and static files are served correctly in production mode"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Create database schema and migration system",
+        "description": "Design SQLite database schema for cards and comments with migration runner",
+        "details": "Create server/db/migrations/001_init.sql with cards table (id TEXT PRIMARY KEY, title TEXT NOT NULL, assignee TEXT, column TEXT DEFAULT 'ready', position REAL NOT NULL, description TEXT, created_at INTEGER NOT NULL) and comments table (id TEXT PRIMARY KEY, card_id TEXT REFERENCES cards(id) ON DELETE CASCADE, author TEXT NOT NULL, content TEXT NOT NULL, created_at INTEGER NOT NULL). Create server/db/schema.js migration runner that checks schema_version table and applies pending migrations on startup. Add indexes for performance on card_id and column fields.",
+        "testStrategy": "Verify migration creates kanban.db file with correct tables and indexes, migration runner applies only new migrations on subsequent runs",
+        "priority": "high",
+        "dependencies": [
+          3
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Design and create SQL schema files for cards and comments tables",
+            "description": "Create the initial SQL migration file with properly structured tables and relationships for the kanban board database",
+            "dependencies": [],
+            "details": "Create server/db/migrations/001_init.sql file containing SQL DDL statements for cards table (id TEXT PRIMARY KEY, title TEXT NOT NULL, assignee TEXT, column TEXT DEFAULT 'ready', position REAL NOT NULL, description TEXT, created_at INTEGER NOT NULL) and comments table (id TEXT PRIMARY KEY, card_id TEXT REFERENCES cards(id) ON DELETE CASCADE, author TEXT NOT NULL, content TEXT NOT NULL, created_at INTEGER NOT NULL). Ensure proper foreign key constraints and data types are defined.",
+            "status": "pending",
+            "testStrategy": "Verify SQL syntax is valid, tables can be created successfully, foreign key constraints work properly, and default values are applied correctly"
+          },
+          {
+            "id": 2,
+            "title": "Implement migration runner system with version tracking",
+            "description": "Build the migration system that tracks applied migrations and executes pending ones automatically",
+            "dependencies": [
+              1
+            ],
+            "details": "Create server/db/schema.js with migration runner functionality that maintains a schema_version table to track applied migrations. Implement logic to scan migrations directory, compare against applied migrations, and execute pending migrations in order. Add error handling for failed migrations and ensure atomic execution. Include startup integration to run migrations automatically when server starts.",
+            "status": "pending",
+            "testStrategy": "Test migration runner applies new migrations only once, tracks version correctly, handles migration failures gracefully, and works on fresh database and existing database"
+          },
+          {
+            "id": 3,
+            "title": "Add database indexes and test migration execution",
+            "description": "Create performance indexes and thoroughly test the complete migration system functionality",
+            "dependencies": [
+              2
+            ],
+            "details": "Add CREATE INDEX statements to the migration file for card_id field in comments table and column field in cards table to optimize query performance. Test the complete migration system by running it on fresh database and verifying all tables, constraints, and indexes are created correctly. Verify the kanban.db file is generated with proper schema structure.",
+            "status": "pending",
+            "testStrategy": "Verify indexes are created and improve query performance, test migration creates kanban.db file with correct tables and indexes, confirm migration runner applies only new migrations on subsequent runs"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Implement database query functions",
+        "description": "Create all SQLite query functions for CRUD operations on cards and comments",
+        "details": "Create server/db/queries.js with functions: initDb() (opens DB and runs migrations), getCards() (returns all cards with nested comments ordered by column and position), createCard(data) (inserts card with UUID, returns created card), updateCard(id, data) (partial update using Object.keys), deleteCard(id) (deletes card and cascades comments), moveCard(id, column, position) (updates position and reorders siblings using fractional indexing), createComment(cardId, data) (inserts comment with UUID and timestamp). Use better-sqlite3 prepared statements for performance.",
+        "testStrategy": "Unit tests for each function using in-memory SQLite database, verify cascade deletes work, test position reordering logic",
+        "priority": "high",
+        "dependencies": [
+          4
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement basic CRUD operations for cards",
+            "description": "Create fundamental database operations for card management including create, read, update, and delete functions",
+            "dependencies": [],
+            "details": "Implement initDb(), getCards(), createCard(), updateCard(), and deleteCard() functions in server/db/queries.js. Use better-sqlite3 for database operations. Include UUID generation for new cards and proper error handling for each operation.",
+            "status": "pending",
+            "testStrategy": "Unit tests for each CRUD function using in-memory SQLite database, verify data integrity and proper return values"
+          },
+          {
+            "id": 2,
+            "title": "Implement complex moveCard function with fractional indexing",
+            "description": "Create sophisticated card positioning system using fractional indexing for smooth reordering",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement moveCard(id, column, position) function that updates card position and reorders siblings using fractional indexing algorithm. Handle edge cases like moving to first/last position and between existing cards. Ensure position values maintain proper ordering.",
+            "status": "pending",
+            "testStrategy": "Test position calculations, verify card order is maintained after multiple moves, test edge cases for first/last positions"
+          },
+          {
+            "id": 3,
+            "title": "Add comment operations with proper card relationships",
+            "description": "Implement comment CRUD operations with proper foreign key relationships to cards",
+            "dependencies": [
+              1
+            ],
+            "details": "Create createComment(cardId, data) function that inserts comments with UUID and timestamp. Modify getCards() to include nested comments. Ensure cascade delete behavior when cards are deleted. Handle comment ordering and relationships properly.",
+            "status": "pending",
+            "testStrategy": "Test comment creation, verify nested comments in getCards(), test cascade delete behavior when parent card is deleted"
+          },
+          {
+            "id": 4,
+            "title": "Optimize with prepared statements",
+            "description": "Enhance all database operations with better-sqlite3 prepared statements for improved performance",
+            "dependencies": [
+              1,
+              2,
+              3
+            ],
+            "details": "Convert all database queries to use prepared statements for better performance and security. Create reusable prepared statement objects for frequently used queries. Implement proper statement cleanup and error handling.",
+            "status": "pending",
+            "testStrategy": "Performance benchmarks comparing prepared vs non-prepared statements, verify all operations still work correctly"
+          },
+          {
+            "id": 5,
+            "title": "Add comprehensive error handling",
+            "description": "Implement robust error handling across all database operations with proper error types and messages",
+            "dependencies": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "details": "Add try-catch blocks around all database operations. Create custom error types for different failure scenarios (not found, constraint violations, etc.). Ensure proper error propagation and logging. Handle database connection issues gracefully.",
+            "status": "pending",
+            "testStrategy": "Test error scenarios like invalid IDs, constraint violations, database connection failures, verify proper error messages and types"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Create REST API routes for cards",
+        "description": "Implement Express routes for card CRUD operations",
+        "details": "Create server/api/cards.js with Express router: GET /api/cards (calls getCards()), POST /api/cards (validates title required, calls createCard), PATCH /api/cards/:id (validates card exists, calls updateCard), DELETE /api/cards/:id (calls deleteCard). Add input validation middleware using express-validator or manual validation. Handle errors with proper HTTP status codes (400 for validation, 404 for not found, 500 for server errors). Mount router in server/index.js at /api path.",
+        "testStrategy": "Integration tests using supertest covering happy path CRUD operations, 404 for unknown IDs, 400 for missing required fields",
+        "priority": "high",
+        "dependencies": [
+          5
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement basic CRUD endpoints (GET, POST, PATCH, DELETE)",
+            "description": "Create the core Express router with basic CRUD operations for cards",
+            "dependencies": [],
+            "details": "Create server/api/cards.js with Express router. Implement GET /api/cards endpoint that calls getCards() function. Add POST /api/cards endpoint that calls createCard() function. Implement PATCH /api/cards/:id endpoint that calls updateCard() function. Add DELETE /api/cards/:id endpoint that calls deleteCard() function. Set up basic route structure without validation or error handling.",
+            "status": "pending",
+            "testStrategy": "Unit tests for each endpoint to verify correct function calls and basic response structure"
+          },
+          {
+            "id": 2,
+            "title": "Add input validation middleware and error handling",
+            "description": "Implement comprehensive input validation and error handling middleware",
+            "dependencies": [
+              1
+            ],
+            "details": "Add input validation middleware using express-validator or manual validation. Validate required title field for POST requests. Validate card existence for PATCH and DELETE operations. Create error handling middleware to catch and format validation errors. Implement proper error response structure with meaningful error messages.",
+            "status": "pending",
+            "testStrategy": "Test validation errors return 400 status, missing required fields are caught, invalid IDs are handled"
+          },
+          {
+            "id": 3,
+            "title": "Integrate with database query functions",
+            "description": "Connect API endpoints with database query functions from previous task",
+            "dependencies": [
+              1
+            ],
+            "details": "Import and integrate getCards(), createCard(), updateCard(), and deleteCard() functions from the database layer. Ensure proper data flow between API endpoints and database operations. Handle database connection errors and query failures. Test integration between API layer and database layer.",
+            "status": "pending",
+            "testStrategy": "Integration tests to verify data persistence, database errors are handled gracefully"
+          },
+          {
+            "id": 4,
+            "title": "Add comprehensive error responses with proper HTTP status codes",
+            "description": "Implement proper HTTP status codes and error response formatting",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "Add proper HTTP status codes: 400 for validation errors, 404 for not found resources, 500 for server errors. Create consistent error response format with error messages and status codes. Mount the router in server/index.js at /api path. Add final error handling middleware for uncaught errors. Test all error scenarios return appropriate status codes.",
+            "status": "pending",
+            "testStrategy": "Test 404 for unknown card IDs, 400 for validation failures, 500 for server errors, verify error response format"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Create REST API routes for comments",
+        "description": "Implement Express routes for comment operations",
+        "details": "Create server/api/comments.js with Express router: POST /api/cards/:id/comments (validates card exists, author and content required, calls createComment). Add validation for card existence before creating comment. Return 404 if card not found, 400 for missing fields. Mount router in server/index.js. Comments are fetched as part of getCards() so no separate GET endpoint needed.",
+        "testStrategy": "Integration tests for comment creation, verify comments appear in card data, test validation errors",
+        "priority": "medium",
+        "dependencies": [
+          6
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement POST endpoint for comment creation",
+            "description": "Create the Express router and POST endpoint for creating comments on cards",
+            "dependencies": [],
+            "details": "Create server/api/comments.js file with Express router. Implement POST /api/cards/:id/comments endpoint that extracts cardId from URL params, validates required fields (author and content), and calls the createComment database function. Set up proper request body parsing and response formatting.",
+            "status": "pending",
+            "testStrategy": "Unit tests for endpoint logic, verify correct parameters are passed to createComment function"
+          },
+          {
+            "id": 2,
+            "title": "Add validation for card existence and required fields",
+            "description": "Implement comprehensive validation logic for comment creation requests",
+            "dependencies": [
+              1
+            ],
+            "details": "Add middleware to validate that the card exists before creating a comment by checking the database. Validate that required fields (author and content) are present and not empty. Return appropriate HTTP status codes: 404 if card not found, 400 for missing or invalid fields. Include descriptive error messages in responses.",
+            "status": "pending",
+            "testStrategy": "Integration tests for validation scenarios, test 404 for non-existent cards, test 400 for missing fields"
+          },
+          {
+            "id": 3,
+            "title": "Integrate error handling and mount router",
+            "description": "Add comprehensive error handling and integrate the comments router into the main application",
+            "dependencies": [
+              2
+            ],
+            "details": "Implement try-catch blocks for database operations and other potential errors. Add proper error response formatting with consistent structure. Mount the comments router in server/index.js at the appropriate path. Ensure the router is properly integrated with existing middleware and error handling patterns.",
+            "status": "pending",
+            "testStrategy": "Integration tests for complete comment creation flow, verify router mounting works correctly, test error responses"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Create API client wrapper functions",
+        "description": "Implement typed fetch wrapper functions for all REST endpoints",
+        "details": "Create client/src/api/client.js with functions: fetchCards() (GET /api/cards), createCard(data) (POST /api/cards), updateCard(id, data) (PATCH /api/cards/:id), deleteCard(id) (DELETE /api/cards/:id), createComment(cardId, data) (POST /api/cards/:id/comments). Add proper error handling, JSON parsing, and TypeScript-style JSDoc comments for better IDE support. Handle network errors and non-200 responses appropriately.",
+        "testStrategy": "Mock fetch to test error handling, verify correct HTTP methods and payloads are sent",
+        "priority": "high",
+        "dependencies": [
+          7
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create basic fetch wrapper functions for all endpoints",
+            "description": "Implement the core API wrapper functions for all REST endpoints without error handling",
+            "dependencies": [],
+            "details": "Create client/src/api/client.js with basic fetch wrapper functions: fetchCards() for GET /api/cards, createCard(data) for POST /api/cards, updateCard(id, data) for PATCH /api/cards/:id, deleteCard(id) for DELETE /api/cards/:id, and createComment(cardId, data) for POST /api/cards/:id/comments. Focus on correct HTTP methods, URL construction, and request body formatting.",
+            "status": "pending",
+            "testStrategy": "Mock fetch to verify correct HTTP methods, URLs, and request payloads are sent for each endpoint"
+          },
+          {
+            "id": 2,
+            "title": "Implement comprehensive error handling for network and HTTP errors",
+            "description": "Add robust error handling to catch and process network failures and HTTP error responses",
+            "dependencies": [
+              1
+            ],
+            "details": "Enhance the API wrapper functions with comprehensive error handling. Catch network errors (connection failures, timeouts), handle HTTP error status codes (4xx, 5xx), and create meaningful error objects with status codes and messages. Implement retry logic for transient failures and provide user-friendly error messages.",
+            "status": "pending",
+            "testStrategy": "Mock various error scenarios including network failures, 404, 500 errors to verify proper error handling and user feedback"
+          },
+          {
+            "id": 3,
+            "title": "Add proper JSON parsing and response handling",
+            "description": "Implement consistent JSON parsing and response processing for all API functions",
+            "dependencies": [
+              2
+            ],
+            "details": "Add proper JSON parsing to all wrapper functions with error handling for malformed JSON responses. Implement consistent response processing that extracts data from successful responses and handles empty responses. Add content-type validation and handle non-JSON responses appropriately.",
+            "status": "pending",
+            "testStrategy": "Test with various response types including valid JSON, malformed JSON, empty responses, and non-JSON content types"
+          },
+          {
+            "id": 4,
+            "title": "Add JSDoc comments and type annotations",
+            "description": "Document all API functions with comprehensive JSDoc comments for better IDE support",
+            "dependencies": [
+              3
+            ],
+            "details": "Add TypeScript-style JSDoc comments to all API wrapper functions including parameter types, return types, and usage examples. Document error scenarios and expected response formats. Add @param, @returns, @throws annotations for comprehensive IDE intellisense support. Include usage examples in comments.",
+            "status": "pending",
+            "testStrategy": "Verify JSDoc comments provide proper IDE autocomplete and type hints, validate documentation accuracy against implementation"
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Implement useBoard hook for state management",
+        "description": "Create React hook for managing board state and card operations",
+        "details": "Create client/src/hooks/useBoard.js with useState for board data (cards grouped by columns). Implement useEffect to load initial data via fetchCards(). Provide functions: createCard, updateCard, deleteCard, moveCard, addComment that call API and update local state optimistically. Handle loading states and errors. Structure state as {ready: [], in_progress: [], done: []} for easy column rendering.",
+        "testStrategy": "Test hook with React Testing Library, verify state updates correctly after API calls, test error handling",
+        "priority": "high",
+        "dependencies": [
+          8
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Set up basic state structure and initial data loading",
+            "description": "Create the useBoard hook with initial state structure and data loading functionality",
+            "dependencies": [],
+            "details": "Create client/src/hooks/useBoard.js with useState for board data structured as {ready: [], in_progress: [], done: []}. Implement useEffect to call fetchCards() on mount and populate the initial state. Set up basic hook structure with proper imports and exports.",
+            "status": "pending",
+            "testStrategy": "Test hook initialization, verify state structure is correct, test initial data loading with mocked fetchCards"
+          },
+          {
+            "id": 2,
+            "title": "Implement optimistic updates for card operations",
+            "description": "Add functions for card operations with optimistic state updates",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement createCard, updateCard, deleteCard, moveCard, and addComment functions that immediately update local state optimistically before making API calls. Each function should update the appropriate column arrays and handle state synchronization when API responses return.",
+            "status": "pending",
+            "testStrategy": "Test each operation updates state immediately, verify API calls are made, test state rollback on API failures"
+          },
+          {
+            "id": 3,
+            "title": "Add error handling and loading states",
+            "description": "Implement comprehensive error handling and loading state management",
+            "dependencies": [
+              2
+            ],
+            "details": "Add loading state tracking for initial data fetch and individual operations. Implement error handling with state rollback for failed optimistic updates. Add error state management and retry mechanisms. Provide loading and error states in hook return value.",
+            "status": "pending",
+            "testStrategy": "Test loading states during operations, verify error handling rolls back optimistic updates, test error recovery mechanisms"
+          },
+          {
+            "id": 4,
+            "title": "Structure state for efficient column-based rendering",
+            "description": "Optimize state structure and provide helper functions for efficient rendering",
+            "dependencies": [
+              3
+            ],
+            "details": "Ensure state is structured as {ready: [], in_progress: [], done: []} for direct column mapping. Add helper functions for common operations like finding cards, getting column data, and managing card positions. Optimize state updates to minimize re-renders.",
+            "status": "pending",
+            "testStrategy": "Test state structure matches expected format, verify helper functions work correctly, test rendering performance with large datasets"
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Create Board, Column, and CardTile components",
+        "description": "Build the main board layout components for displaying cards in columns",
+        "details": "Create client/src/components/Board/Board.jsx as main container with three columns (Ready, In Progress, Done). Create Column.jsx component that renders column header and list of cards. Create CardTile.jsx component displaying card title, assignee, and truncated description. Add click handler to open card modal. Style with CSS modules or styled-components for clean layout. Use CSS Grid or Flexbox for responsive column layout.",
+        "testStrategy": "Render board with mock data, verify cards appear in correct columns, test card click opens modal",
+        "priority": "high",
+        "dependencies": [
+          9
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Board layout component with responsive column structure",
+            "description": "Build the main Board.jsx component that serves as the container for the three-column layout (Ready, In Progress, Done)",
+            "dependencies": [],
+            "details": "Create client/src/components/Board/Board.jsx as the main container component. Implement responsive three-column layout using CSS Grid or Flexbox. Set up column structure for Ready, In Progress, and Done states. Ensure proper responsive behavior across different screen sizes. Add proper semantic HTML structure and accessibility attributes.",
+            "status": "pending",
+            "testStrategy": "Test responsive layout on different screen sizes, verify three columns render correctly, check accessibility with screen readers"
+          },
+          {
+            "id": 2,
+            "title": "Implement Column component with header and card list",
+            "description": "Create the Column.jsx component that renders individual column headers and manages the list of cards within each column",
+            "dependencies": [
+              1
+            ],
+            "details": "Create client/src/components/Board/Column.jsx component that accepts column title and cards as props. Render column header with title and card count. Implement card list container that will hold CardTile components. Add proper styling for column structure and ensure cards are properly spaced. Handle empty column state with appropriate messaging.",
+            "status": "pending",
+            "testStrategy": "Test column renders with correct title, card count updates properly, empty state displays correctly, cards are properly contained"
+          },
+          {
+            "id": 3,
+            "title": "Create CardTile component with card display and click handling",
+            "description": "Build the CardTile.jsx component for individual card display with click interaction to open card modal",
+            "dependencies": [
+              2
+            ],
+            "details": "Create client/src/components/Board/CardTile.jsx component displaying card title, assignee, and truncated description. Implement click handler to open card modal. Add hover effects and proper cursor styling. Handle long text truncation with ellipsis. Include assignee avatar or initials display. Add proper keyboard navigation support for accessibility.",
+            "status": "pending",
+            "testStrategy": "Test card displays all required information, click handler opens modal correctly, text truncation works properly, keyboard navigation functions"
+          },
+          {
+            "id": 4,
+            "title": "Add CSS styling and responsive design",
+            "description": "Implement comprehensive styling for Board, Column, and CardTile components with responsive design considerations",
+            "dependencies": [
+              1,
+              2,
+              3
+            ],
+            "details": "Create CSS modules or styled-components for all three components. Implement responsive design that works on mobile, tablet, and desktop. Add proper spacing, colors, and typography. Ensure consistent design language across components. Add hover states, focus indicators, and smooth transitions. Test cross-browser compatibility and ensure proper contrast ratios for accessibility.",
+            "status": "pending",
+            "testStrategy": "Test responsive behavior across device sizes, verify styling consistency, check accessibility contrast ratios, validate cross-browser compatibility"
+          }
+        ]
+      },
+      {
+        "id": 11,
+        "title": "Create CardModal component for card details",
+        "description": "Build modal component for viewing and editing card details",
+        "details": "Create client/src/components/CardModal/CardModal.jsx with modal overlay. Include editable title and assignee fields, description display area, and comments section. Add save/cancel functionality for edits. Include delete card button with confirmation. Use React Portal for modal rendering. Add keyboard shortcuts (Escape to close). Style modal with backdrop blur and centered positioning.",
+        "testStrategy": "Test modal opens/closes correctly, edits save properly, delete confirmation works, keyboard navigation functions",
+        "priority": "high",
+        "dependencies": [
+          10
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create modal structure with React Portal",
+            "description": "Set up the basic modal component structure using React Portal for proper DOM rendering",
+            "dependencies": [],
+            "details": "Create CardModal.jsx component with React Portal implementation. Set up modal container that renders outside the main app DOM tree. Include basic modal wrapper, overlay backdrop, and modal content container. Implement modal open/close state management and proper cleanup on unmount.",
+            "status": "pending",
+            "testStrategy": "Test modal renders in correct DOM location, opens and closes properly, portal cleanup works on unmount"
+          },
+          {
+            "id": 2,
+            "title": "Implement editable fields with save/cancel functionality",
+            "description": "Add editable title and assignee fields with proper form handling and state management",
+            "dependencies": [
+              1
+            ],
+            "details": "Create editable input fields for card title and assignee with controlled components. Implement edit mode toggle, form validation for required fields, save functionality that calls API, and cancel functionality that reverts changes. Add loading states during save operations and error handling for failed saves.",
+            "status": "pending",
+            "testStrategy": "Test edit mode toggles correctly, save persists changes via API, cancel reverts to original values, validation prevents empty title"
+          },
+          {
+            "id": 3,
+            "title": "Add delete confirmation and keyboard shortcuts",
+            "description": "Implement card deletion with confirmation dialog and keyboard navigation support",
+            "dependencies": [
+              1
+            ],
+            "details": "Add delete button with confirmation dialog to prevent accidental deletions. Implement keyboard event handlers for Escape key to close modal, Enter key for save actions, and proper focus management. Add event listener cleanup and prevent event bubbling where needed.",
+            "status": "pending",
+            "testStrategy": "Test delete confirmation prevents accidental deletion, Escape key closes modal, keyboard navigation works properly, focus management is correct"
+          },
+          {
+            "id": 4,
+            "title": "Integrate comments section display",
+            "description": "Add comments display area within the modal for viewing card comments",
+            "dependencies": [
+              1
+            ],
+            "details": "Create comments section within modal that displays existing comments with author names and timestamps. Integrate with CommentList component or implement basic comment display. Add proper spacing and layout within modal content area. Handle empty comments state with appropriate messaging.",
+            "status": "pending",
+            "testStrategy": "Test comments display correctly in modal, empty state shows appropriate message, layout doesn't break with long comments"
+          },
+          {
+            "id": 5,
+            "title": "Add modal styling and backdrop effects",
+            "description": "Implement visual styling for modal including backdrop blur and centered positioning",
+            "dependencies": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "details": "Add CSS styling for modal backdrop with blur effect, center modal positioning with responsive design, proper z-index layering, smooth animations for open/close transitions. Style modal content with appropriate padding, borders, shadows, and responsive breakpoints for mobile devices.",
+            "status": "pending",
+            "testStrategy": "Test modal appears centered on all screen sizes, backdrop blur effect works, animations are smooth, mobile responsiveness functions correctly"
+          }
+        ]
+      },
+      {
+        "id": 12,
+        "title": "Create CreateCardForm component",
+        "description": "Build inline form for creating new cards at bottom of Ready column",
+        "details": "Create client/src/components/CreateCardForm.jsx with title input (required) and assignee input (optional). Add form validation and submission handling. Show form inline at bottom of Ready column with toggle button. Clear form after successful submission. Add loading state during card creation. Handle form validation errors gracefully.",
+        "testStrategy": "Test form submission creates card, validation prevents empty title, form clears after success",
+        "priority": "medium",
+        "dependencies": [
+          11
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create form component with input fields and validation",
+            "description": "Build the basic CreateCardForm component structure with title and assignee input fields, including client-side validation",
+            "dependencies": [],
+            "details": "Create client/src/components/CreateCardForm.jsx with React component containing controlled inputs for title (required) and assignee (optional). Implement form validation using useState for form state management. Add validation rules: title must not be empty and should be trimmed. Include proper form styling and input labels. Set up form state structure to handle input values and validation errors.",
+            "status": "pending",
+            "testStrategy": "Test form renders correctly, validation prevents submission with empty title, input values update state properly"
+          },
+          {
+            "id": 2,
+            "title": "Implement form submission and loading states",
+            "description": "Add form submission handling with API integration, loading states, and success/error feedback",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement handleSubmit function that calls the createCard API endpoint with form data. Add loading state management using useState to show spinner/disabled state during submission. Handle successful submission by clearing form fields and showing success feedback. Implement error handling for API failures with user-friendly error messages. Ensure form is disabled during submission to prevent duplicate requests.",
+            "status": "pending",
+            "testStrategy": "Test form submission creates card via API, loading state displays correctly, form clears after success, error handling works for API failures"
+          },
+          {
+            "id": 3,
+            "title": "Add form toggle functionality and error handling",
+            "description": "Implement show/hide toggle for the form and integrate it into the Ready column with comprehensive error handling",
+            "dependencies": [
+              2
+            ],
+            "details": "Add toggle button to show/hide the CreateCardForm at bottom of Ready column. Implement state management for form visibility using useState. Add smooth transitions for form appearance/disappearance. Integrate form into the board layout ensuring proper positioning. Enhance error handling to display validation errors inline with form fields. Add escape key handler to close form. Ensure form resets when toggled closed.",
+            "status": "pending",
+            "testStrategy": "Test toggle button shows/hides form correctly, form integrates properly with Ready column layout, error messages display inline, escape key closes form"
+          }
+        ]
+      },
+      {
+        "id": 13,
+        "title": "Implement drag and drop functionality with dnd-kit",
+        "description": "Add drag and drop capability for moving cards between columns and reordering within columns",
+        "details": "Install @dnd-kit/core, @dnd-kit/sortable, @dnd-kit/utilities. Wrap Board in DndContext with closestCenter collision detection. Make Column components use SortableContext. Add useSortable hook to CardTile components. Implement onDragEnd handler to call moveCard API. Handle both cross-column moves and within-column reordering. Add visual feedback during drag with CSS transforms.",
+        "testStrategy": "Test dragging cards between columns updates position, within-column reordering works, visual feedback appears during drag",
+        "priority": "high",
+        "dependencies": [
+          12
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Install and configure dnd-kit with DndContext",
+            "description": "Install required dnd-kit packages and set up the basic DndContext wrapper around the Board component",
+            "dependencies": [],
+            "details": "Install @dnd-kit/core, @dnd-kit/sortable, and @dnd-kit/utilities packages. Wrap the Board component in DndContext with closestCenter collision detection algorithm. Configure sensors for mouse and touch interactions. Set up the basic structure for drag and drop functionality.",
+            "status": "pending",
+            "testStrategy": "Test that DndContext is properly initialized and collision detection works correctly"
+          },
+          {
+            "id": 2,
+            "title": "Implement sortable columns and cards",
+            "description": "Make Column components use SortableContext and add useSortable hook to CardTile components",
+            "dependencies": [
+              1
+            ],
+            "details": "Wrap each Column component with SortableContext to enable sorting within columns. Add useSortable hook to CardTile components to make individual cards draggable. Configure unique IDs for each sortable item and set up proper drag handles and accessibility attributes.",
+            "status": "pending",
+            "testStrategy": "Test that cards can be selected for dragging and columns properly handle sortable context"
+          },
+          {
+            "id": 3,
+            "title": "Add drag end handler for position updates",
+            "description": "Implement onDragEnd handler to process drag operations and call moveCard API",
+            "dependencies": [
+              2
+            ],
+            "details": "Create onDragEnd handler in DndContext that determines the new position and column for dropped cards. Calculate fractional positions for proper ordering. Call moveCard API with updated position and column data. Handle both successful moves and error cases with proper state rollback.",
+            "status": "pending",
+            "testStrategy": "Test that drag end events properly update card positions via API calls and handle errors gracefully"
+          },
+          {
+            "id": 4,
+            "title": "Implement visual feedback during drag operations",
+            "description": "Add CSS transforms and visual indicators to provide feedback during drag operations",
+            "dependencies": [
+              2
+            ],
+            "details": "Implement CSS transforms for smooth drag animations using transform styles. Add visual feedback such as opacity changes, shadows, or overlays during drag operations. Style drag overlays and drop zones to clearly indicate valid drop targets. Ensure smooth transitions and responsive visual feedback.",
+            "status": "pending",
+            "testStrategy": "Test that visual feedback appears correctly during drag operations and animations are smooth"
+          },
+          {
+            "id": 5,
+            "title": "Handle both cross-column and within-column reordering",
+            "description": "Implement logic to handle cards being moved between different columns and reordered within the same column",
+            "dependencies": [
+              3
+            ],
+            "details": "Enhance the drag end handler to detect whether a card is being moved to a different column or reordered within the same column. Implement different position calculation logic for each scenario. For cross-column moves, update both column and position. For within-column reordering, only update position while maintaining column.",
+            "status": "pending",
+            "testStrategy": "Test that cards can be moved between columns and reordered within columns with correct position updates"
+          }
+        ]
+      },
+      {
+        "id": 14,
+        "title": "Integrate BlockNote rich text editor",
+        "description": "Add BlockNote editor for rich text card descriptions",
+        "details": "Install @blocknote/react and @blocknote/core. Create client/src/components/CardModal/BlockEditor.jsx wrapper component. Configure BlockNote with headings, paragraphs, bullet lists, numbered lists, and code blocks. Add edit/read-only mode toggle. Save description as JSON string to database. Handle empty state gracefully. Add proper styling to match application theme.",
+        "testStrategy": "Test rich text editing saves correctly, read-only mode displays formatted content, JSON serialization works",
+        "priority": "medium",
+        "dependencies": [
+          11
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Install BlockNote dependencies and create wrapper component",
+            "description": "Install @blocknote/react and @blocknote/core packages and create the basic BlockEditor wrapper component",
+            "dependencies": [],
+            "details": "Run npm install @blocknote/react @blocknote/core in the client directory. Create client/src/components/CardModal/BlockEditor.jsx with basic component structure. Import necessary BlockNote components and set up the initial component skeleton with proper React hooks and state management.",
+            "status": "pending",
+            "testStrategy": "Verify packages are installed correctly and component renders without errors"
+          },
+          {
+            "id": 2,
+            "title": "Configure editor with required block types and features",
+            "description": "Set up BlockNote editor configuration with headings, paragraphs, bullet lists, numbered lists, and code blocks",
+            "dependencies": [
+              1
+            ],
+            "details": "Configure BlockNote editor with schema including heading blocks (h1, h2, h3), paragraph blocks, bullet list blocks, numbered list blocks, and code blocks. Set up proper block type configurations and ensure all required formatting options are available in the editor toolbar.",
+            "status": "pending",
+            "testStrategy": "Test that all block types can be created and formatted correctly in the editor"
+          },
+          {
+            "id": 3,
+            "title": "Implement edit/read-only mode toggle",
+            "description": "Add functionality to switch between edit and read-only modes for the BlockNote editor",
+            "dependencies": [
+              2
+            ],
+            "details": "Implement mode switching logic using BlockNote's editable prop. Create state management for edit/read-only modes. Add UI controls (buttons/icons) to toggle between modes. Ensure proper styling differences between modes and handle user interactions appropriately in each mode.",
+            "status": "pending",
+            "testStrategy": "Test mode switching works correctly, read-only mode prevents editing, edit mode allows all formatting"
+          },
+          {
+            "id": 4,
+            "title": "Add JSON serialization and styling integration",
+            "description": "Implement JSON serialization for saving to database and integrate styling to match application theme",
+            "dependencies": [
+              3
+            ],
+            "details": "Implement JSON serialization of BlockNote content for database storage. Handle empty state gracefully when no content is present. Add custom CSS styling to match the application's theme and design system. Ensure proper integration with the CardModal component and handle loading/saving states.",
+            "status": "pending",
+            "testStrategy": "Test JSON serialization saves and loads correctly, styling matches application theme, empty states display properly"
+          }
+        ]
+      },
+      {
+        "id": 15,
+        "title": "Create CommentList component",
+        "description": "Build comment display and creation interface",
+        "details": "Create client/src/components/CardModal/CommentList.jsx showing chronological list of comments with author names and timestamps. Add form for creating new comments with author name input and comment text area. Format timestamps in relative format (e.g., '2 hours ago'). Add proper styling for comment threads. Handle empty comment state.",
+        "testStrategy": "Test comments display in correct order, new comment form submission works, timestamps format correctly",
+        "priority": "medium",
+        "dependencies": [
+          11
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create comment display component with chronological ordering",
+            "description": "Build the comment display functionality showing comments in chronological order with author names and timestamps",
+            "dependencies": [],
+            "details": "Create the comment list display section in CommentList.jsx that renders comments in chronological order (oldest first). Include author name display, comment text, and timestamp for each comment. Handle empty state when no comments exist with appropriate messaging. Ensure proper data structure handling for comment objects.",
+            "status": "pending",
+            "testStrategy": "Test comments display in correct chronological order, empty state shows appropriate message, comment data renders correctly"
+          },
+          {
+            "id": 2,
+            "title": "Implement comment creation form with validation",
+            "description": "Build the form interface for creating new comments with proper validation and submission handling",
+            "dependencies": [
+              1
+            ],
+            "details": "Create comment creation form with author name input field and comment text area. Implement form validation to ensure both fields are required and not empty. Add form submission handling that calls the API to create new comments. Include loading state during submission and clear form after successful creation. Handle validation errors with user-friendly messages.",
+            "status": "pending",
+            "testStrategy": "Test form validation prevents empty submissions, successful submission creates comment and clears form, loading states work correctly"
+          },
+          {
+            "id": 3,
+            "title": "Add timestamp formatting and styling",
+            "description": "Implement relative timestamp formatting and apply proper styling for the comment threads",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Add timestamp formatting utility to display relative time format (e.g., '2 hours ago', 'yesterday', '3 days ago'). Apply CSS styling for comment threads including proper spacing, typography, and visual hierarchy. Style the comment form with consistent design patterns. Ensure responsive design for different screen sizes and proper contrast for accessibility.",
+            "status": "pending",
+            "testStrategy": "Test timestamp formatting shows correct relative times, styling renders consistently across browsers, responsive design works on mobile devices"
+          }
+        ]
+      },
+      {
+        "id": 16,
+        "title": "Implement WebSocket broadcaster",
+        "description": "Create WebSocket server for real-time event broadcasting",
+        "details": "Create server/ws/broadcaster.js with WebSocket server using 'ws' library. Attach to existing HTTP server. Maintain list of connected clients. Implement broadcast(event, payload) function that sends JSON to all connected clients. Handle client connection/disconnection events. Add heartbeat/ping mechanism to detect dead connections. Export initWs(httpServer) and broadcast functions.",
+        "testStrategy": "Test WebSocket connections establish correctly, broadcast sends to all clients, dead connections are cleaned up",
+        "priority": "high",
+        "dependencies": [
+          7
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Set up WebSocket server and client connection handling",
+            "description": "Create WebSocket server infrastructure and handle client connections",
+            "dependencies": [],
+            "details": "Create server/ws/broadcaster.js file. Set up WebSocket server using 'ws' library and attach to existing HTTP server. Initialize empty Set to track connected clients. Implement connection event handler to add clients to tracking set. Export initWs(httpServer) function to initialize the WebSocket server.",
+            "status": "pending",
+            "testStrategy": "Test WebSocket server starts correctly, clients can connect, connection tracking works"
+          },
+          {
+            "id": 2,
+            "title": "Implement broadcast functionality to all connected clients",
+            "description": "Create broadcast function to send messages to all connected WebSocket clients",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement broadcast(event, payload) function that creates JSON message with event type and payload. Iterate through all connected clients and send message to each. Handle WebSocket ready state checking before sending. Add error handling for failed sends to individual clients.",
+            "status": "pending",
+            "testStrategy": "Test broadcast sends to all connected clients, JSON format is correct, handles client send failures gracefully"
+          },
+          {
+            "id": 3,
+            "title": "Add heartbeat/ping mechanism for connection health",
+            "description": "Implement ping/pong heartbeat system to detect dead connections",
+            "dependencies": [
+              1
+            ],
+            "details": "Add heartbeat interval timer that sends ping frames to all clients every 30 seconds. Track pong responses from clients with timestamps. Implement pong event handler to update client heartbeat status. Set up cleanup mechanism to identify clients that haven't responded to pings within timeout period.",
+            "status": "pending",
+            "testStrategy": "Test ping frames are sent regularly, pong responses are tracked, dead connections are identified correctly"
+          },
+          {
+            "id": 4,
+            "title": "Handle client disconnection and cleanup",
+            "description": "Implement proper cleanup when clients disconnect or become unresponsive",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "Add close event handler to remove clients from tracking set when they disconnect normally. Implement cleanup logic for dead connections identified by heartbeat mechanism. Remove unresponsive clients from the connected clients set. Add error event handler for connection errors. Ensure proper resource cleanup and memory management.",
+            "status": "pending",
+            "testStrategy": "Test clients are removed on normal disconnect, dead connections are cleaned up, no memory leaks occur"
+          }
+        ]
+      },
+      {
+        "id": 17,
+        "title": "Add WebSocket event broadcasting to API routes",
+        "description": "Integrate WebSocket broadcasting into all card and comment mutation endpoints",
+        "details": "Import broadcast function into cards.js and comments.js route handlers. Add broadcast calls after successful database operations: broadcast('card:created', card), broadcast('card:updated', card), broadcast('card:deleted', {id}), broadcast('card:moved', card), broadcast('comment:created', comment). Ensure broadcasts only happen after successful database writes. Handle broadcast errors gracefully without affecting API responses.",
+        "testStrategy": "Test each API operation triggers correct WebSocket event, events contain proper payload data",
+        "priority": "high",
+        "dependencies": [
+          16
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Integrate broadcast calls into card operation endpoints",
+            "description": "Add WebSocket broadcasting to all card mutation endpoints in cards.js route handlers",
+            "dependencies": [
+              16
+            ],
+            "details": "Import broadcast function into cards.js. Add broadcast calls after successful database operations for card creation, updates, deletion, and movement. Implement broadcast('card:created', card), broadcast('card:updated', card), broadcast('card:deleted', {id}), and broadcast('card:moved', card) calls. Ensure broadcasts only trigger after successful database writes.",
+            "status": "pending",
+            "testStrategy": "Test each card API operation (create, update, delete, move) triggers the correct WebSocket event with proper payload data"
+          },
+          {
+            "id": 2,
+            "title": "Add broadcast calls to comment operations",
+            "description": "Integrate WebSocket broadcasting into comment mutation endpoints in comments.js",
+            "dependencies": [
+              16
+            ],
+            "details": "Import broadcast function into comments.js route handlers. Add broadcast('comment:created', comment) call after successful comment creation in database. Ensure broadcast only happens after successful database write operation. Include complete comment object with card association in broadcast payload.",
+            "status": "pending",
+            "testStrategy": "Test comment creation API triggers comment:created WebSocket event with complete comment data including card reference"
+          },
+          {
+            "id": 3,
+            "title": "Implement error handling for broadcast failures",
+            "description": "Add graceful error handling for WebSocket broadcast failures without affecting API responses",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Wrap all broadcast calls in try-catch blocks to handle potential WebSocket errors. Log broadcast failures for debugging but don't let them affect API response success. Implement fallback behavior when WebSocket server is unavailable. Ensure API operations complete successfully even if broadcasting fails.",
+            "status": "pending",
+            "testStrategy": "Test API operations succeed when WebSocket server is down, broadcast errors are logged properly, and client receives appropriate responses"
+          }
+        ]
+      },
+      {
+        "id": 18,
+        "title": "Create useWebSocket hook for real-time updates",
+        "description": "Implement React hook for WebSocket connection and event handling",
+        "details": "Create client/src/hooks/useWebSocket.js that establishes WebSocket connection to server. Handle connection lifecycle (connect, disconnect, reconnect). Parse incoming JSON events and call provided onEvent callback. Implement automatic reconnection with exponential backoff. Handle connection errors gracefully. Clean up connection on component unmount.",
+        "testStrategy": "Test WebSocket connects on mount, receives events correctly, reconnects after disconnection, cleans up properly",
+        "priority": "high",
+        "dependencies": [
+          17
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement WebSocket connection lifecycle management",
+            "description": "Create the core WebSocket connection management functionality including connect, disconnect, and connection state tracking",
+            "dependencies": [],
+            "details": "Implement useRef for WebSocket instance, useState for connection status (connecting, connected, disconnected, error). Create connect() function that establishes WebSocket connection to server endpoint. Add disconnect() function for clean connection termination. Track connection state changes and update component state accordingly. Handle WebSocket onopen, onclose, and onerror events.",
+            "status": "pending",
+            "testStrategy": "Test connection establishes successfully, state updates correctly on connect/disconnect, connection can be manually closed"
+          },
+          {
+            "id": 2,
+            "title": "Add automatic reconnection with exponential backoff",
+            "description": "Implement robust reconnection logic that automatically attempts to reconnect with increasing delays",
+            "dependencies": [
+              1
+            ],
+            "details": "Create reconnection logic with exponential backoff starting at 1 second, doubling up to maximum of 30 seconds. Track reconnection attempts and reset counter on successful connection. Implement useRef for reconnection timeout and attempt counter. Add logic to automatically reconnect on connection loss unless explicitly disconnected by user. Prevent multiple simultaneous reconnection attempts.",
+            "status": "pending",
+            "testStrategy": "Test reconnection triggers after connection loss, backoff timing increases correctly, reconnection stops after manual disconnect"
+          },
+          {
+            "id": 3,
+            "title": "Implement event parsing and callback handling",
+            "description": "Add JSON event parsing and callback mechanism for handling incoming WebSocket messages",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement WebSocket onmessage handler that parses incoming JSON events safely with try-catch. Accept onEvent callback parameter in hook that gets called with parsed event data. Add event type validation and error handling for malformed JSON. Support different event types and pass them to callback with event type and payload. Add optional event filtering by event type.",
+            "status": "pending",
+            "testStrategy": "Test JSON parsing handles valid and invalid messages, callback receives correct event data, event filtering works properly"
+          },
+          {
+            "id": 4,
+            "title": "Add proper cleanup and error handling",
+            "description": "Implement comprehensive error handling and cleanup mechanisms for the WebSocket hook",
+            "dependencies": [
+              1,
+              2,
+              3
+            ],
+            "details": "Add useEffect cleanup function that closes WebSocket connection and clears reconnection timeouts on component unmount. Implement comprehensive error handling for connection failures, network errors, and parsing errors. Add error callback parameter for custom error handling. Clear all timeouts and intervals on cleanup. Handle edge cases like rapid connect/disconnect cycles and component re-renders.",
+            "status": "pending",
+            "testStrategy": "Test cleanup runs on unmount, no memory leaks from timeouts, error callbacks receive proper error information, handles rapid state changes gracefully"
+          }
+        ]
+      },
+      {
+        "id": 19,
+        "title": "Integrate real-time updates into useBoard hook",
+        "description": "Connect WebSocket events to board state updates for real-time synchronization",
+        "details": "Modify useBoard hook to use useWebSocket. Handle incoming events: card:created (add to appropriate column), card:updated (update existing card), card:deleted (remove from state), card:moved (update position/column), comment:created (add to card's comments). Ensure local state stays in sync with server. Avoid duplicate updates when user performs action (optimistic updates).",
+        "testStrategy": "Test multiple browser tabs stay synchronized, local actions don't cause duplicate updates, state remains consistent",
+        "priority": "high",
+        "dependencies": [
+          18
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Integrate WebSocket hook with board state management",
+            "description": "Connect the useWebSocket hook to the useBoard hook and establish the foundation for real-time state updates",
+            "dependencies": [],
+            "details": "Import and initialize useWebSocket within useBoard hook. Set up WebSocket connection with proper error handling and reconnection logic. Create event listener registration system for incoming WebSocket messages. Establish the connection between WebSocket events and board state reducer.",
+            "status": "pending",
+            "testStrategy": "Test WebSocket connection establishes successfully, reconnects on disconnect, and event listeners are properly registered"
+          },
+          {
+            "id": 2,
+            "title": "Implement event handlers for all card and comment operations",
+            "description": "Create comprehensive event handlers for card:created, card:updated, card:deleted, card:moved, and comment:created events",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement handleCardCreated to add new cards to appropriate columns. Create handleCardUpdated to update existing card properties. Add handleCardDeleted to remove cards from state. Implement handleCardMoved to update card position and column. Create handleCommentCreated to add comments to card's comment array. Ensure all handlers properly update the board state using the existing reducer pattern.",
+            "status": "pending",
+            "testStrategy": "Test each event handler correctly updates board state, handles edge cases like non-existent cards, and maintains data integrity"
+          },
+          {
+            "id": 3,
+            "title": "Handle optimistic updates to avoid duplicates",
+            "description": "Implement mechanism to prevent duplicate state updates when user performs local actions that trigger WebSocket events",
+            "dependencies": [
+              2
+            ],
+            "details": "Create optimistic update tracking system using action IDs or timestamps. Implement logic to ignore incoming WebSocket events that match recently performed local actions. Add debouncing mechanism to handle rapid successive updates. Create rollback functionality for failed optimistic updates. Ensure local actions are immediately reflected in UI while preventing duplicate processing of the same action from WebSocket.",
+            "status": "pending",
+            "testStrategy": "Test local actions don't cause duplicate updates, failed actions rollback properly, and rapid successive actions are handled correctly"
+          },
+          {
+            "id": 4,
+            "title": "Ensure state consistency across multiple clients",
+            "description": "Implement conflict resolution and state synchronization mechanisms to maintain consistency across multiple connected clients",
+            "dependencies": [
+              3
+            ],
+            "details": "Add conflict resolution logic for simultaneous edits from multiple clients. Implement state reconciliation when WebSocket reconnects after disconnection. Create mechanism to handle out-of-order message delivery. Add periodic state synchronization checks to detect and resolve inconsistencies. Ensure proper handling of concurrent operations like moving cards to same position.",
+            "status": "pending",
+            "testStrategy": "Test multiple browser tabs stay synchronized, concurrent operations resolve correctly, and state remains consistent after network interruptions"
+          }
+        ]
+      },
+      {
+        "id": 20,
+        "title": "Create Docker configuration",
+        "description": "Set up Docker multi-stage build and docker-compose configuration",
+        "details": "Create Dockerfile with multi-stage build: first stage builds client with Node 20 Alpine and Vite, second stage serves with Node 20 Alpine runtime. Copy built client to server's public directory. Create docker-compose.yml with app service and named volume for SQLite database persistence. Configure environment variables for production mode. Expose port 3000. Add .dockerignore file.",
+        "testStrategy": "Test docker compose up serves application correctly, data persists across container restarts, production build works",
+        "priority": "medium",
+        "dependencies": [
+          19
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create multi-stage Dockerfile for client build and server runtime",
+            "description": "Implement Dockerfile with two stages: build stage using Node 20 Alpine with Vite for client compilation, and runtime stage with Node 20 Alpine serving the application",
+            "dependencies": [],
+            "details": "Create Dockerfile with first stage FROM node:20-alpine AS build that installs dependencies and runs npm run build for client. Second stage FROM node:20-alpine AS runtime copies built client assets to server's public directory and sets up production server environment. Configure proper working directories and copy operations between stages.",
+            "status": "pending",
+            "testStrategy": "Test docker build completes successfully, verify built client assets are properly copied to server public directory, confirm production server starts correctly"
+          },
+          {
+            "id": 2,
+            "title": "Set up docker-compose with volume persistence",
+            "description": "Create docker-compose.yml configuration with app service definition and named volume for SQLite database persistence across container restarts",
+            "dependencies": [
+              1
+            ],
+            "details": "Create docker-compose.yml with app service using the Dockerfile, expose port 3000:3000, create named volume for SQLite database persistence mounted to appropriate database directory. Configure service dependencies and restart policies. Add .dockerignore file to exclude node_modules, .git, and other unnecessary files from build context.",
+            "status": "pending",
+            "testStrategy": "Test docker-compose up starts application successfully, verify database data persists after container restart, confirm port 3000 is accessible"
+          },
+          {
+            "id": 3,
+            "title": "Configure environment variables and production optimizations",
+            "description": "Set up production environment variables and optimize Docker configuration for production deployment",
+            "dependencies": [
+              2
+            ],
+            "details": "Configure NODE_ENV=production in docker-compose.yml, set up environment variables for database path and server configuration. Add production optimizations like multi-stage build cleanup, proper user permissions, and security configurations. Ensure static file serving is optimized for production workloads.",
+            "status": "pending",
+            "testStrategy": "Test application runs in production mode, verify environment variables are properly set, confirm static files are served efficiently and security configurations are applied"
+          }
+        ]
+      },
+      {
+        "id": 21,
+        "title": "Add comprehensive test suite",
+        "description": "Implement unit, integration, and E2E tests following the test pyramid strategy",
+        "details": "Add Jest for unit tests of database queries and React hooks. Add supertest for API integration tests. Install Playwright for E2E tests. Create test files: server/db/queries.test.js (test all CRUD operations), server/api/cards.test.js (test REST endpoints), client/src/hooks/useBoard.test.js (test state management), e2e/board.spec.js (test full user workflows). Configure test scripts in package.json. Aim for 70% line coverage, 80% function coverage.",
+        "testStrategy": "All tests pass, coverage targets met, CI can run test suite successfully",
+        "priority": "medium",
+        "dependencies": [
+          20
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Set up Jest for unit testing database queries",
+            "description": "Install Jest testing framework and configure it for unit testing database query functions",
+            "dependencies": [],
+            "details": "Install Jest and related packages (jest, @types/jest). Create jest.config.js with configuration for Node.js environment. Set up in-memory SQLite database for testing. Configure test scripts in package.json for running unit tests.",
+            "status": "pending",
+            "testStrategy": "Verify Jest runs successfully and can execute basic test cases"
+          },
+          {
+            "id": 2,
+            "title": "Add supertest for API integration tests",
+            "description": "Install and configure supertest library for testing REST API endpoints",
+            "dependencies": [
+              1
+            ],
+            "details": "Install supertest package. Create test setup that starts Express server in test mode. Configure test database isolation. Set up helper functions for making HTTP requests to API endpoints.",
+            "status": "pending",
+            "testStrategy": "Verify supertest can make requests to test server and receive responses"
+          },
+          {
+            "id": 3,
+            "title": "Configure Playwright for E2E testing",
+            "description": "Install Playwright and set up end-to-end testing infrastructure",
+            "dependencies": [],
+            "details": "Install Playwright and browser dependencies. Create playwright.config.js with browser configurations (Chrome, Firefox, Safari). Set up test database seeding for E2E tests. Configure base URL and test timeouts.",
+            "status": "pending",
+            "testStrategy": "Verify Playwright can launch browsers and navigate to application"
+          },
+          {
+            "id": 4,
+            "title": "Create unit tests for React hooks",
+            "description": "Implement comprehensive unit tests for React hooks using Jest and React Testing Library",
+            "dependencies": [
+              1
+            ],
+            "details": "Create client/src/hooks/useBoard.test.js to test state management logic. Test hook initialization, state updates, error handling, and side effects. Mock API calls and WebSocket connections. Verify hook behavior with different scenarios.",
+            "status": "pending",
+            "testStrategy": "Test all hook functions, state transitions, and edge cases with 80%+ coverage"
+          },
+          {
+            "id": 5,
+            "title": "Implement API endpoint tests",
+            "description": "Create integration tests for all REST API endpoints using supertest",
+            "dependencies": [
+              2
+            ],
+            "details": "Create server/api/cards.test.js to test all CRUD operations on cards endpoint. Test GET /api/cards, POST /api/cards, PUT /api/cards/:id, DELETE /api/cards/:id. Verify request validation, response formats, error handling, and database interactions.",
+            "status": "pending",
+            "testStrategy": "Test all API endpoints with valid/invalid inputs, verify HTTP status codes and response data"
+          },
+          {
+            "id": 6,
+            "title": "Add E2E workflow tests and coverage reporting",
+            "description": "Create end-to-end tests for complete user workflows and set up coverage reporting",
+            "dependencies": [
+              3,
+              4,
+              5
+            ],
+            "details": "Create e2e/board.spec.js to test full user workflows: creating cards, moving between columns, adding comments, real-time updates. Set up coverage reporting with nyc/c8 for 70% line coverage and 80% function coverage targets. Configure CI test scripts.",
+            "status": "pending",
+            "testStrategy": "Test complete user journeys, verify real-time functionality, achieve coverage targets"
+          }
+        ]
+      },
+      {
+        "id": 22,
+        "title": "Add inline editing functionality",
+        "description": "Implement click-to-edit for card titles and assignees",
+        "details": "Add inline editing capability to CardTile and CardModal components. Implement click-to-edit for title and assignee fields with input validation. Add save on blur/enter and cancel on escape functionality. Show visual feedback during editing state. Handle API errors gracefully with rollback to previous values. Ensure editing works on both card tile and modal views.",
+        "testStrategy": "Test inline editing saves correctly, validation prevents empty titles, escape cancels edit, errors are handled",
+        "priority": "low",
+        "dependencies": [
+          19
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement click-to-edit functionality for card tiles",
+            "description": "Add inline editing capability to CardTile component for title and assignee fields",
+            "dependencies": [],
+            "details": "Modify CardTile component to detect clicks on title and assignee elements. Replace text with input fields when clicked. Implement state management for editing mode. Add visual indicators (border, background) to show editing state. Handle focus management to automatically select text content.",
+            "status": "pending",
+            "testStrategy": "Test click activation, input field rendering, visual feedback during editing state"
+          },
+          {
+            "id": 2,
+            "title": "Add inline editing to modal components",
+            "description": "Implement click-to-edit functionality within CardModal component",
+            "dependencies": [
+              1
+            ],
+            "details": "Extend CardModal component with inline editing for title and assignee fields. Ensure consistent behavior with CardTile implementation. Handle modal-specific considerations like focus trapping and larger input areas. Maintain modal functionality while in editing mode.",
+            "status": "pending",
+            "testStrategy": "Test modal editing works independently, consistent behavior with tile editing, focus management"
+          },
+          {
+            "id": 3,
+            "title": "Implement keyboard shortcuts and validation",
+            "description": "Add keyboard event handling and input validation for inline editing",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Implement Enter key to save changes and Escape key to cancel editing. Add blur event handling to auto-save. Implement validation to prevent empty titles and invalid assignee values. Show validation errors inline. Handle edge cases like rapid key presses and multiple simultaneous edits.",
+            "status": "pending",
+            "testStrategy": "Test Enter saves, Escape cancels, blur auto-saves, validation prevents empty values, error display"
+          },
+          {
+            "id": 4,
+            "title": "Add error handling with rollback functionality",
+            "description": "Implement graceful error handling and rollback mechanism for failed edits",
+            "dependencies": [
+              3
+            ],
+            "details": "Add try-catch blocks around API calls for saving edits. Implement rollback mechanism to restore previous values when API calls fail. Show user-friendly error messages for network failures or validation errors. Add loading states during save operations. Ensure UI remains responsive during error scenarios.",
+            "status": "pending",
+            "testStrategy": "Test API error handling, rollback restores previous values, error messages display correctly, loading states work"
+          }
+        ]
+      },
+      {
+        "id": 23,
+        "title": "Implement position renormalization system",
+        "description": "Add automatic position renormalization when fractional gaps become too small",
+        "details": "Enhance moveCard function in queries.js to detect when position gaps between adjacent cards become smaller than 0.001. Implement renormalization logic that resets all positions in a column to integers (1, 2, 3, etc.) while maintaining order. Add database transaction to ensure atomicity. Log renormalization events for monitoring. Test with many reorder operations to verify stability.",
+        "testStrategy": "Test position renormalization triggers correctly, card order is preserved, performance remains acceptable with many cards",
+        "priority": "low",
+        "dependencies": [
+          13
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement gap detection logic for fractional positions",
+            "description": "Add logic to detect when position gaps between adjacent cards become smaller than 0.001 threshold",
+            "dependencies": [],
+            "details": "Enhance moveCard function in queries.js to check position differences between adjacent cards after each move operation. Calculate gaps between consecutive positions and trigger renormalization when any gap falls below 0.001. Include edge case handling for first/last positions in columns.",
+            "status": "pending",
+            "testStrategy": "Unit tests to verify gap detection triggers at correct threshold, test edge cases with single cards and boundary positions"
+          },
+          {
+            "id": 2,
+            "title": "Create renormalization algorithm with database transactions",
+            "description": "Implement the core renormalization logic that resets all positions in a column to integers while maintaining order",
+            "dependencies": [
+              1
+            ],
+            "details": "Create renormalizeColumn function that fetches all cards in a column ordered by position, reassigns integer positions (1, 2, 3, etc.), and updates database within a transaction. Ensure atomicity using database transactions to prevent data corruption during renormalization process.",
+            "status": "pending",
+            "testStrategy": "Test transaction rollback on failures, verify card order preservation, test concurrent access scenarios"
+          },
+          {
+            "id": 3,
+            "title": "Add monitoring and performance testing for large datasets",
+            "description": "Implement logging for renormalization events and conduct performance testing with large card datasets",
+            "dependencies": [
+              2
+            ],
+            "details": "Add comprehensive logging for renormalization events including column ID, card count, and execution time. Create performance tests with datasets of 1000+ cards to verify renormalization completes efficiently. Monitor memory usage and database lock duration during operations.",
+            "status": "pending",
+            "testStrategy": "Performance benchmarks with varying dataset sizes, stress testing with rapid reorder operations, monitoring log output verification"
+          }
+        ]
+      },
+      {
+        "id": 24,
+        "title": "Add production optimizations and error handling",
+        "description": "Implement production-ready error handling, logging, and performance optimizations",
+        "details": "Add comprehensive error handling middleware to Express app. Implement request logging with morgan. Add rate limiting for API endpoints. Optimize client bundle with code splitting and lazy loading. Add error boundaries in React components. Implement proper loading states throughout the application. Add health check endpoint with database connectivity test. Configure proper CORS for production.",
+        "testStrategy": "Test error scenarios are handled gracefully, performance meets requirements, health checks work correctly",
+        "priority": "low",
+        "dependencies": [
+          21
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement comprehensive error handling middleware",
+            "description": "Create centralized error handling middleware for Express application to catch and process all errors consistently",
+            "dependencies": [],
+            "details": "Create server/middleware/errorHandler.js with comprehensive error handling middleware. Handle different error types (validation, database, authentication, etc.) with appropriate HTTP status codes. Log errors with stack traces in development and sanitized messages in production. Return consistent error response format with error codes and user-friendly messages. Add 404 handler for unmatched routes.",
+            "status": "pending",
+            "testStrategy": "Test various error scenarios including validation errors, database errors, and unhandled exceptions to ensure proper error responses and logging"
+          },
+          {
+            "id": 2,
+            "title": "Add logging and monitoring with morgan",
+            "description": "Implement request logging using morgan middleware and set up monitoring infrastructure",
+            "dependencies": [
+              1
+            ],
+            "details": "Install and configure morgan for HTTP request logging. Set up different log formats for development (detailed) and production (combined). Configure log rotation and file output for production. Add custom logging utility for application events. Implement structured logging with timestamps, request IDs, and correlation tracking. Set up log aggregation strategy for production monitoring.",
+            "status": "pending",
+            "testStrategy": "Verify request logs are generated correctly, log rotation works, and custom application logs are properly formatted and stored"
+          },
+          {
+            "id": 3,
+            "title": "Configure rate limiting and security measures",
+            "description": "Implement API rate limiting and additional security middleware to protect against abuse",
+            "dependencies": [
+              1
+            ],
+            "details": "Install express-rate-limit and configure rate limiting for API endpoints with different limits for different routes. Add helmet middleware for security headers. Implement IP-based rate limiting with Redis store for production scalability. Configure different rate limits for authenticated vs anonymous users. Add request size limits and timeout configurations. Implement graceful rate limit responses with retry-after headers.",
+            "status": "pending",
+            "testStrategy": "Test rate limiting triggers correctly, security headers are present, and rate-limited requests receive appropriate responses with retry information"
+          },
+          {
+            "id": 4,
+            "title": "Optimize client bundle with code splitting",
+            "description": "Implement code splitting and lazy loading to optimize client-side bundle size and performance",
+            "dependencies": [],
+            "details": "Configure Vite for code splitting and dynamic imports. Implement lazy loading for React components using React.lazy() and Suspense. Split vendor libraries into separate chunks. Optimize bundle size with tree shaking and dead code elimination. Add preloading strategies for critical routes. Configure chunk naming and caching strategies for optimal browser caching.",
+            "status": "pending",
+            "testStrategy": "Analyze bundle size reduction, verify lazy loading works correctly, test loading performance with network throttling, and ensure proper chunk caching"
+          },
+          {
+            "id": 5,
+            "title": "Add React error boundaries and loading states",
+            "description": "Implement error boundaries and comprehensive loading states throughout the React application",
+            "dependencies": [
+              4
+            ],
+            "details": "Create ErrorBoundary component to catch and handle React component errors gracefully. Implement loading states for all async operations (API calls, lazy-loaded components). Add skeleton screens and loading spinners with consistent styling. Create error fallback components with retry mechanisms. Implement global loading state management. Add error recovery strategies and user-friendly error messages.",
+            "status": "pending",
+            "testStrategy": "Test error boundaries catch component errors, loading states display correctly during async operations, and error recovery mechanisms work as expected"
+          },
+          {
+            "id": 6,
+            "title": "Configure production CORS and health checks",
+            "description": "Set up production-ready CORS configuration and comprehensive health check endpoints",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "Configure CORS middleware with production-specific origins, methods, and headers. Implement comprehensive health check endpoint that tests database connectivity, WebSocket server status, and external dependencies. Add readiness and liveness probes for container orchestration. Configure health check caching and timeout handling. Add metrics endpoint for monitoring system performance and resource usage.",
+            "status": "pending",
+            "testStrategy": "Test CORS configuration blocks unauthorized origins, health checks accurately report system status, and monitoring endpoints provide useful metrics"
+          }
+        ]
       }
     ],
     "metadata": {
-      "created": "2026-04-08T15:47:55.643Z",
-      "updated": "2026-04-08T15:48:15.513Z",
-      "description": "Tasks for hello-world context"
+      "created": "2026-04-09T19:08:45.343Z",
+      "updated": "2026-04-09T19:10:19.746Z",
+      "description": "Tasks for kanban-board context"
     }
   }
 }

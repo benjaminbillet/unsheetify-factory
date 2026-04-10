@@ -1,0 +1,205 @@
+{
+	"meta": {
+		"generatedAt": "2026-04-09T19:11:22.991Z",
+		"tasksAnalyzed": 24,
+		"totalTasks": 24,
+		"analysisCount": 24,
+		"thresholdScore": 5,
+		"projectName": "unsheetify-factory",
+		"usedResearch": false
+	},
+	"complexityAnalysis": [
+		{
+			"taskId": 1,
+			"taskTitle": "Initialize monorepo structure and workspace configuration",
+			"complexityScore": 3,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Break down the monorepo initialization into: 1) Create root package.json with workspace configuration, 2) Set up npm scripts for development and production, 3) Create directory structure for client and server, 4) Initialize individual workspace package.json files",
+			"reasoning": "This is foundational setup work with well-defined requirements. While it involves multiple configuration files and directory creation, the tasks are straightforward and don't involve complex logic or algorithms."
+		},
+		{
+			"taskId": 2,
+			"taskTitle": "Setup Vite + React client application",
+			"complexityScore": 4,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Split into: 1) Initialize Vite React project and install dependencies, 2) Configure vite.config.js with proxy settings for API endpoints, 3) Set up basic App.jsx structure and verify HMR functionality",
+			"reasoning": "Standard React/Vite setup with some configuration complexity for proxy settings. The proxy configuration for WebSocket and API endpoints adds moderate complexity beyond basic project initialization."
+		},
+		{
+			"taskId": 3,
+			"taskTitle": "Setup Express server with health endpoint",
+			"complexityScore": 4,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Break down into: 1) Create basic Express app with dependencies installation, 2) Configure CORS and middleware setup, 3) Implement health endpoint and error handling, 4) Set up nodemon for development and static file serving",
+			"reasoning": "Standard Express setup with multiple configuration aspects. CORS configuration, static file serving, and error handling middleware add moderate complexity to basic server setup."
+		},
+		{
+			"taskId": 4,
+			"taskTitle": "Create database schema and migration system",
+			"complexityScore": 6,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Split into: 1) Design and create SQL schema files for cards and comments tables with proper relationships, 2) Implement migration runner system with version tracking, 3) Add database indexes and test migration execution",
+			"reasoning": "Database schema design requires careful consideration of relationships, constraints, and performance. The migration system adds complexity as it needs to track applied migrations and handle edge cases safely."
+		},
+		{
+			"taskId": 5,
+			"taskTitle": "Implement database query functions",
+			"complexityScore": 7,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Break down into: 1) Implement basic CRUD operations (create, read, update, delete), 2) Implement complex moveCard function with fractional indexing, 3) Add comment operations with proper card relationships, 4) Optimize with prepared statements, 5) Add comprehensive error handling",
+			"reasoning": "High complexity due to fractional indexing for card positioning, cascade operations, and the need for optimized prepared statements. The moveCard function with position reordering is particularly complex."
+		},
+		{
+			"taskId": 6,
+			"taskTitle": "Create REST API routes for cards",
+			"complexityScore": 5,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Split into: 1) Implement basic CRUD endpoints (GET, POST, PATCH, DELETE), 2) Add input validation middleware and error handling, 3) Integrate with database query functions, 4) Add comprehensive error responses with proper HTTP status codes",
+			"reasoning": "Standard REST API implementation with validation complexity. Error handling for various scenarios (validation, not found, server errors) and proper HTTP status codes add moderate complexity."
+		},
+		{
+			"taskId": 7,
+			"taskTitle": "Create REST API routes for comments",
+			"complexityScore": 4,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down into: 1) Implement POST endpoint for comment creation, 2) Add validation for card existence and required fields, 3) Integrate error handling and mount router",
+			"reasoning": "Simpler than card routes as it only involves comment creation. The main complexity is validating card existence before creating comments and proper error handling."
+		},
+		{
+			"taskId": 8,
+			"taskTitle": "Create API client wrapper functions",
+			"complexityScore": 5,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Split into: 1) Create basic fetch wrapper functions for all endpoints, 2) Implement comprehensive error handling for network and HTTP errors, 3) Add proper JSON parsing and response handling, 4) Add JSDoc comments and type annotations",
+			"reasoning": "Moderate complexity due to comprehensive error handling requirements. Need to handle various error scenarios (network failures, HTTP errors, JSON parsing) while maintaining clean API interface."
+		},
+		{
+			"taskId": 9,
+			"taskTitle": "Implement useBoard hook for state management",
+			"complexityScore": 7,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Break down into: 1) Set up basic state structure and initial data loading, 2) Implement optimistic updates for card operations, 3) Add error handling and loading states, 4) Structure state for efficient column-based rendering",
+			"reasoning": "High complexity due to optimistic updates, state synchronization, and the need to structure data efficiently for rendering. Managing loading states and error recovery adds significant complexity."
+		},
+		{
+			"taskId": 10,
+			"taskTitle": "Create Board, Column, and CardTile components",
+			"complexityScore": 6,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Split into: 1) Create Board layout component with responsive column structure, 2) Implement Column component with header and card list, 3) Create CardTile component with card display and click handling, 4) Add CSS styling and responsive design",
+			"reasoning": "Moderate to high complexity due to responsive layout requirements, component interaction, and the need for clean, maintainable component architecture. CSS Grid/Flexbox layout adds complexity."
+		},
+		{
+			"taskId": 11,
+			"taskTitle": "Create CardModal component for card details",
+			"complexityScore": 7,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Break down into: 1) Create modal structure with React Portal, 2) Implement editable fields with save/cancel functionality, 3) Add delete confirmation and keyboard shortcuts, 4) Integrate comments section display, 5) Add modal styling and backdrop effects",
+			"reasoning": "High complexity due to modal management, React Portal usage, keyboard event handling, and multiple interactive elements. The combination of editing, deletion, and comments in one component adds complexity."
+		},
+		{
+			"taskId": 12,
+			"taskTitle": "Create CreateCardForm component",
+			"complexityScore": 4,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Split into: 1) Create form component with input fields and validation, 2) Implement form submission and loading states, 3) Add form toggle functionality and error handling",
+			"reasoning": "Standard form component with validation. Moderate complexity due to inline display requirements and integration with the board state management."
+		},
+		{
+			"taskId": 13,
+			"taskTitle": "Implement drag and drop functionality with dnd-kit",
+			"complexityScore": 8,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Break down into: 1) Install and configure dnd-kit with DndContext, 2) Implement sortable columns and cards, 3) Add drag end handler for position updates, 4) Implement visual feedback during drag operations, 5) Handle both cross-column and within-column reordering",
+			"reasoning": "High complexity due to drag-and-drop library integration, complex position calculations, and handling multiple drag scenarios. Visual feedback and smooth animations add additional complexity."
+		},
+		{
+			"taskId": 14,
+			"taskTitle": "Integrate BlockNote rich text editor",
+			"complexityScore": 6,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Split into: 1) Install BlockNote dependencies and create wrapper component, 2) Configure editor with required block types and features, 3) Implement edit/read-only mode toggle, 4) Add JSON serialization and styling integration",
+			"reasoning": "Moderate to high complexity due to third-party library integration, configuration requirements, and the need to handle JSON serialization. Mode switching and styling integration add complexity."
+		},
+		{
+			"taskId": 15,
+			"taskTitle": "Create CommentList component",
+			"complexityScore": 5,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down into: 1) Create comment display component with chronological ordering, 2) Implement comment creation form with validation, 3) Add timestamp formatting and styling",
+			"reasoning": "Moderate complexity due to chronological ordering, timestamp formatting, and form integration. The component needs to handle both display and creation functionality."
+		},
+		{
+			"taskId": 16,
+			"taskTitle": "Implement WebSocket broadcaster",
+			"complexityScore": 7,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Break down into: 1) Set up WebSocket server and client connection handling, 2) Implement broadcast functionality to all connected clients, 3) Add heartbeat/ping mechanism for connection health, 4) Handle client disconnection and cleanup",
+			"reasoning": "High complexity due to WebSocket connection management, broadcast logic, and the need for robust connection health monitoring. Handling multiple clients and cleanup adds significant complexity."
+		},
+		{
+			"taskId": 17,
+			"taskTitle": "Add WebSocket event broadcasting to API routes",
+			"complexityScore": 5,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Split into: 1) Integrate broadcast calls into card operation endpoints, 2) Add broadcast calls to comment operations, 3) Implement error handling for broadcast failures",
+			"reasoning": "Moderate complexity due to integration with existing API routes and ensuring broadcasts happen after successful database operations. Error handling for broadcast failures adds complexity."
+		},
+		{
+			"taskId": 18,
+			"taskTitle": "Create useWebSocket hook for real-time updates",
+			"complexityScore": 7,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Break down into: 1) Implement WebSocket connection lifecycle management, 2) Add automatic reconnection with exponential backoff, 3) Implement event parsing and callback handling, 4) Add proper cleanup and error handling",
+			"reasoning": "High complexity due to connection lifecycle management, reconnection logic with exponential backoff, and robust error handling. WebSocket state management in React adds complexity."
+		},
+		{
+			"taskId": 19,
+			"taskTitle": "Integrate real-time updates into useBoard hook",
+			"complexityScore": 8,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Split into: 1) Integrate WebSocket hook with board state management, 2) Implement event handlers for all card and comment operations, 3) Handle optimistic updates to avoid duplicates, 4) Ensure state consistency across multiple clients",
+			"reasoning": "High complexity due to state synchronization challenges, avoiding duplicate updates from optimistic updates, and ensuring consistency across multiple clients. The integration of real-time updates with existing state management is complex."
+		},
+		{
+			"taskId": 20,
+			"taskTitle": "Create Docker configuration",
+			"complexityScore": 5,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Split into: 1) Create multi-stage Dockerfile for client build and server runtime, 2) Set up docker-compose with volume persistence, 3) Configure environment variables and production optimizations",
+			"reasoning": "Moderate complexity due to multi-stage build requirements and the need to properly handle static file serving and database persistence. Docker configuration requires understanding of build optimization."
+		},
+		{
+			"taskId": 21,
+			"taskTitle": "Add comprehensive test suite",
+			"complexityScore": 8,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Break down into: 1) Set up Jest for unit testing database queries, 2) Add supertest for API integration tests, 3) Configure Playwright for E2E testing, 4) Create unit tests for React hooks, 5) Implement API endpoint tests, 6) Add E2E workflow tests and coverage reporting",
+			"reasoning": "High complexity due to multiple testing frameworks, different types of tests (unit, integration, E2E), and coverage requirements. Setting up comprehensive test infrastructure is complex and time-consuming."
+		},
+		{
+			"taskId": 22,
+			"taskTitle": "Add inline editing functionality",
+			"complexityScore": 6,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Split into: 1) Implement click-to-edit functionality for card tiles, 2) Add inline editing to modal components, 3) Implement keyboard shortcuts and validation, 4) Add error handling with rollback functionality",
+			"reasoning": "Moderate to high complexity due to multiple editing contexts, keyboard event handling, validation, and error recovery with rollback. The dual implementation (tile and modal) adds complexity."
+		},
+		{
+			"taskId": 23,
+			"taskTitle": "Implement position renormalization system",
+			"complexityScore": 7,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Split into: 1) Implement gap detection logic for fractional positions, 2) Create renormalization algorithm with database transactions, 3) Add monitoring and performance testing for large datasets",
+			"reasoning": "High complexity due to algorithmic challenges in position management, database transaction handling, and performance considerations. The renormalization logic needs to be robust and efficient."
+		},
+		{
+			"taskId": 24,
+			"taskTitle": "Add production optimizations and error handling",
+			"complexityScore": 8,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Break down into: 1) Implement comprehensive error handling middleware, 2) Add logging and monitoring with morgan, 3) Configure rate limiting and security measures, 4) Optimize client bundle with code splitting, 5) Add React error boundaries and loading states, 6) Configure production CORS and health checks",
+			"reasoning": "High complexity due to multiple production concerns: security, performance, monitoring, error handling, and optimization. Each area requires careful consideration and testing for production readiness."
+		}
+	]
+}
